@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use SeoControlCenter\Core\Console\ConsoleApplication;
+use SeoControlCenter\Core\Console\Output;
+use SeoControlCenter\Core\Container\Container;
+use SeoControlCenter\Core\Errors\PhpErrorHandler;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+
+$appRoot = dirname(__DIR__);
+require $appRoot . '/vendor/autoload.php';
+
+/** @var Closure(string): Container $bootstrap */
+$bootstrap = require $appRoot . '/bootstrap/app.php';
+$container = $bootstrap($appRoot);
+$container->make(PhpErrorHandler::class)->register();
+
+/** @var list<string> $argv */
+exit($container->make(ConsoleApplication::class)->run($argv, new Output()));

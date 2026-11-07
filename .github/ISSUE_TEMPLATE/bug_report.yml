@@ -1,0 +1,48 @@
+name: Bug report
+description: Something in SEO Control Center doesn't work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Please leave out passwords, API keys, tokens and client data. Report security problems privately, as described in SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: SEOcc version
+      description: Shown under System health
+      placeholder: 0.51.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Hosting
+      description: PHP version, database, web server and host, if you know them
+      placeholder: PHP 8.5, MariaDB 11.4, LiteSpeed, cPanel shared hosting
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Click ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Errors or logs
+      description: From System → Jobs, System health or storage/logs
+      render: text

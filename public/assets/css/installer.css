@@ -1,0 +1,91 @@
+/* Native installation UI. All controls work without JavaScript. */
+.installer-shell { width: min(1160px, 100%); margin-inline: auto; padding: 0 clamp(1rem, 4vw, 2.5rem); }
+.installer-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding-block: 1.5rem; border-bottom: 1px solid var(--border); }
+.installer-brand { display: flex; align-items: center; gap: .75rem; font-weight: 600; }
+.installer-brand small { display: block; color: var(--muted); font-size: .75rem; font-weight: 400; }
+.installer-header > a { font-size: .85rem; padding-block: .75rem; }
+.installer-intro { padding-block: 2.5rem 2rem; }
+.installer-intro h1, .installer-complete h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); letter-spacing: -.025em; line-height: 1.2; margin-block: .5rem 1rem; }
+.installer-intro > p:last-child { color: var(--muted); max-width: 60ch; line-height: 1.7; }
+.installer-eyebrow { color: var(--accent); font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; }
+.installer-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 2rem; align-items: start; }
+.installer-index { position: sticky; top: 1.5rem; }
+.installer-index ol { list-style: none; counter-reset: install-step; padding: 0; margin-block: 1rem 1.5rem; display: grid; gap: .4rem; }
+.installer-index li { counter-increment: install-step; }
+.installer-index a { display: flex; align-items: center; gap: .75rem; padding: .7rem .5rem; color: var(--text); text-decoration: none; border-radius: .65rem; }
+.installer-index a::before { content: counter(install-step); display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border: 1px solid var(--border); border-radius: .5rem; color: var(--accent); font-size: .8rem; }
+.installer-index a:hover { background: var(--raised); }
+.installer-content { min-width: 0; }
+.installer-section { margin: 0 0 1.5rem; padding: clamp(1rem, 3vw, 1.75rem); min-width: 0; border-radius: 1rem; scroll-margin-top: 1rem; }
+fieldset.installer-section { border: 1px solid var(--border); }
+.installer-section legend { color: var(--text); font-size: 1.15rem; font-weight: 600; padding-inline: .5rem; }
+.installer-section-heading { display: flex; align-items: center; gap: .85rem; margin-bottom: 1.5rem; }
+.installer-section-heading > span:first-child { flex: 0 0 2.25rem; height: 2.25rem; display: grid; place-items: center; background: var(--accent-soft); border-radius: .65rem; color: var(--accent); }
+.installer-section-heading > div { flex: 1; min-width: 0; }
+.installer-section-heading h2 { margin: 0; font-size: 1.15rem; }
+.installer-section-heading p { margin: .35rem 0 0; color: var(--muted); font-size: .85rem; }
+.installer-checks { list-style: none; padding: 0; margin: 0; }
+.installer-checks li { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--border); padding-block: .9rem; }
+.installer-checks li > div { min-width: 0; }
+.installer-checks li p { margin: .3rem 0 0; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
+.installer-checks .badge { flex-shrink: 0; }
+.installer-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.installer-content .form { gap: 0; max-width: none; }
+.installer-section .field { min-width: 0; margin-top: 1rem; }
+.installer-fields .field { margin-top: 0; align-content: start; }
+.installer-section :is(input,select) { width: 100%; min-width: 0; min-height: 44px; }
+.installer-section .field p { line-height: 1.6; }
+.installer-section code, .installer-next-steps code { overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+.installer-submit { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.5rem; border-radius: 1rem; }
+.installer-submit > div { flex: 1 1 18rem; }
+.installer-submit p { margin-bottom: 0; }
+.installer-submit .button, .installer-complete .button { min-height: 44px; justify-content: center; }
+.installer-footer { margin-top: 2rem; padding-block: 1.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .8rem; text-align: center; }
+.installer-complete { max-width: 800px; margin: 2.5rem auto; padding: clamp(1.25rem, 4vw, 2.5rem); border-radius: 1rem; }
+.installer-complete h2 { font-size: 1.25rem; margin-top: 2rem; }
+.installer-next-steps { display: grid; gap: 1rem; padding-left: 1.5rem; }
+.installer-next-steps li { padding-left: .5rem; line-height: 1.7; }
+.installer-next-steps li::marker { color: var(--accent); font-weight: 600; }
+.installer-next-steps li code { display: inline-block; max-width: 100%; }
+.installer-shell :is(h1,h2,p,a,strong,legend) { overflow-wrap: anywhere; }
+@media(max-width: 800px) {
+ .installer-layout { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+ .installer-index { position: static; }
+ .installer-index ol { display: flex; flex-wrap: wrap; gap: .25rem .5rem; }
+ .installer-index a { font-size: .85rem; }
+ .installer-index > .small { display: none; }
+}
+@media(max-width: 520px) {
+ .installer-fields { grid-template-columns: minmax(0, 1fr); }
+ .installer-intro { padding-block: 1.5rem; }
+ .installer-section-heading { flex-wrap: wrap; }
+ .installer-submit .button { width: 100%; }
+ .installer-index a { padding: .5rem .25rem; gap: .4rem; }
+}
+
+.installer-brand .brand-mark { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: .6rem; background: var(--accent); color: var(--on-accent); }
+/* A progressive wizard: without scripts every section remains available. */
+.installer-shell [hidden] { display: none !important; }
+.installer-shell { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.installer-section { box-shadow: 0 8px 32px rgb(0 0 0 / .04); }
+.installer-section:focus { outline: none; }
+.installer-section h2 { margin-top: 0; font-size: 1.35rem; letter-spacing: -.025em; }
+.installer-index a[aria-current="step"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.installer-index a[aria-current="step"]::before { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.installer-index > p a { display: inline; padding: 0; color: var(--accent); }
+.installer-index > p a::before { content: none; }
+.installer-welcome { padding: 1.25rem; border-radius: .8rem; background: var(--raised); margin-block: 1.5rem; }
+.installer-welcome ul { padding-left: 1.25rem; margin-bottom: 0; line-height: 1.8; }
+.installer-requirements summary, .installer-advanced summary { cursor: pointer; padding-block: .8rem; font-weight: 600; }
+.installer-advanced { margin-block: 1.5rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.installer-step-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; }
+.installer-step-actions .button { min-height: 44px; }
+.installer-review { margin-block: 1.5rem; }
+.installer-review > div { display: grid; grid-template-columns: 9rem minmax(0,1fr); gap: 1rem; border-bottom: 1px solid var(--border); padding-block: .8rem; }
+.installer-review dt { color: var(--muted); }
+.installer-review dd { margin: 0; overflow-wrap: anywhere; }
+.installer-next-steps h2 { margin-top: 0; }
+.installer-copy { display: grid; gap: .65rem; margin-block: 1rem; }
+.installer-copy :is(input,textarea) { width: 100%; font-family: ui-monospace, monospace; font-size: .85rem; min-height: 44px; padding: .85rem; border: 1px solid var(--border); border-radius: .65rem; background: var(--raised); color: var(--text); resize: vertical; }
+.installer-copy .button { justify-self: start; }
+@media(max-width:520px) { .installer-step-actions { flex-wrap: wrap; } .installer-step-actions > span { font-size: .75rem; } .installer-review > div { grid-template-columns: 1fr; gap: .3rem; } }

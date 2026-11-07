@@ -1,0 +1,701 @@
+/*
+ * SEOcc: GitHub (Primer) style, 0.31. Loaded after app.css and workspace-ui.css,
+ * before any white-label stylesheet. Replaces the native layer (large radii, blur,
+ * tinted gradients, coloured top edges) with Primer's dark-default and light palettes,
+ * GitHub's system font stack, 6px radii, 1px borders and flat surfaces. Top-level cards
+ * read as Primer Boxes with a subtle header strip; the sidebar is a Primer NavList.
+ * Dark is the default, light via html[data-theme="light"]. Text keeps 4.5:1 and input
+ * boundaries 3:1 (AccessibilityTest, CODING_STANDARDS).
+ */
+:root {
+    color-scheme: dark;
+    --bg: #0d1117;
+    --surface: #0d1117;
+    --surface-2: #151b23;
+    --raised: #212830;
+    --text: #f0f6fc;
+    --muted: #9198a1;
+    --border: #3d444d;
+    --row-border: #2a3038;
+    --input-border: #6e7681;
+    --accent: #4493f8;
+    --accent-strong: #4493f8;
+    --accent-soft: rgba(56, 139, 253, 0.15);
+    --on-accent: #ffffff;
+    --link: #4493f8;
+    --positive: #3fb950;
+    --positive-soft: rgba(46, 160, 67, 0.15);
+    --negative: #db6d28;
+    --negative-soft: rgba(219, 109, 40, 0.15);
+    --warning: #d29922;
+    --warning-soft: rgba(187, 128, 9, 0.15);
+    --danger: #f85149;
+    --danger-soft: rgba(248, 81, 73, 0.15);
+    --danger-fill: #da3633;
+    --on-danger: #ffffff;
+    --chip: rgba(101, 108, 118, 0.2);
+    --bar: #3d444d;
+    --chart-2: #ab7df8;
+    --shadow: none;
+    --overlay: rgba(1, 4, 9, 0.7);
+
+    --btn-primary: #238636;
+    --btn-primary-hover: #1c7a32;
+    --btn-primary-border: rgba(240, 246, 252, 0.1);
+    --btn-bg: #212830;
+    --btn-hover: #262c36;
+    --underline-active: #f78166;
+    --nav-indicator: #1f6feb;
+    --header-bg: #010409;
+    --floating-shadow: 0 0 0 1px #3d444d, 0 6px 12px -3px rgba(1, 4, 9, 0.4), 0 6px 18px rgba(1, 4, 9, 0.4);
+
+    --side-bg: #010409;
+    --side-text: #f0f6fc;
+    --side-muted: #9198a1;
+    --side-border: #3d444d;
+    --side-raised: rgba(101, 108, 118, 0.2);
+    --side-active: rgba(101, 108, 118, 0.2);
+    --side-active-text: #f0f6fc;
+
+    --tone-blue: #4493f8;
+    --tone-violet: #ab7df8;
+    --tone-teal: #39c5cf;
+    --tone-amber: #d29922;
+    --tone-coral: #f85149;
+    --tone-green: #3fb950;
+    --tone-sky: #79c0ff;
+    --tone-slate: #9198a1;
+
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --radius: 6px;
+    --radius-sm: 6px;
+    --box-pad: 16px;
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f6f8fa;
+    --raised: #eff2f5;
+    --text: #1f2328;
+    --muted: #59636e;
+    --border: #d1d9e0;
+    --row-border: #d1d9e0b3;
+    --input-border: #818b98;
+    --accent: #0969da;
+    --accent-strong: #0969da;
+    --accent-soft: #ddf4ff;
+    --on-accent: #ffffff;
+    --link: #0969da;
+    --positive: #1a7f37;
+    --positive-soft: #dafbe1;
+    --negative: #bc4c00;
+    --negative-soft: #fff1e5;
+    --warning: #9a6700;
+    --warning-soft: #fff8c5;
+    --danger: #d1242f;
+    --danger-soft: #ffebe9;
+    --danger-fill: #cf222e;
+    --on-danger: #ffffff;
+    --chip: rgba(129, 139, 152, 0.15);
+    --bar: #d1d9e0;
+    --chart-2: #8250df;
+    --overlay: rgba(31, 35, 40, 0.5);
+
+    --btn-primary: #1f883d;
+    --btn-primary-hover: #1c8139;
+    --btn-primary-border: rgba(31, 35, 40, 0.15);
+    --btn-bg: #f6f8fa;
+    --btn-hover: #eff2f5;
+    --underline-active: #fd8c73;
+    --nav-indicator: #0969da;
+    --header-bg: #f6f8fa;
+    --floating-shadow: 0 0 0 1px #d1d9e0, 0 6px 12px -3px rgba(37, 41, 46, 0.04), 0 6px 18px rgba(37, 41, 46, 0.12);
+
+    --side-bg: #f6f8fa;
+    --side-text: #1f2328;
+    --side-muted: #59636e;
+    --side-border: #d1d9e0;
+    --side-raised: rgba(129, 139, 152, 0.15);
+    --side-active: rgba(129, 139, 152, 0.15);
+    --side-active-text: #1f2328;
+
+    --tone-blue: #0969da;
+    --tone-violet: #8250df;
+    --tone-teal: #0f766e;
+    --tone-amber: #9a6700;
+    --tone-coral: #cf222e;
+    --tone-green: #1a7f37;
+    --tone-sky: #0550ae;
+    --tone-slate: #59636e;
+}
+@media print { :root, :root[data-theme] { --tone-violet: #8250df; --tone-teal: #0f766e; --tone-amber: #9a6700; --tone-coral: #cf222e; --tone-green: #1a7f37; --tone-sky: #0550ae; --tone-slate: #59636e; } }
+
+/* ---- Base ------------------------------------------------------------------- */
+body { font: 14px/1.5 var(--font); font-optical-sizing: auto; }
+body * { letter-spacing: normal !important; }
+input, select, textarea, button { font-family: var(--font); }
+h1 { font-size: 1.5rem; font-weight: 600; }
+h2 { font-size: 1rem; font-weight: 600; }
+h3 { font-size: .875rem; font-weight: 600; }
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link); text-decoration: underline; text-underline-offset: .2rem; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; box-shadow: none; }
+::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+code { border-radius: var(--radius); background: var(--chip); font-size: 85%; }
+* { scrollbar-color: var(--border) transparent; }
+
+/* ---- Shell: GitHub header strip and a NavList sidebar ------------------------ */
+.sidebar { background: var(--side-bg); padding: 1rem .5rem; gap: 2px; }
+.brand { padding: .25rem .5rem 1rem; gap: .5rem; font-size: .875rem; font-weight: 600; color: var(--side-text); }
+.brand:hover { text-decoration: none; color: var(--side-text); }
+.brand .logo-mark, .brand-initial { width: 32px; height: 32px; }
+.workspace-name, .workspace-switch select { min-height: 32px; border-radius: var(--radius); background: var(--btn-bg); border: 1px solid var(--border); font-weight: 600; font-size: .875rem; }
+.workspace-name { padding: .25rem .5rem; }
+.workspace-name .avatar { width: 20px; height: 20px; font-size: .75rem; }
+.workspace-new { font-size: .75rem; margin-top: -.25rem; }
+.nav { gap: 0; }
+.nav ul { gap: 2px; }
+.nav a, .sidebar-section > summary { position: relative; min-height: 32px; padding: .375rem .5rem; border-radius: var(--radius); font-size: .875rem; color: var(--side-text); }
+.nav a .ic, .sidebar-section > summary .ic { width: 16px; height: 16px; color: var(--side-muted); }
+.nav a:hover { background: var(--side-raised); text-decoration: none; }
+.nav a[aria-current="page"] { background: var(--side-active); color: var(--side-active-text); font-weight: 600; }
+.nav a[aria-current="page"] .ic { color: var(--side-text); }
+.nav a[aria-current="page"]::after { content: ''; position: absolute; left: -.5rem; top: calc(50% - 12px); width: 4px; height: 24px; margin: 0; border-radius: var(--radius); background: var(--nav-indicator); }
+.nav-label { padding: 1rem .5rem .375rem; font-size: .75rem; font-weight: 600; text-transform: none; color: var(--side-muted); }
+.sidebar-section { margin-top: .5rem; padding-top: .5rem; }
+.sidebar-help a { min-height: 32px; font-size: .75rem; border-radius: var(--radius); }
+.sidebar-help a:hover { text-decoration: none; }
+.sidebar-user { padding-top: .75rem; }
+.avatar { background: var(--raised); box-shadow: 0 0 0 1px var(--border); font-weight: 600; }
+.sidebar-user-name:hover { text-decoration: none; color: var(--link); }
+
+.topbar { background: var(--header-bg); backdrop-filter: none; -webkit-backdrop-filter: none; min-height: 56px; height: auto; padding-block: .5rem; }
+.crumbs { font-size: .875rem; }
+.crumbs a { color: var(--text); }
+.crumbs a:hover { color: var(--link); }
+.crumbs [aria-current] { font-weight: 600; }
+.icon-button, .topbar .icon-button { width: 32px; height: 32px; min-height: 32px; border-radius: var(--radius); background: transparent; border: 1px solid var(--border); color: var(--muted); }
+.icon-button:hover { background: var(--btn-hover); color: var(--text); }
+.topbar-panel { border: 0; border-radius: 12px; box-shadow: var(--floating-shadow); background: var(--surface); }
+
+/* ---- Surfaces: flat Boxes, 1px borders, no gradients or coloured top edges ---- */
+:is(.card, .stat, .kpi, .summary-tile, .insight-metric, .timeline-stat, .brief-stat, .module-context, .settings-context, .sync-status, .portfolio-card, .portfolio-summary, .portfolio-summary-link, .portfolio-toolbar, .portfolio-traffic, .portfolio-empty, .project-navigation, .overview-analytics-summary, .insight-opportunity) {
+    border-radius: var(--radius) !important;
+    box-shadow: none !important;
+    background-image: none !important;
+}
+:is(.card, .stat, .kpi, .summary-tile, .timeline-stat, .brief-stat, .module-context, .settings-context, .portfolio-card, .portfolio-summary, .portfolio-summary-link, .overview-analytics-summary):not(.notice) {
+    border: 1px solid var(--border) !important;
+    background-color: var(--surface);
+}
+.opportunities-workspace .opportunity-state-grid .insight-metric { border: 1px solid var(--border) !important; background-color: var(--surface); }
+.opportunities-workspace .insight-opportunity { background-color: var(--surface); border-left-width: 1px; box-shadow: inset 2px 0 0 var(--priority-color, var(--finding-color)) !important; }
+.decision-overview .prognosis-card::before { display: none; }
+.portfolio-traffic, .portfolio-empty, .portfolio-shortcuts { background: var(--surface-2); border-radius: var(--radius); }
+.portfolio-avatar { background: var(--surface-2) !important; border-color: var(--border) !important; box-shadow: none !important; border-radius: var(--radius) !important; color: var(--text); }
+.portfolio-card:hover { transform: none !important; }
+.portfolio-action { border-radius: var(--radius); background: var(--btn-bg); border: 1px solid var(--border); color: var(--text); font-weight: 500; }
+.portfolio-action:hover { background: var(--btn-hover); text-decoration: none; }
+.portfolio-summary-icon, .summary-tile-icon, .portfolio-empty-icon { border-radius: var(--radius); background: transparent !important; }
+:is(.portfolio-shortcuts a, .portfolio-source, .portfolio-change) { border-radius: var(--radius); }
+.portfolio-summary strong, .portfolio-traffic-value > strong, .dashboard-hero h1 { font-weight: 600; }
+.dashboard-hero h1 { font-size: 1.5rem; }
+
+/* Signature: a top-level card that opens with a header becomes a Primer Box with a header strip. */
+main.content .card:has(> .card-header:first-child) { padding: var(--box-pad) !important; overflow: clip; }
+main.content .card > .card-header:first-child {
+    margin: calc(var(--box-pad) * -1) calc(var(--box-pad) * -1) var(--box-pad);
+    padding: .75rem var(--box-pad);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+}
+main.content .card > .card-header:first-child :is(h2, h3) { font-size: .875rem; font-weight: 600; }
+
+/* Section labels: Primer keeps them sentence case and quiet. */
+:is(.integration-kicker, .portfolio-eyebrow, .project-nav-group > summary) { text-transform: none; font-size: .75rem; font-weight: 600; color: var(--muted); }
+main.content :is(.integration-kicker, .portfolio-eyebrow):not(:where(.summary-tile *, .insight-metric *, .stat *)) { color: var(--muted); }
+main.content :is(.card-header, .section-header) .integration-kicker::before { display: none; }
+
+/* Tables: Primer data tables. */
+.table { border-collapse: separate; border-spacing: 0; }
+main.content .table thead th { background: var(--surface-2); border-bottom: 1px solid var(--border); color: var(--muted); font-size: .75rem; font-weight: 600; text-transform: none; }
+.table td, .table th { border-color: var(--row-border); }
+.table tbody tr:hover > * { background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
+
+/* ---- Controls ------------------------------------------------------------------ */
+.button { min-height: 32px; padding: 0 .75rem; border-radius: var(--radius); border: 1px solid var(--btn-primary-border); background: var(--btn-primary); color: #ffffff; font-size: .875rem; font-weight: 500; filter: none; }
+.button:hover { background: var(--btn-primary-hover); color: #ffffff; filter: none; text-decoration: none; }
+.button:active, .icon-button:active { transform: none; }
+.button-small { min-height: 28px; padding: 0 .5rem; font-size: .75rem; }
+.button-ghost { background: var(--btn-bg); border-color: var(--border); color: var(--text); }
+.button-ghost:hover { background: var(--btn-hover); border-color: var(--border); color: var(--text); }
+.button-danger { background: var(--btn-bg); border-color: var(--border); color: var(--danger); }
+.button-danger:hover { background: var(--danger-fill); border-color: var(--danger-fill); color: var(--on-danger); }
+.button[disabled] { opacity: .5; }
+input[type="text"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], input[type="search"], input[type="file"], input[id^="annotation-"], select, textarea { min-height: 32px; padding: .3125rem .75rem; border-radius: var(--radius); background: var(--bg); font-size: .875rem; }
+:is(input, select, textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+.portfolio-search input, .portfolio-sort select { min-height: 32px; border-radius: var(--radius); }
+.field label, fieldset.field legend { font-size: .875rem; font-weight: 600; }
+
+/* Filters: Primer segmented / outline buttons. */
+.chip { min-height: 28px; border-radius: var(--radius); background: var(--btn-bg); border-color: var(--border); color: var(--text); font-size: .75rem; font-weight: 500; }
+.chip:hover { background: var(--btn-hover); border-color: var(--border); text-decoration: none; }
+.chip[aria-current] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); font-weight: 600; }
+
+/* Labels and counters. */
+.badge { padding: 0 .4375rem; min-height: 20px; border: 1px solid var(--border); border-radius: 2em; background: transparent; color: var(--muted); font-size: .75rem; font-weight: 500; line-height: 18px; }
+.badge-ok { border-color: var(--positive); color: var(--positive); background: transparent; }
+.badge-error { border-color: var(--danger); color: var(--danger); background: transparent; }
+.badge-warning { border-color: var(--warning); color: var(--warning); background: transparent; }
+.badge-info { border-color: var(--border); color: var(--muted); }
+:where(.stat-delta, .kpi-note, .stat-note) :where(.delta-good, .delta-bad) { border-radius: 2em; padding: 0 .4375rem; font-weight: 500; }
+
+/* Flash notices. */
+.notice { border-radius: var(--radius); color: var(--text); }
+.notice-success { border-color: color-mix(in srgb, var(--positive) 40%, transparent); }
+.notice-error { border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+
+/* UnderlineNav: project, settings and generic tabs. */
+:is(.tabs, .project-primary-tabs, .settings-tabs) { gap: .5rem; border-bottom: 1px solid var(--border); }
+:is(.tabs, .project-primary-tabs, .settings-tabs) a { padding: .5rem; min-height: 48px; display: inline-flex; align-items: center; gap: .5rem; font-size: .875rem; font-weight: 400; color: var(--text); border-bottom: 2px solid transparent; }
+:is(.tabs, .project-primary-tabs, .settings-tabs) a .ic { width: 16px; height: 16px; color: var(--muted); }
+:is(.tabs, .project-primary-tabs, .settings-tabs) a:hover { text-decoration: none; color: var(--text); border-bottom-color: var(--border); }
+:is(.tabs, .project-primary-tabs, .settings-tabs) a[aria-current] { color: var(--text); border-bottom-color: var(--underline-active); font-weight: 600; }
+.settings-tabs a { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; }
+.settings-tabs a[aria-current], .settings-tabs a:hover { background: transparent; color: var(--text); }
+.settings-tabs a[aria-current] { border-bottom-color: var(--underline-active); }
+.settings-workspace h1, .page-header h1 { font-size: 1.5rem; line-height: 1.25; }
+
+@media (max-width: 60rem) {
+    .navigation-scrim { inset: 56px 0 0; }
+    .ui-ready .navigation-open .sidebar { inset: 56px auto 0 0; height: calc(100dvh - 56px); }
+}
+@media print {
+    :root, :root[data-theme] { --bg: #ffffff; --surface: #ffffff; --surface-2: #f6f8fa; --text: #1f2328; --muted: #59636e; --border: #d1d9e0; --link: #0969da; }
+}
+
+/* ---- Finish-review fixes ---------------------------------------------------------- */
+/* Box header strip also for cards that open with a plain heading. */
+main.content .card:has(> :is(h2, h3):first-child) { padding: var(--box-pad) !important; overflow: clip; }
+main.content .card > :is(h2, h3):first-child {
+    margin: calc(var(--box-pad) * -1) calc(var(--box-pad) * -1) var(--box-pad);
+    padding: .75rem var(--box-pad);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-size: .875rem; font-weight: 600;
+}
+/* Danger zone: red frame and header, like GitHub's repository settings. */
+main.content .card.danger-zone { border-color: color-mix(in srgb, var(--danger) 60%, var(--border)) !important; }
+main.content .card.danger-zone > :is(h2, h3):first-child { color: var(--danger); border-bottom-color: color-mix(in srgb, var(--danger) 40%, var(--border)); }
+/* A table that is the whole body of a Box sits flush, without a second frame. */
+main.content .card > .table-scroll:last-child { max-width: none; margin: calc(var(--box-pad) * -1) calc(var(--box-pad) * -1); border: 0; border-radius: 0; }
+main.content .card > :is(h2, h3, .card-header):first-child + .table-scroll:last-child { margin-top: calc(var(--box-pad) * -1); }
+
+/* Kickers are not part of Primer: drop them where the heading already says it. */
+.dashboard-hero .portfolio-eyebrow, .settings-context .portfolio-eyebrow, main.content .card-header .integration-kicker:not(:has(*)) { display: none; }
+
+/* Search fields with a leading icon. */
+.portfolio-search input { padding-left: 2rem; }
+.portfolio-search > .ic { left: .5rem; width: 16px; height: 16px; }
+
+/* Header notice as a Primer Flash, not a pill. */
+.header-notice { border-radius: var(--radius); border-color: color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-soft); }
+:is(.header-notice-icon, .header-notice-link, .header-notice-close) { border-radius: var(--radius); }
+
+/* Section menus sit on the tab underline as invisible buttons, not in a second frame. */
+.project-navigation { border: 0; background: transparent !important; padding: 0; }
+.project-nav-group > summary { border-radius: var(--radius); color: var(--text); }
+.project-nav-group > summary:hover { background: var(--btn-hover); }
+
+/* Primer progress bars are green. */
+:is(progress, .quest-progress, .progress) { accent-color: var(--positive); }
+
+/* Compact selects in box headers. */
+main.content .card-header select { min-height: 32px; padding-block: .25rem; }
+
+/* ---- All pages: one Primer vocabulary (0.31 polish) ------------------------------ */
+/* One corner radius for every panel, filter bar, menu item and control. */
+:is(.table-toolbar, .filter-form, .brief-filter, .indexing-request, .opportunity-filters, .timeline-filter, .timeline-empty, .connection, .performance-toolbar, .page-monitoring-picks, .module-context, .settings-context, .research-intro, .insight-intro, .setup-requirements, .brief-list-item, .annotation-body, .portfolio-toolbar, .sync-status, .insight-coverage),
+:is(.filter-row .chip, .opportunity-filters :is(select, input), .project-nav-links a, .performance-outline a, .research-shortcuts a, .insight-segments :is(a, button), .module-tabs a),
+:is(progress, .settings-workspace .connection) { border-radius: var(--radius) !important; }
+.timeline-empty { border-style: dashed; }
+input:is([type="date"], [type="month"], [type="time"], [type="tel"], [type="datetime-local"], [type="week"]) { min-height: 32px; padding: .3125rem .75rem; border: 1px solid var(--input-border); border-radius: var(--radius); background: var(--bg); color: var(--text); font: inherit; font-size: .875rem; }
+fieldset.page-monitoring-picks { border-width: 1px; }
+
+/* Side stripes become full 1px frames; priority and kind are carried by their Labels. */
+:is(.overview-action-list, .overview-finding-list) > li[class*="priority-band-"] { padding-left: 0; }
+:is(.overview-action-list, .overview-finding-list) > li[class*="priority-band-"]::before,
+.overview-workspace .stat::before { display: none; }
+.opportunities-workspace .insight-opportunity { box-shadow: none !important; }
+:is(.opportunities-workspace .insight-opportunity, .improve-workspace .brief-list-item, .annotation-body) { border: 1px solid var(--border) !important; }
+.annotation-entry { border-left-width: 1px; border-left-color: var(--border); }
+/* Setup notes read as a Primer Flash. */
+.setup-requirements { border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-soft); }
+
+/* Kickers above headings are dropped everywhere; the heading carries the section. */
+:is(.portfolio-eyebrow, .integration-kicker, .eyebrow):has(+ :is(h1, h2, h3)) { display: none; }
+/* Overview section dividers: Primer Subhead (sentence case, full-width rule). */
+.overview-section-title { color: var(--text); font-size: 1rem; font-weight: 600; text-transform: none; margin-top: 1rem; }
+.priority-legend-caption { text-transform: none; font-size: .75rem; }
+.priority-legend li { border-radius: 2em; }
+
+/* Module and section navigation: UnderlineNav, not pill rows. */
+.module-context { background: transparent !important; border: 0 !important; padding: 0 !important; }
+.module-tabs { gap: .5rem; border-bottom: 1px solid var(--border); flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.module-tabs a { min-height: 40px; padding: .5rem; border: 0 !important; border-bottom: 2px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--text) !important; font-size: .875rem; font-weight: 400; white-space: nowrap; }
+.module-tabs a:hover { border-bottom-color: var(--border) !important; text-decoration: none; }
+.module-tabs a[aria-current] { border-bottom-color: var(--underline-active) !important; font-weight: 600; }
+.module-context .module-tabs { margin-left: 0; width: 100%; }
+/* In-page jump links and shortcuts: Primer invisible buttons. */
+:is(.performance-outline, .insight-segments, .research-shortcuts) :is(a, button) { min-height: 32px; padding: .25rem .75rem; border: 1px solid transparent; background: transparent; color: var(--text); font-size: .875rem; font-weight: 500; }
+:is(.performance-outline, .insight-segments, .research-shortcuts) :is(a, button):hover { background: var(--btn-hover); color: var(--text); text-decoration: none; }
+:is(.performance-outline, .insight-segments, .research-shortcuts) :is(a, button)[aria-current] { background: var(--btn-bg); border-color: var(--border); }
+.research-shortcuts a { border-color: var(--border); background: var(--btn-bg); }
+/* SegmentedControl: neutral track, the selected segment raised on the canvas. */
+.segmented { padding: 2px; gap: 2px; border: 0; border-radius: var(--radius); background: var(--raised); }
+.segmented a { min-height: 28px; padding: 0 .75rem; border-radius: var(--radius); color: var(--text); font-size: .875rem; font-weight: 400; }
+.segmented a:hover { background: var(--btn-hover); text-decoration: none; }
+.segmented a[aria-current] { background: var(--bg); box-shadow: 0 0 0 1px var(--input-border); font-weight: 600; }
+/* Section menus open as a Primer ActionMenu overlay. */
+.project-nav-links { border: 0 !important; border-radius: 12px !important; background: var(--surface) !important; box-shadow: var(--floating-shadow) !important; padding: .5rem !important; }
+.project-nav-links a { min-height: 32px; padding: .375rem .5rem; color: var(--text); font-size: .875rem; }
+.project-nav-links a:hover, .project-nav-links a[aria-current] { background: var(--side-active); text-decoration: none; }
+.project-nav-links a[aria-current] { font-weight: 600; }
+
+/* ProgressBar: 8px track, neutral rail. */
+progress { height: 8px; border: 0; }
+progress::-webkit-progress-bar { background: var(--raised) !important; border-radius: var(--radius) !important; }
+progress::-webkit-progress-value { border-radius: var(--radius) !important; }
+progress::-moz-progress-bar { border-radius: var(--radius) !important; }
+
+/* Charts: hairline grid, as in GitHub Insights. */
+main.content svg :is(.grid, .gridline, .chart-grid) line, main.content svg line.grid { stroke: var(--row-border); }
+main.content :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), select, textarea) { border-radius: var(--radius) !important; border-width: 1px !important; }
+.project-nav-group > summary { box-shadow: none !important; }
+.notice { border-radius: var(--radius) !important; }
+.insight-segments { border-radius: var(--radius) !important; }
+.insight-segments .chip { box-shadow: none !important; }
+:is(.improve-shortcuts, .opportunity-shortcuts) a { min-height: 32px; padding: .25rem .75rem; border: 1px solid var(--border); border-radius: var(--radius) !important; background: var(--btn-bg); color: var(--text); font-size: .875rem; font-weight: 500; }
+:is(.improve-shortcuts, .opportunity-shortcuts) a:hover { background: var(--btn-hover); text-decoration: none; }
+section.module-context:not(.notice) { border: 0 !important; }
+/* A kicker that carries a status (Quest Log) stays, shown as a quiet line with its Label. */
+.integration-kicker:has(*):has(+ :is(h1, h2, h3)) { display: block; color: var(--muted); }
+
+/* ---- Audit fixes (0.31) ------------------------------------------------------------- */
+:root { --on-accent: #0d1117; --btn-danger-text: #ff7b72; }
+:root[data-theme="light"] { --on-accent: #ffffff; --btn-danger-text: #d1242f; }
+.button-danger { color: var(--btn-danger-text); }
+.header-notice-icon { color: var(--text); }
+/* Guide sub-headings keep box-title size after moving to h2 for a correct outline. */
+:is(.setup-guide-aside, .setup-demo, .setup-requirements) h2, .portfolio-card-identity h2 { font-size: .875rem; font-weight: 600; margin-bottom: .5rem; }
+.portfolio-card-identity h2 { font-size: 1rem; margin-bottom: .25rem; }
+/* WCAG 2.2 target size: standalone links and disclosures are at least 24px tall. */
+:is(.sidebar-user-name, .setup-step-links a, .quest-details-link, .overview-action-link, main.content a.small) { display: inline-flex; align-items: center; min-height: 24px; }
+main.content details > summary { min-height: 24px; }
+main.content input[type="file"] { min-height: 32px !important; padding: .25rem; border: 1px solid var(--input-border); border-radius: var(--radius); background: var(--bg); }
+/* Current item in a section menu: text colour on the grey selection, check in link blue. */
+.project-nav-links a[aria-current] { color: var(--text); }
+.project-nav-links a[aria-current] .project-nav-check { color: var(--text); }
+/* Change kinds are Primer Labels: a coloured ring and text, no tint behind (4.5:1 in both themes). */
+.annotation-kind { padding: 0 .4375rem; border: 1px solid var(--kind-color, var(--border)); border-radius: 2em; background: transparent; color: var(--kind-color, var(--muted)); font-size: .75rem; font-weight: 500; line-height: 18px; }
+/* Breadcrumbs and filter resets reach the 24px target height. */
+.crumbs a { display: inline-block; padding-block: 2px; }
+main.content :is(.actions, .brief-filter, .table-toolbar, .filter-form) > a:not(.button) { display: inline-flex; align-items: center; min-height: 32px; padding-inline: .5rem; border-radius: var(--radius); }
+main.content :is(.actions, .brief-filter, .table-toolbar, .filter-form) > a:not(.button):hover { background: var(--btn-hover); text-decoration: none; }
+/* .button-secondary had no style of its own (it rendered green); it is a Primer default button. */
+.button-secondary { background: var(--btn-bg); border-color: var(--border); color: var(--text); }
+.button-secondary:hover { background: var(--btn-hover); border-color: var(--border); color: var(--text); }
+/* Inputs without a type attribute are text inputs; style them like the rest. */
+input:not([type]) { width: 100%; min-height: 32px; padding: .3125rem .75rem; border: 1px solid var(--input-border); border-radius: var(--radius); background: var(--bg); color: var(--text); font: inherit; font-size: .875rem; }
+input:not([type]):focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+/* Consecutive forms in one box keep a gap, so a submit button never touches the next label. */
+/* Only stacked forms: inline forms sit side by side in action rows and must keep a shared top edge. */
+main.content :is(.card, section, details, .stack, .manage-workspace) > form:not(.inline-form) + form:not(.inline-form) { margin-top: 1rem; }
+main.content .inline-form + .inline-form { margin-top: 0; }
+
+/* ---- Layout without holes (0.31) --------------------------------------------------- */
+/* Every titled card gets the same Box header strip, including titles that carry a help
+   button (section-help.js wraps those in .section-heading). The strip rounds its own top
+   corners instead of clipping the card, so help popovers and menus are never cut off. */
+main.content .card:has(> :is(.card-header, .section-heading, h2, h3):first-child) { padding: var(--box-pad) !important; overflow: visible; }
+main.content .card > :is(.card-header, .section-heading, h2, h3):first-child {
+    margin: calc(var(--box-pad) * -1) calc(var(--box-pad) * -1) var(--box-pad);
+    padding: .5rem var(--box-pad);
+    min-height: 44px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+}
+main.content .card > .section-heading:first-child { display: flex; align-items: center; gap: .5rem; }
+main.content .card > .section-heading:first-child h2 { margin: 0; font-size: .875rem; font-weight: 600; }
+main.content .card > :is(h2, h3):first-child { display: flex; align-items: center; }
+main.content .card > .section-heading .section-help > summary { width: 24px; height: 24px; min-width: 24px; min-height: 24px; font-size: .75rem; }
+
+/* Settings, account, reports and project settings: cards pack into balanced columns
+   (top to bottom, then across) instead of rows that wait for their tallest card.
+   Headers, notices, navigation and wide cards (tables, grids) span every column. */
+:is(.content.page-columns, .content.page-columns > .manage-workspace) { display: block; columns: 3 30rem; column-gap: 1.25rem; }
+:is(.content.page-columns, .content.page-columns > .manage-workspace) > * { column-span: all; margin: 0 0 1.25rem; }
+:is(.content.page-columns, .content.page-columns > .manage-workspace) > .card:not(:has(table, .table-scroll, .integration-grid, .card-grid, .settings-summary)) { column-span: none; display: block; break-inside: avoid; }
+:is(.content.page-columns, .content.page-columns > .manage-workspace) > details.card:not(:has(table, .table-scroll, .integration-grid, .card-grid, .settings-summary)) { display: block; }
+.content.page-columns > .manage-workspace { margin-bottom: 0; }
+
+/* Integration cards pack the same way. */
+.integration-grid { display: block !important; columns: 4 18rem; column-gap: 1.25rem; }
+.integration-grid > * { break-inside: avoid; margin: 0 0 1.25rem !important; display: block; }
+
+/* Overview "Why it changed": two cards use two tracks, never a third empty one. */
+@media (min-width: 75rem) {
+    .overview-section-grid.is-why:not(:has(> :nth-child(3))) { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+}
+
+/* ---- Setup guides: one reading column, a numbered timeline, help tiles after the steps ---- */
+.setup-guide-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; padding: var(--box-pad) !important; }
+.setup-intro { max-width: 110ch; }
+.setup-requirements { max-width: 80ch; padding: .75rem 1rem; margin: 1rem 0 1.5rem; }
+.setup-requirements h2 { margin: 0 0 .25rem; }
+.setup-requirements ul { margin: 0; padding-left: 1.25rem; }
+.setup-steps { list-style: none; margin: 0; padding: 0; counter-reset: setup-step; }
+.setup-steps > li { counter-increment: setup-step; position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; column-gap: 1.5rem; margin: 0; padding: 0 0 1.5rem 2.75rem; border: 0; }
+.setup-steps > li:last-child { padding-bottom: 0; }
+.setup-steps > li::before { content: counter(setup-step); position: absolute; left: 0; top: -.125rem; display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface-2); color: var(--text); font-size: .875rem; font-weight: 600; }
+.setup-steps > li:not(:last-child)::after { content: ''; position: absolute; left: 13px; top: 30px; bottom: .25rem; width: 2px; background: var(--border); }
+.setup-steps > li > * { grid-column: 1; max-width: 110ch; }
+.setup-steps strong { margin-bottom: .25rem; font-size: .875rem; font-weight: 600; }
+.setup-steps p { line-height: 1.6; }
+.setup-note { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); }
+.setup-step-links { gap: .25rem 1rem; }
+.setup-screenshot { margin: .75rem 0 0; }
+.setup-screenshot > a { border-radius: var(--radius); }
+.setup-screenshot img { max-height: 20rem; width: auto; }
+.setup-screenshot figcaption { max-width: 60ch; }
+.setup-guide-aside { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; padding: 0 !important; border: 0 !important; background: transparent !important; }
+.setup-guide-tile { min-width: 0; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); }
+.setup-guide-tile h2 { margin: 0 0 .5rem; }
+.setup-guide-tile p, .setup-guide-tile ul { margin: 0 0 .5rem; }
+.setup-guide-tile > :last-child { margin-bottom: 0; }
+.setup-guide-tile ul { padding-left: 1.15rem; }
+.setup-guide-tile.setup-demo { margin: 0; border-block: 1px solid var(--border); }
+.setup-guide > summary { padding: .75rem var(--box-pad); background: var(--surface-2); font-size: .875rem; }
+.setup-guide[open] > summary { border-bottom: 1px solid var(--border); }
+/* A card with no card beside it (headers or wide content on both sides) takes the full width
+   instead of sitting alone in the first column. */
+:is(.content.page-columns, .content.page-columns > .manage-workspace) > .card:not(.card + .card):not(:has(+ .card)) { column-span: all; }
+/* Setup guides are documents: always full width, never packed into a column. */
+:is(.content.page-columns, .content.page-columns > .manage-workspace) > .setup-guide { column-span: all !important; }
+@media (min-width: 90rem) {
+    /* Wide screens: the help tiles become a sticky rail beside the steps, like a docs sidebar. */
+    .setup-guide { overflow: visible !important; }
+    .setup-guide-body { grid-template-columns: minmax(0, 1fr) 20rem; column-gap: 2rem; }
+    .setup-guide-aside { grid-template-columns: minmax(0, 1fr); position: sticky; top: 72px; max-height: calc(100vh - 88px); overflow-y: auto; align-self: start; }
+}
+/* The older grid layout zeroed card margins; in packed columns the margin is the gap. */
+:is(.content.page-columns, .content.page-columns > .manage-workspace) > :is(.card, .setup-guide, details).card { margin: 0 0 1.25rem !important; }
+/* A short side column beside a long one follows the reader instead of leaving a hole. */
+@media (min-width: 75rem) {
+    .overview-section-grid.is-why:not(:has(> :nth-child(3))) > .overview-evidence-stack:last-child { position: sticky; top: 72px; }
+    .timeline-layout > .timeline-aside { position: sticky; top: 72px; align-self: start; }
+}
+
+/* ---- One control height (0.31) ----------------------------------------------------- */
+/* The native layer forced 44px on many buttons while fields were 32px, so filter rows did not
+   line up and small labels sat in tall boxes. One scale for everything: 32px controls, 28px
+   small buttons; 40/36px on touch screens. */
+:root { --control-h: 32px; --control-h-sm: 28px; }
+@media (pointer: coarse) { :root { --control-h: 40px; --control-h-sm: 36px; } }
+main.content :is(.button, input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"]), select) { min-height: var(--control-h) !important; }
+main.content .button { height: auto; padding-block: 0; line-height: 1.25; }
+main.content .button-small { min-height: var(--control-h-sm) !important; }
+main.content .chip { min-height: var(--control-h-sm) !important; padding-block: 0 !important; }
+/* A small button inside a form that has fields matches the field height, so they line up. */
+main.content :is(form, .filter-row):has(:is(input:not([type="hidden"], [type="checkbox"], [type="radio"]), select)) .button-small { min-height: var(--control-h) !important; }
+/* Filter and request rows align controls on their bottom edge (labels sit above the fields). */
+main.content :is(.indexing-request, .inline-form, .filter-form, .brief-filter, .table-toolbar) { align-items: flex-end; }
+main.content .inline-form:not(:has(label:not(.visually-hidden))) { align-items: center; }
+/* Buttons take the width of their label, not of the form; phones keep full-width actions where a page asks for them. */
+@media (min-width: 40rem) {
+    main.content :is(.stack, form, .form, .field, .card) > :is(.button, button.button, input[type="submit"]) { justify-self: start; width: auto; max-width: 100%; }
+    main.content :is(.stack, .card) > :is(.button, button.button, input[type="submit"]) { align-self: flex-start; }
+}
+main.content :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"]), select) { height: var(--control-h); padding-block: 0 !important; }
+/* Filter grids: the actions cell lines its buttons up with the fields' bottom edge. */
+main.content :is(.task-filter-grid, .insight-filter-form, .opportunity-filters) { align-items: end; }
+main.content :is(.task-filter-grid, .insight-filter-form, .opportunity-filters) > .actions { align-self: end; }
+/* Filter bars submit with a default button; green stays for the action that changes something. */
+main.content :is(.table-toolbar, .filter-form, .brief-filter, .task-filter-grid, .insight-filter-form, .timeline-filter, form[method="get"]) .button:not(.button-danger, .button-primary) { background: var(--btn-bg); border-color: var(--border); color: var(--text); }
+main.content :is(.table-toolbar, .filter-form, .brief-filter, .task-filter-grid, .insight-filter-form, .timeline-filter, form[method="get"]) .button:not(.button-danger, .button-primary):hover { background: var(--btn-hover); }
+/* Fields inside an inline form size to their content, so the submit button stays on the same row. */
+main.content .inline-form :is(select, input:not([type="checkbox"], [type="radio"], [type="hidden"])) { width: auto; max-width: min(100%, 12rem); }
+main.content .inline-form { flex-wrap: wrap; gap: .5rem; }
+@media (min-width: 60rem) { main.content .sync-row > .inline-form { flex: 0 0 auto; flex-wrap: nowrap; } }
+
+/* ---- Data tables (table-controls.js, 0.31) ----------------------------------------- */
+/* Toolbar: one quiet row above the table, filter left, count and page size right. */
+.data-table-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin: 0 0 .75rem; }
+.data-table-search { position: relative; display: flex; align-items: center; flex: 0 1 20rem; min-width: min(100%, 12rem); }
+.data-table-search input { width: 100%; padding-left: 2rem !important; }
+.data-table-search-icon { position: absolute; left: .625rem; width: 16px; height: 16px; fill: var(--muted); pointer-events: none; }
+.data-table-count { margin-right: auto; color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; }
+.data-table-search + .data-table-count { margin-left: .25rem; }
+.data-table-size { color: var(--muted); font-size: .75rem; font-weight: 400; }
+.data-table-bar select { width: auto; min-width: 4.5rem; }
+/* With a pager the table shows a page at a time, so it no longer scrolls inside a fixed box. */
+.table-scroll.has-pager { max-height: none !important; overflow-y: visible !important; }
+/* Sortable headers: the whole header is the button; the arrow lights up for the active column. */
+table.data-table th[aria-sort] { padding: 0 !important; }
+table.data-table th[aria-sort] .table-sort { display: inline-flex; align-items: center; gap: .25rem; width: 100%; min-height: 32px; padding: .375rem .75rem; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 600; text-align: inherit; cursor: pointer; }
+table.data-table th.num[aria-sort] .table-sort, table.data-table th[aria-sort][class*="num"] .table-sort { justify-content: flex-end; }
+table.data-table th[aria-sort] .table-sort:hover { color: var(--text); background: var(--btn-hover); }
+table.data-table th[aria-sort] .table-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.table-sort-icon { width: 12px; height: 12px; flex-shrink: 0; fill: currentColor; opacity: .35; }
+table.data-table th[aria-sort="ascending"] .table-sort-icon path:last-child, table.data-table th[aria-sort="descending"] .table-sort-icon path:first-child { opacity: 0; }
+table.data-table th:is([aria-sort="ascending"], [aria-sort="descending"]) { color: var(--text); }
+table.data-table th:is([aria-sort="ascending"], [aria-sort="descending"]) .table-sort-icon { opacity: 1; color: var(--accent); }
+.data-table-empty td { padding: 1.5rem 1rem !important; color: var(--muted); text-align: center !important; }
+/* Pager: Primer pagination, centred under the table. */
+.data-table-pager { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .25rem; margin-top: .75rem; }
+.data-table-pager[hidden] { display: none; }
+.data-table-page { min-width: 32px; min-height: 32px; padding: 0 .625rem; border: 1px solid transparent; border-radius: var(--radius); background: transparent; color: var(--text); font: inherit; font-size: .875rem; font-variant-numeric: tabular-nums; cursor: pointer; }
+.data-table-page:hover:not(:disabled) { border-color: var(--border); }
+.data-table-page[aria-current="page"] { background: var(--accent-emphasis, var(--nav-indicator)); border-color: transparent; color: #ffffff; font-weight: 600; }
+.data-table-page.is-edge { color: var(--link); }
+.data-table-page:disabled { color: var(--muted); cursor: default; opacity: .6; }
+.data-table-gap { padding: 0 .25rem; color: var(--muted); }
+@media (pointer: coarse) { .data-table-page { min-width: 40px; min-height: 40px; } }
+
+/* Server pagination (Previous / Page n of m / Next) shares the same look on every list page. */
+main.content nav.pagination { justify-content: center; gap: .5rem; margin-top: 1rem; padding-top: .75rem; border-top: 1px solid var(--row-border); }
+main.content nav.pagination > span { color: var(--muted); font-size: .75rem; }
+main.content nav.pagination > :is(a, span[aria-current], strong) { min-height: var(--control-h-sm); }
+/* Tables with controls never scroll inside a fixed-height box; paging keeps them short. */
+.table-scroll:has(> table.data-table) { max-height: none !important; overflow-y: visible !important; }
+/* Long plain lists inside a disclosure (for example data coverage) read as columns, not one long run. */
+main.content details > ul:has(> li:nth-child(12)) { columns: 3 16rem; column-gap: 2rem; }
+main.content details > ul:has(> li:nth-child(12)) > li { break-inside: avoid; }
+
+/* ---- Charts: one Primer style in every module ---------------------------------------- */
+.chart .grid, :is(.performance-trend-panel, .research-workspace) .chart .grid { stroke: var(--row-border); stroke-width: 1; stroke-dasharray: none; }
+.chart .tick { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+.chart .line { stroke-width: 2; }
+.chart .area, :is(.performance-trend-panel, .research-workspace) .chart .area { opacity: .08; }
+.chart .marker { stroke: var(--bg); stroke-width: 2; }
+.chart .crosshair { stroke: var(--input-border); stroke-dasharray: 2 3; }
+/* The figures above a chart are a stat strip: label over value, a rule under it, no box. */
+main.content .chart-summary { display: flex; flex-wrap: wrap; gap: .75rem 2rem; margin: 0 0 .75rem; padding: 0 0 .75rem; border: 0; border-bottom: 1px solid var(--row-border); border-radius: 0; background: transparent !important; }
+main.content .chart-summary dt { color: var(--muted); font-size: .75rem; font-weight: 400; }
+main.content .chart-summary dd { margin: .125rem 0 0; font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Tooltip: a small Primer overlay that reads in both themes. */
+.chart-tooltip { padding: .375rem .5rem; border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: var(--floating-shadow); font-size: .75rem; font-weight: 500; }
+/* Insight bars (shares by device, country, source): 8px rounded tracks in the neutral rail. */
+:is(.insight-bars, .module-workspace .insight-bars) progress { height: 8px; }
+td.cell-nowrap { white-space: nowrap; }
+
+/* ---- Rows, overflow and block links (0.31) ------------------------------------------ */
+/* Every button is one size, so a row that mixes regular and small buttons stays level. */
+main.content .button-small { min-height: var(--control-h) !important; padding: 0 .75rem; font-size: .875rem; }
+/* Action rows built from several one-button forms, links and disclosures: one baseline, no stray margins. */
+main.content :is(.actions, [class$="-actions"], [class*="-actions "], .indexing-actions, .article-idea-actions, .sync-row) { align-items: center; }
+main.content :is(.actions, [class$="-actions"], [class*="-actions "], .indexing-actions, .article-idea-actions) > :is(form, p, details, a, button) { margin-block: 0 !important; }
+main.content :is(.actions, [class$="-actions"], [class*="-actions "]) > details > summary.button { list-style: none; }
+/* Nothing crosses a box edge: long words and unbroken strings wrap, media and code shrink. */
+main.content .card { min-width: 0; overflow-wrap: anywhere; }
+main.content .card :is(p, li, dd, dt, td, th, span, strong, a, label, h2, h3, h4) { overflow-wrap: anywhere; }
+main.content .card table :is(th, td, td *) { overflow-wrap: break-word; }
+main.content .card table th { overflow-wrap: normal; }
+main.content .card :is(img, svg:not(.ic), video, pre, code) { max-width: 100%; }
+main.content .card pre { overflow-x: auto; }
+/* Links that are whole cards or tiles never underline their contents; they show a border instead. */
+main.content a:has(> :is(div, p, dl, h2, h3, h4, strong, span[class])):not(.button, .chip),
+main.content a:is(.card, .stat, .kpi, .summary-tile, .insight-metric, .timeline-stat, .brief-stat, .portfolio-summary-link, [class*="tile"]) { text-decoration: none !important; color: inherit; }
+main.content a:has(> :is(div, p, dl, h2, h3, h4, strong, span[class])):not(.button, .chip) *,
+main.content a:is(.card, .stat, .kpi, .summary-tile, .insight-metric, .timeline-stat, .brief-stat, .portfolio-summary-link, [class*="tile"]) * { text-decoration: none !important; }
+main.content a:is(.card, .stat, .kpi, .summary-tile, .insight-metric, .timeline-stat, .brief-stat, .portfolio-summary-link, [class*="tile"]):hover { border-color: var(--accent) !important; }
+main.content a:is(.card, .stat, .kpi, .summary-tile, .insight-metric, .timeline-stat, .brief-stat, .portfolio-summary-link, [class*="tile"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Item lists (briefs, indexing evidence and similar): one Primer Box with divider rows,
+   not a stack of separately framed, tinted boxes whose edges double up. */
+main.content .brief-list { gap: 0 !important; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+main.content .brief-list > .brief-list-item { margin: 0; padding: var(--box-pad) !important; border: 0 !important; border-top: 1px solid var(--border) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+main.content .brief-list > .brief-list-item:first-child { border-top: 0 !important; }
+main.content .brief-list > .brief-list-item:hover { background: color-mix(in srgb, var(--surface-2) 60%, transparent) !important; }
+/* Sentence-case subheadings in article ideas. */
+:is(.article-idea-estimates, .article-idea-outline) h3 { text-transform: none; font-size: .875rem; }
+/* Quest Log chapters: the standard gap between boxes. */
+.quest-chapters { gap: .75rem; }
+
+/* Business measurement on Analytics (ADR-042, 0.32.0). */
+.business-measurement .mono, .business-measurement-detail .mono, #business-test-check .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.business-events td { vertical-align: top; }
+.business-events td:nth-child(6) { min-width: 18rem; max-width: 42ch; }
+.business-event-form, .business-check-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; margin-top: 1rem; }
+.business-event-form .field, .business-check-form .field { margin: 0; }
+.business-check-form .field input { min-width: min(100%, 22rem); }
+.measure-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0 0 .75rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+.measure-pair dt { font-size: .75rem; font-weight: 600; color: var(--muted); }
+.measure-pair dd { margin: 0; }
+.measure-pair dd.mono { font-size: 1.85rem; font-weight: 500; line-height: 1.15; }
+.measurement-limits { margin: 0; padding-left: 1.1rem; display: grid; gap: .5rem; }
+.business-test-steps { gap: .5rem; max-width: 80ch; }
+@media (max-width: 40rem) { .measure-pair { grid-template-columns: minmax(0, 1fr); } }
+
+/* Content inventory (ADR-042, 0.33.0). */
+.inventory-states { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
+.inventory-states .counter { display: inline-block; min-width: 1.25rem; padding: 0 6px; border-radius: 2em; background: var(--surface-2, rgba(110, 118, 129, .2)); font-size: .75rem; font-weight: 500; font-variant-numeric: tabular-nums; text-align: center; }
+.inventory-filter { margin-bottom: .75rem; }
+.inventory-table td { vertical-align: top; }
+.inventory-table td:first-child { min-width: 16rem; max-width: 34rem; }
+.inventory-sources { margin: 0; padding: 0; list-style: none; display: grid; gap: .35rem; font-size: .8125rem; }
+.inventory-source-name { font-weight: 600; }
+.inventory-edit { display: inline-block; margin-left: .25rem; }
+.inventory-edit[open] { display: block; margin: .5rem 0; padding: .75rem; border: 1px solid var(--border); border-radius: 6px; }
+.inventory-edit > summary { list-style: none; display: inline-block; }
+.inventory-edit > summary::-webkit-details-marker { display: none; }
+.inventory-item-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; }
+.inventory-item-form .field { margin: 0; flex: 1 1 12rem; }
+.inventory-item-form .field:has(select), .inventory-item-form .field:has(input[type="date"]) { flex: 0 1 10rem; }
+.inventory-candidates { margin-top: .5rem; display: grid; gap: .35rem; }
+.inventory-candidate { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+
+/* Claims and sources on briefs (ADR-042, 0.34.0). */
+.brief-claims .claim-counts { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 1rem; }
+.claim-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 6px; }
+.claim-list > .claim { padding: 1rem; }
+.claim-list > .claim + .claim { border-top: 1px solid var(--border); }
+.claim-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.claim-text { margin: 0; font-weight: 600; max-width: 75ch; }
+.claim-evidence { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .25rem 1rem; margin: .75rem 0; font-size: .8125rem; }
+.claim-evidence dt { color: var(--muted); font-weight: 600; }
+.claim-evidence dd { margin: 0; overflow-wrap: anywhere; }
+.claim-passage { margin: 0; padding-left: .75rem; border-left: 2px solid var(--border); color: var(--text); font-style: normal; }
+.claim-flags { margin: .5rem 0; padding: .5rem .75rem; border: 1px solid color-mix(in srgb, var(--warning, #d29922) 40%, var(--border)); border-radius: 6px; }
+.claim-flags p { margin: 0 0 .25rem; }
+.claim-flags ul { margin: 0; padding-left: 1.1rem; font-size: .8125rem; }
+.claim-flag-error { color: var(--danger, #f85149); }
+.claim-edit, .claim-add, .claim-history { margin-top: .5rem; }
+.claim-edit > summary, .claim-add > summary { list-style: none; display: inline-block; }
+.claim-edit > summary::-webkit-details-marker, .claim-add > summary::-webkit-details-marker { display: none; }
+.claim-form { display: grid; gap: 1rem; margin-top: .75rem; max-width: 60rem; }
+.claim-form fieldset { margin: 0; padding: .75rem 1rem 1rem; border: 1px solid var(--border); border-radius: 6px; display: grid; gap: .75rem; }
+.claim-form legend { padding: 0 .25rem; font-weight: 600; font-size: .875rem; }
+.claim-form .field { margin: 0; }
+.claim-scope { display: flex; flex-wrap: wrap; gap: .5rem 1rem; }
+.claim-scope .field { flex: 1 1 11rem; }
+.claim-form .claim-wide textarea, .claim-form .claim-wide input { width: 100%; }
+.claim-form > button { justify-self: start; }
+@media (max-width: 40rem) { .claim-evidence { grid-template-columns: minmax(0, 1fr); } .claim-head { flex-direction: column; gap: .25rem; } }
+
+/* Internal-link classes (ADR-042, 0.35.0). */
+.link-class-summary { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin: 0 0 .5rem; padding: 0; list-style: none; font-size: .8125rem; }
+.link-class-group { margin: .5rem 0; }
+.link-class-group > summary { cursor: pointer; font-weight: 600; font-size: .875rem; padding: .25rem 0; }
+
+/* Overlap review (ADR-042, 0.36.0). */
+.overlap-members { margin: 0 0 .75rem; padding-left: 1.1rem; font-weight: 600; overflow-wrap: anywhere; }
+.overlap-candidate h3 { margin: .5rem 0 .25rem; font-size: .875rem; }
+.overlap-preview, .overlap-decide { margin-top: .75rem; }
+.overlap-preview > summary { cursor: pointer; font-weight: 600; font-size: .875rem; }
+.overlap-decide > summary { list-style: none; display: inline-block; }
+.overlap-decide > summary::-webkit-details-marker { display: none; }
+.overlap-decide .inventory-item-form { margin-top: .5rem; }

@@ -1,0 +1,24 @@
+Options -Indexes -MultiViews
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # CGI/FastCGI/LiteSpeed drop the Authorization header; pass it on for bearer tokens (/mcp).
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Self-hosted fonts (older Apache mime.types lack woff2); cache them for a year.
+<IfModule mod_mime.c>
+    AddType font/woff2 .woff2
+</IfModule>
+<IfModule mod_headers.c>
+    <FilesMatch "\.woff2$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>

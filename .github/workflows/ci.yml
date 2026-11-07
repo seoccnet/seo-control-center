@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Style, analysis and fast tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_mysql, sodium, mbstring, intl, zip, curl, openssl
+          coverage: none
+      - run: composer validate --no-check-publish
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/php-cs-fixer fix --dry-run --diff
+      - run: vendor/bin/phpstan analyse --memory-limit=2G --no-progress
+      - run: vendor/bin/phpunit --testsuite unit,http,security,tenant-isolation
+
+  integration:
+    name: Integration tests (MySQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: seo_control_center_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_PORT: 3306
+      TEST_DB_DATABASE: seo_control_center_test
+      TEST_DB_USERNAME: root
+      TEST_DB_PASSWORD: root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_mysql, sodium, mbstring, intl, zip, curl, openssl
+          coverage: none
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/phpunit --testsuite integration

@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace SeoControlCenter\Modules\Research\Jobs;
+
+use SeoControlCenter\Core\Queue\JobContext;
+use SeoControlCenter\Core\Queue\JobHandler;
+use SeoControlCenter\Modules\Research\BrandMentionService;
+
+final readonly class ScheduleBrandMentionsJob implements JobHandler
+{
+    public function __construct(private BrandMentionService $service) {}
+    public function handle(array $payload, JobContext $context): void
+    {
+        $this->service->startDue();
+    }
+}

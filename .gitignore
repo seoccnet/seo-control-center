@@ -1,0 +1,25 @@
+/vendor/
+/.env
+/.env.testing
+/.env.deploy
+/storage/cache/*
+/storage/logs/*
+/storage/sessions/*
+/storage/tmp/*
+/storage/backups/*
+/storage/keys/*
+/storage/updates/*
+/storage/branding/*
+!/storage/*/.gitignore
+!/storage/.htaccess
+/.idea/
+/.vscode/
+/.claude/
+/.impeccable/
+Thumbs.db
+.DS_Store
+
+# Local leftovers
+/_originals-*/
+/seo-control-center-project-docs/
+/build/

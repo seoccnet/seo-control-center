@@ -1,0 +1,15 @@
+includes:
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - app
+        - bootstrap
+        - config
+        - routes
+        - database
+        - bin
+        - tests
+    tmpDir: storage/cache/phpstan
+    treatPhpDocTypesAsCertain: false

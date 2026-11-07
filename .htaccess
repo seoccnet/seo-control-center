@@ -1,0 +1,21 @@
+# SEOcc default subdomain folder: only public/ is reachable through HTTP.
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # An interrupted preparation stays closed until its files are recovered.
+    RewriteCond %{DOCUMENT_ROOT}/.scc-installing -f
+    RewriteRule ^(?!installer\.php$) - [R=503,L]
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule ^(?:app|bin|bootstrap|config|database|resources|routes|storage|vendor)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:composer\.(?:json|lock)|version\.json|release\.(?:json|sig))$ - [F,L,NC]
+    RewriteRule ^installer\.php$ - [L]
+    RewriteRule ^public(?:/|$) - [L]
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

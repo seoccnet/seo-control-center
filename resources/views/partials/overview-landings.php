@@ -1,0 +1,14 @@
+<?php $ga = $evidence['analytics']; ?>
+<section class="card overview-half" aria-labelledby="overview-landings-heading">
+<div class="card-header"><div><p class="integration-kicker">Search visits & outcomes</p><h2 id="overview-landings-heading">Landing-page outcomes</h2></div><a class="small" href="<?= $view->e($base) ?>/analytics">Analytics →</a></div>
+<?php if ($ga['totals'] === null): ?><p class="muted">No GA4 Organic Search data imported for these dates.</p><a href="<?= $view->e($base) ?>/analytics"><?= $ga['propertyId'] === null ? 'Connect a GA4 property' : 'Review property and import history' ?> →</a>
+<?php elseif ($ga['rows'] === []): ?><p class="muted">No eligible landing pages match both sources: at least 100 Google impressions and 10 GA4 organic sessions. URLs must match exactly.</p><a href="<?= $view->e($base) ?>/pages">Review page evidence →</a>
+<?php else: ?>
+<p class="muted small"><?= $view->e($evidence['range']->fromString()) ?> – <?= $view->e($evidence['range']->toString()) ?> · <?= $ga['sample'] ?> matched pages · <?= $ga['canRank'] ? 'lowest key events per session first' : 'highest impressions first' ?></p>
+<div class="table-scroll"><table class="table table-dense" data-no-table-controls><thead><tr><th scope="col">Page</th><th scope="col" class="num">Impressions / clicks</th><th scope="col" class="num">Sessions / events</th><th scope="col" class="num">Events per 100 sessions</th></tr></thead><tbody>
+<?php foreach ($ga['rows'] as $row): ?><tr><td class="overview-subject"><a title="<?= $view->e($row['url']) ?>" href="<?= $view->e($base . '/pages/details?url=' . rawurlencode($row['url'])) ?>"><?= $view->e(preg_replace('#^https?://[^/]+#', '', $row['url']) ?: '/') ?></a></td><td class="num"><?= number_format($row['search']->impressions) ?><span class="overview-cell-note"><?= $row['search']->clicks ?> clicks</span></td><td class="num"><?= number_format($row['sessions']) ?><span class="overview-cell-note"><?= number_format($row['conversions'], 2) ?> events</span></td><td class="num"><?= $ga['complete'] && $evidence['covered'] === $evidence['range']->days() ? number_format($row['eventRate'] * 100, 1) : 'Unavailable' ?></td></tr><?php endforeach; ?>
+</tbody></table></div>
+<?php if (!$ga['complete'] || $evidence['covered'] !== $evidence['range']->days()): ?><p class="muted small">Rates withheld because imports are incomplete or restricted.</p><?php endif; ?>
+<details class="overview-about"><summary><?= $view->icon('info') ?>About this data</summary><p><?= $ga['sample'] ?> eligible matched pages in <?= $ga['loaded'] ?> loaded GA4 pages. <?= $ga['canRank'] ? 'Lowest recorded key events per session first.' : 'Highest observed impressions first; outcome ranking is unavailable.' ?></p><p>Key events can occur more than once per session. This is not a user conversion rate or engagement measurement. Search clicks and GA4 sessions use different attribution.</p></details>
+<?php endif; ?>
+</section>

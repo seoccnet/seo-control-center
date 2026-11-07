@@ -1,0 +1,25 @@
+SEO Control Center (SEOcc)
+Copyright (C) 2026 Trio Group LLC
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, version 3.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+The full license text is in the LICENSE file.
+
+Section 13 of the license: if you run a modified version and let users interact
+with it over a network, you must offer those users its source code. The sidebar's
+"Source code" link does this. Point SOURCE_CODE_URL at your modified source.
+
+Other licenses in this repository:
+- integrations/wordpress and resources/integrations/seocc.zip (the WordPress
+  plugin) are licensed under GPL-2.0-or-later.
+- Bundled third-party components keep their own licenses. See
+  THIRD-PARTY-NOTICES.md and docs/integration-tutorial-assets.md.
+
+"SEO Control Center", "SEOcc" and the logo are trademarks of Trio Group LLC and
+are not licensed under the AGPL. See TRADEMARKS.md.
