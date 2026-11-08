@@ -26,7 +26,7 @@ $field = static function (string $name, string $label, string $type = 'text', st
 <?php foreach (['Welcome', 'Site & access', 'Database', 'Your account', 'Review & install'] as $index => $label): ?>
 <li><a href="#setup-step-<?= $index ?>" data-step-link="<?= $index ?>"><?= $view->e($label) ?></a></li>
 <?php endforeach; ?>
-</ol><p class="muted small">Need help with cPanel?<br><a href="https://github.com/seocontrolcenter/seo-control-center/blob/main/docs/guide/02-installation.md" target="_blank" rel="noopener noreferrer">Open the installation guide ↗</a></p></nav>
+</ol><p class="muted small">Need help with cPanel?<br><a href="https://github.com/seoccnet/seo-control-center/blob/main/docs/guide/02-installation.md" target="_blank" rel="noopener noreferrer">Open the installation guide ↗</a></p></nav>
 <div class="installer-content">
 <?php foreach (['general', 'requirements'] as $key): ?>
 <?php if (isset($errors[$key])): ?><p class="notice notice-error" role="alert"><?= $view->e($errors[$key]) ?></p><?php endif; ?>

@@ -17,7 +17,7 @@
 <body>
     <a class="skip-link" href="#installation">Skip to installation</a>
     <div class="installer-shell">
-        <header class="installer-header"><div class="installer-brand"><?= $view->partial('partials/logo-mark') ?><span>SEO Control Center<small>Installation assistant</small></span></div><a href="https://github.com/seocontrolcenter/seo-control-center/blob/main/docs/guide/02-installation.md" target="_blank" rel="noopener noreferrer">Installation guide <span aria-hidden="true">↗</span></a></header>
+        <header class="installer-header"><div class="installer-brand"><?= $view->partial('partials/logo-mark') ?><span>SEO Control Center<small>Installation assistant</small></span></div><a href="https://github.com/seoccnet/seo-control-center/blob/main/docs/guide/02-installation.md" target="_blank" rel="noopener noreferrer">Installation guide <span aria-hidden="true">↗</span></a></header>
         <main id="installation" tabindex="-1"><?= $content ?></main>
         <footer class="installer-footer">Self-hosted on your server · Your data stays in your installation.</footer>
     </div>

@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: Questions and ideas
-    url: https://github.com/seocontrolcenter/seo-control-center/discussions
+    url: https://github.com/seoccnet/seo-control-center/discussions
     about: Ask for help or discuss an idea with the community.
   - name: Report a security problem
-    url: https://github.com/seocontrolcenter/seo-control-center/security/advisories/new
+    url: https://github.com/seoccnet/seo-control-center/security/advisories/new
     about: Please report vulnerabilities privately, not in a public issue.
   - name: User guide
-    url: https://github.com/seocontrolcenter/seo-control-center/blob/main/docs/guide/README.md
+    url: https://github.com/seoccnet/seo-control-center/blob/main/docs/guide/README.md
     about: Setup, integrations, features and troubleshooting.

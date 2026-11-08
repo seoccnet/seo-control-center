@@ -15,4 +15,4 @@ SEO Control Center is in early alpha. Finished work is in [CHANGELOG.md](CHANGEL
 
 ## How to influence this
 
-Open a [feature request](https://github.com/seocontrolcenter/seo-control-center/issues/new/choose) or start a [discussion](https://github.com/seocontrolcenter/seo-control-center/discussions). This list is a direction, not a promise.
+Open a [feature request](https://github.com/seoccnet/seo-control-center/issues/new/choose) or start a [discussion](https://github.com/seoccnet/seo-control-center/discussions). This list is a direction, not a promise.

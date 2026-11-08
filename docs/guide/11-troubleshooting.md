@@ -35,7 +35,7 @@
 
 ## Support
 
-Please include, in a [GitHub issue](https://github.com/seocontrolcenter/seo-control-center/issues):
+Please include, in a [GitHub issue](https://github.com/seoccnet/seo-control-center/issues):
 
 1. a **support bundle** (*System health → Download support bundle*). It contains health checks, versions and recent errors, with e-mail addresses and tokens removed, and never passwords, keys or SEO data;
 2. what you did, what you expected, and what happened.

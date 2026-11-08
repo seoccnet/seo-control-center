@@ -41,7 +41,7 @@ If you use Manage My Databases instead, also add the user to the database and gr
 
 ## Step 4: Upload SEOcc
 
-1. Download **scc-<version>-install.zip** from the [latest release](https://github.com/seocontrolcenter/seo-control-center/releases/latest). The file ending in `-install.zip` is the one for new installations.
+1. Download **scc-<version>-install.zip** from the [latest release](https://github.com/seoccnet/seo-control-center/releases/latest). The file ending in `-install.zip` is the one for new installations.
 2. In File Manager, open the document root shown for your new subdomain. The folder must be empty apart from recognized hosting files. Remove a host's placeholder page only after confirming it belongs to this new subdomain.
 3. Upload the zip into that folder, select it and choose **Extract**.
 4. Open the new **seo-control-center** folder. Turn on **Show hidden files** in File Manager's settings, select everything, and **Move** it up one level into the subdomain's folder.

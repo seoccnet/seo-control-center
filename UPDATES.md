@@ -82,7 +82,7 @@ Packages never contain `.env`, `storage/`, tests or documentation.
 
 ### Distribution
 
-Official packages are attached to [GitHub Releases](https://github.com/seocontrolcenter/seo-control-center/releases), signed with the project's release key.
+Official packages are attached to [GitHub Releases](https://github.com/seoccnet/seo-control-center/releases), signed with the project's release key.
 
 If you maintain a fork, create your own key with `php bin/console release:keygen`, build with `release:build`, and set `UPDATE_PUBLIC_KEY` on your installations. Official packages then no longer verify there, which is intended.
 

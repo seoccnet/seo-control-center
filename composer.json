@@ -4,8 +4,8 @@
     "keywords": ["seo", "seo-tools", "self-hosted", "search-console", "site-audit", "rank-tracking", "mcp"],
     "homepage": "https://seocc.net/",
     "support": {
-        "issues": "https://github.com/seocontrolcenter/seo-control-center/issues",
-        "source": "https://github.com/seocontrolcenter/seo-control-center"
+        "issues": "https://github.com/seoccnet/seo-control-center/issues",
+        "source": "https://github.com/seoccnet/seo-control-center"
     },
     "type": "project",
     "license": "AGPL-3.0-only",

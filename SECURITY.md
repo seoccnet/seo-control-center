@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Please do not open a public issue. Use [private vulnerability reporting](https://github.com/seocontrolcenter/seo-control-center/security/advisories/new) and include the version, the steps to reproduce and the impact. Only the latest release gets security fixes while SEOcc is in early alpha.
+Please do not open a public issue. Use [private vulnerability reporting](https://github.com/seoccnet/seo-control-center/security/advisories/new) and include the version, the steps to reproduce and the impact. Only the latest release gets security fixes while SEOcc is in early alpha.
 
 Paid data and client websites are out of scope for testing: use your own installation, and no one else's.
 

@@ -18,4 +18,4 @@ SEO Control Center is for people with very different levels of SEO and coding ex
 
 ## Enforcement
 
-Maintainers may edit or remove content and may block people from the project. To report a problem privately, open a [private security advisory](https://github.com/seocontrolcenter/seo-control-center/security/advisories/new) and start the title with "Conduct". Reports are kept confidential.
+Maintainers may edit or remove content and may block people from the project. To report a problem privately, open a [private security advisory](https://github.com/seoccnet/seo-control-center/security/advisories/new) and start the title with "Conduct". Reports are kept confidential.

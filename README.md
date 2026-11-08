@@ -12,14 +12,14 @@ Search Console analytics, site audits, rank tracking, keyword research, backlink
   <a href="https://seocc.net/#explore">See it in action</a> ·
   <a href="#install-seocc">Install</a> ·
   <a href="https://seocc.net/#faq">FAQ</a> ·
-  <a href="https://github.com/seocontrolcenter/seo-control-center/discussions">Discussions</a>
+  <a href="https://github.com/seoccnet/seo-control-center/discussions">Discussions</a>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue"></a>
   <img alt="PHP 8.5+" src="https://img.shields.io/badge/PHP-8.5%2B-777bb4">
   <img alt="MySQL 8.0+ or MariaDB 10.6+" src="https://img.shields.io/badge/database-MySQL%208%20%7C%20MariaDB%2010.6-4479a1">
-  <a href="https://github.com/seocontrolcenter/seo-control-center/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/seocontrolcenter/seo-control-center/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/seoccnet/seo-control-center/actions/workflows/ci.yml"><img alt="Tests" src="https://github.com/seoccnet/seo-control-center/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Status: early alpha" src="https://img.shields.io/badge/status-early%20alpha-orange">
 </p>
 
@@ -131,7 +131,7 @@ Every paid lookup is reserved against a workspace budget first, so a spending li
 
 ### On shared hosting (cPanel, no SSH needed)
 
-1. Download `scc-<version>-install.zip` from the [latest release](https://github.com/seocontrolcenter/seo-control-center/releases/latest).
+1. Download `scc-<version>-install.zip` from the [latest release](https://github.com/seoccnet/seo-control-center/releases/latest).
 2. Create a subdomain, select PHP 8.5 and turn on HTTPS.
 3. Upload the zip to the subdomain's empty folder and extract it, then move everything from the `seo-control-center` folder up into the subdomain's folder. Include hidden files such as `.htaccess`.
 4. Open your subdomain and follow the installation wizard. It asks for a setup key, which you can read from `storage/setup-key.txt` in File Manager.
@@ -142,7 +142,7 @@ The [full installation guide](docs/guide/02-installation.md) covers each step.
 ### From source
 
 ```bash
-git clone https://github.com/seocontrolcenter/seo-control-center.git
+git clone https://github.com/seoccnet/seo-control-center.git
 ```
 
 ```bash
@@ -222,8 +222,8 @@ More answers are in the [SEOcc FAQ](https://seocc.net/#faq).
 Bug reports, documentation fixes, translations of ideas into pull requests and feedback from real SEO work are all welcome.
 
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md).
-- Ask questions in [GitHub Discussions](https://github.com/seocontrolcenter/seo-control-center/discussions).
-- Report bugs in [GitHub Issues](https://github.com/seocontrolcenter/seo-control-center/issues).
+- Ask questions in [GitHub Discussions](https://github.com/seoccnet/seo-control-center/discussions).
+- Report bugs in [GitHub Issues](https://github.com/seoccnet/seo-control-center/issues).
 - Report security problems privately, as described in [SECURITY.md](SECURITY.md).
 
 If SEOcc is useful to you, a star helps other people find it.

@@ -21,5 +21,5 @@ return [
     'support_email' => $env->string('SUPPORT_EMAIL', ''),
     'community_url' => $env->string('COMMUNITY_URL', 'https://discord.gg/5pPRTCww2X'),
     // AGPL-3.0 section 13: if you run a changed version for others, point this at your changed source.
-    'source_url' => $env->string('SOURCE_CODE_URL', 'https://github.com/seocontrolcenter/seo-control-center'),
+    'source_url' => $env->string('SOURCE_CODE_URL', 'https://github.com/seoccnet/seo-control-center'),
 ];

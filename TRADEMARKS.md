@@ -26,4 +26,4 @@ This policy is a plain-language guide, not a license to anything beyond it.
 
 Give your fork its own name and logo, and set `SOURCE_CODE_URL` to your own source. In the app, **System → Branding** lets you change the product name and logo without changing code.
 
-Questions: use [GitHub Discussions](https://github.com/seocontrolcenter/seo-control-center/discussions).
+Questions: use [GitHub Discussions](https://github.com/seoccnet/seo-control-center/discussions).

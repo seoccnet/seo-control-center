@@ -15,7 +15,7 @@
 
 Updates are signed packages (`scc-<version>.zip`). Your installation only accepts packages signed with the project's release key, and only if every file is intact.
 
-1. Download the **update package** from the [project's releases](https://github.com/seocontrolcenter/seo-control-center/releases). (The install package, `scc-<version>-install.zip`, is only for new installations.)
+1. Download the **update package** from the [project's releases](https://github.com/seoccnet/seo-control-center/releases). (The install package, `scc-<version>-install.zip`, is only for new installations.)
 2. Go to **System → Updates**, choose the file and click **Upload and verify**. The page shows the version and what the package contains.
 3. Click **Install**.
 
