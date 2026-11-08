@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — Open source
+## [1.0.0] — 2026-11-08 — Open source
 
 - **SEO Control Center is now free and open source under AGPL-3.0.** Every feature is available, with no licence key, edition or limit on projects and workspaces.
 - **No connection to a vendor server.** The licence checks and the daily update check are gone. Download updates from GitHub Releases and upload them under *System → Updates*.
