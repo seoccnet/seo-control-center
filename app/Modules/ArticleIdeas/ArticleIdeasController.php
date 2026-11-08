@@ -25,7 +25,9 @@ final readonly class ArticleIdeasController
     {
         $project = $this->project($request);
 
-        return $this->responses->html($this->views->render('article-ideas/index', ['project' => $project, ...$this->ideas->overview(WebContext::user($request), $project)], $request))->withHeader('Cache-Control', 'no-store');
+        $market = $request->getQueryParams()['market'] ?? null;
+
+        return $this->responses->html($this->views->render('article-ideas/index', ['project' => $project, ...$this->ideas->overview(WebContext::user($request), $project, is_string($market) && $market !== '' ? $market : null)], $request))->withHeader('Cache-Control', 'no-store');
     }
 
     public function start(ServerRequestInterface $request): ResponseInterface
@@ -34,9 +36,12 @@ final readonly class ArticleIdeasController
         $body = WebContext::body($request);
 
         return $this->handle($request, $project, function () use ($request, $project, $body): string {
-            $this->ideas->start(WebContext::user($request), $project, ($body['confirm_paid'] ?? null) === '1', ($body['confirm_repeat'] ?? null) === '1', ClientInfo::fromRequest($request));
+            $confirmed = $body['confirmed_cost'] ?? null;
+            $this->ideas->start(WebContext::user($request), $project, ($body['confirm_paid'] ?? null) === '1', ($body['confirm_repeat'] ?? null) === '1', ClientInfo::fromRequest($request), is_string($confirmed) && is_numeric($confirmed) ? (float) $confirmed : null);
+            $skipped = $this->ideas->marketPlan($project)['skipped'];
 
-            return 'Looking up competitor articles. Ideas appear here within a few minutes.';
+            return 'Looking up competitor articles. Ideas appear here within a few minutes.'
+                . ($skipped !== [] ? ' Skipped, because DataForSEO Labs has no data for them: ' . implode(', ', array_column($skipped, 'label')) . '.' : '');
         });
     }
 

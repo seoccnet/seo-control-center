@@ -21,6 +21,9 @@ final class FakeResearchProvider implements ResearchProvider
     /** @var list<ResearchKeyword> */
     public array $ranked = [];
 
+    /** @var array<string, list<ResearchKeyword>> by "domain|location:language", before $rankedFor */
+    public array $rankedIn = [];
+
     /** @var array<string, list<ResearchKeyword>> by domain, before $ranked */
     public array $rankedFor = [];
 
@@ -55,7 +58,7 @@ final class FakeResearchProvider implements ResearchProvider
     {
         $this->call('ranked', [$domain, $locale->key(), $limit]);
 
-        return $this->rankedFor[$domain] ?? $this->ranked;
+        return $this->rankedIn[$domain . '|' . $locale->key()] ?? $this->rankedFor[$domain] ?? $this->ranked;
     }
 
     public function keywordGap(int $workspaceId, ?int $projectId, string $domain, string $competitor, KeywordLocale $locale, int $limit): array

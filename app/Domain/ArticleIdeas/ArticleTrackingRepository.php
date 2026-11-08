@@ -13,7 +13,7 @@ interface ArticleTrackingRepository
      * Starts tracking an idea's article, or replaces the address, date and source of the one it has.
      *
      * @param list<string> $keywords
-     * @param array{traffic: array{low: int, expected: int, high: int}, months: array{low: int, high: int, basis: string}} $prediction
+     * @param array{traffic: array{low: int, expected: int, high: int}, months: array{low: int, high: int, basis: string}, markets?: list<string>} $prediction
      */
     public function track(Project $project, ArticleIdea $idea, array $keywords, array $prediction, string $url, string $publishedOn, string $source, ?int $userId, string $now): ArticleTracking;
 

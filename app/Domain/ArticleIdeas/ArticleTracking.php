@@ -19,7 +19,7 @@ final readonly class ArticleTracking
 
     /**
      * @param list<string> $keywords the idea's searches, main search first
-     * @param array{traffic: array{low: int, expected: int, high: int}, months: array{low: int, high: int, basis: string}} $prediction
+     * @param array{traffic: array{low: int, expected: int, high: int}, months: array{low: int, high: int, basis: string}, markets?: list<string>} $prediction markets: the idea's markets when it was published (absent on older trackings)
      * @param array{weeks: list<array{week: string, clicks: int, impressions: int, position: ?float}>, top10_week: ?string, best_position: ?float, clicks_28d: int}|null $result
      */
     public function __construct(
@@ -86,6 +86,7 @@ final readonly class ArticleTracking
             'url' => $this->url,
             'published_on' => $this->publishedOn,
             'source' => $this->source,
+            'markets' => $this->prediction['markets'] ?? [],
             'predicted' => ['clicks_per_month' => $this->prediction['traffic'], 'months_to_rank' => ['low' => $this->prediction['months']['low'], 'high' => $this->prediction['months']['high']]],
             'measured' => $this->result === null ? null : [
                 'checked_at' => $this->checkedAt,

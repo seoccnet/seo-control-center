@@ -12,8 +12,11 @@ use SeoControlCenter\Domain\Projects\Project;
  */
 interface ArticleIdeaRepository
 {
-    /** @param list<array{domain: string, found: bool}> $competitors */
-    public function createRun(Project $project, array $competitors, ?string $market, float $estimatedCost, ?int $userId, string $now): ArticleIdeaRun;
+    /**
+     * @param list<array{domain: string, found: bool}> $competitors
+     * @param list<string> $markets every market the run buys ("location:language"), $market first
+     */
+    public function createRun(Project $project, array $competitors, ?string $market, float $estimatedCost, ?int $userId, string $now, array $markets = []): ArticleIdeaRun;
 
     public function run(int $runId): ?ArticleIdeaRun;
 
@@ -30,10 +33,14 @@ interface ArticleIdeaRepository
 
     public function fail(int $runId, string $error, string $now): void;
 
-    /** @param list<array{domain: string, found: bool, url: string, keyword: string, volume: ?int, difficulty: ?int, position: ?int, traffic: ?float, avg_rd: ?int}> $rows */
+    /** @param list<array{domain: string, found: bool, url: string, keyword: string, volume: ?int, difficulty: ?int, position: ?int, traffic: ?float, avg_rd: ?int, market?: ?string}> $rows */
     public function saveRows(int $runId, int $projectId, array $rows): void;
 
-    /** @return list<array{domain: string, found: bool, url: string, keyword: string, volume: ?int, difficulty: ?int, position: ?int, traffic: ?float, avg_rd: ?int}> */
+    /**
+     * The run's rows; market is null on rows saved before markets were stored.
+     *
+     * @return list<array{domain: string, found: bool, url: string, keyword: string, volume: ?int, difficulty: ?int, position: ?int, traffic: ?float, avg_rd: ?int, market: ?string}>
+     */
     public function rows(int $runId): array;
 
     /**

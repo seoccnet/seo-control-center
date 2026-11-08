@@ -33,6 +33,9 @@ final class KeywordRepositoryTest extends FullStackTestCase
         $repo->add($rivalProject, ['red shoes'], $us, $rival['user']->id);
         self::assertSame(4, $repo->count($project));
         self::assertTrue($repo->lastLocale($project)?->equals($de));
+        self::assertSame(['2840:en', '2276:de'], array_map(static fn(KeywordLocale $l): string => $l->key(), $repo->marketsByCount($project, 20)), 'A tie keeps the market added first.');
+        self::assertSame(['2840:en'], array_map(static fn(KeywordLocale $l): string => $l->key(), $repo->marketsByCount($project, 1)));
+        self::assertSame(['2840:en'], array_map(static fn(KeywordLocale $l): string => $l->key(), $repo->marketsByCount($rivalProject, 20)), 'Only keywords of the project itself count.');
 
         $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $pending = $repo->needingMetrics($project, $ws, $now->modify('-30 days'), 100);

@@ -44,6 +44,15 @@ interface KeywordRepository
     public function lastLocale(int $projectId): ?KeywordLocale;
 
     /**
+     * The distinct markets of the project's tracked keywords, the market with
+     * the most keywords first (ties: the market added first). Unsupported
+     * stored markets are left out.
+     *
+     * @return list<KeywordLocale>
+     */
+    public function marketsByCount(int $projectId, int $limit): array;
+
+    /**
      * Keywords of the project without metrics, or with metrics fetched before $staleBefore.
      * Returns nothing when the project was deleted or is not in the workspace,
      * so a queued job never spends money on it.

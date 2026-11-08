@@ -185,8 +185,15 @@ The business profile also decides what is worth paying for:
 *Research → Article ideas* suggests articles to write or update next, from the searches your competitors' articles rank for.
 
 1. **Competitors.** SEOcc compares you with your tracked competitors, then with the sites it sees most often in your stored results pages (marked *found*). Big platforms such as Wikipedia, YouTube or Reddit are left out. At most 5 sites are used.
-2. **Find article ideas** buys up to 500 ranked keywords per competitor from DataForSEO. The page shows the estimated cost; tick the confirmation to pay. If the last lookup is under 30 days old, a second tick is needed: competitor rankings change slowly. The lookup runs in the background; ideas appear within a few minutes.
-3. **Only articles count.** Competitor pages that look like blog posts, guides, how-tos or reviews are used, when they rank on page one or two (position 20 or better). Product, category and home pages are not. Searches under 10 a month, and searches your business profile or keyword ratings rule out, are skipped. Each search goes to the competitor article that ranks best for it, and one article makes one idea. Copies of one article in another language or country folder (/blog-… and /us/blog-…) count as one article, and articles that each rank in the top 10 for the other's main search are combined. Close variants that Google gives one shared search volume (*slicer vs paste*, *paste vs slicer plants*) are counted once.
+2. **Markets.** A lookup covers every market the project targets (a market is a country and language, such as *United States · English*). SEOcc takes them in this order:
+   - the markets in the project's **business profile** (*Opportunities → Business profile*), at most 20;
+   - without markets there, the markets of your **tracked keywords**, the market with the most keywords first;
+   - without keywords, *United States · English*.
+
+   The page says which of these was used, with a link to the business profile: add, remove or reorder markets there to change them. Markets that DataForSEO Labs has no competitor data for (such as *Germany · English*) are skipped and named on the page; they are never looked up or paid for.
+3. **Find article ideas** buys up to 500 ranked keywords per competitor and market from DataForSEO. The cost grows with both: competitors × markets × the price of one lookup. With several markets the page shows that sum and the cost per market; tick the confirmation to pay. The run buys exactly the competitors and markets you confirmed: if they changed after the page was shown and the cost went up, the run is refused and you confirm the new cost. If the last lookup is under 30 days old, a second tick is needed: competitor rankings change slowly. The lookup runs in the background; ideas appear within a few minutes.
+4. **Only articles count.** Competitor pages that look like blog posts, guides, how-tos or reviews are used, when they rank on page one or two (position 20 or better). Product, category and home pages are not. Searches under 10 a month, and searches your business profile or keyword ratings rule out, are skipped. Each search goes to the competitor article that ranks best for it, and one article makes one idea. Copies of one article in another language or country folder (/blog-… and /us/blog-…) count as one article, and articles that each rank in the top 10 for the other's main search are combined. Close variants that Google gives one shared search volume (*slicer vs paste*, *paste vs slicer plants*) are counted once.
+5. **Per market.** Ideas are built for each market from that market's rankings, with your relevance rules applied to each. When the same search is an idea in several markets of the same language (*how to grow tomatoes* in the United States and Canada), it is listed once: its volume and traffic add the markets up, and a table on the idea shows the split per market (searches, clicks, difficulty and competitor articles). Difficulty and time to rank are those of its hardest market. The same words in another language stay a separate idea, and volumes of different languages are never added up.
 
 Each idea says what to do:
 
@@ -201,7 +208,9 @@ Each idea also shows estimates, as ranges with how they were made:
 - **Backlinks to speed it up:** referring domains that would put the article in line with page one. Internal links and your domain carry part of it.
 - **Time to rank:** a rough range of months by difficulty. It is an assumption until SEOcc has enough of your own ranking history.
 
-Open *Competitor articles and searches* to see the competitor pages, their positions and estimated traffic, the searches with volume and difficulty, and your page. **Hide** removes an idea; **Not relevant** also marks its main search as not relevant for future research. Ideas are rebuilt every day for free from the stored lookup, so they follow your rankings; hidden ideas stay hidden. **Rebuild ideas now** does the same right away, for free (up to 6 times an hour), for example after an update or a change to your business profile. The top 3 ideas also appear on the Opportunities page.
+With several markets, each idea names its market or markets, and a **Market** filter above the ideas shows one market at a time. With one market the page looks as before.
+
+Open *Competitor articles and searches* to see the competitor pages, their positions and estimated traffic, the searches with volume and difficulty, and your page. **Hide** removes an idea; **Not relevant** also marks its main search as not relevant for future research. Ideas are rebuilt every day for free from the stored lookup, so they follow your rankings; hidden ideas stay hidden. **Rebuild ideas now** does the same right away, for free (up to 6 times an hour), for example after an update or a change to your business profile. Rebuilds use the stored rankings of every market of the last lookup and never buy anything; a market you add to the business profile is only looked up with the next paid lookup. The top 3 ideas also appear on the Opportunities page.
 
 ### Competitor outlines and briefs
 
@@ -219,7 +228,7 @@ The idea then shows its **subtopics**: headings that articles of at least two co
 - an outline with the main search as H1 and the subtopics as H2s;
 - the questions to answer and, for an update, what is missing on your page;
 - for an update, your page as the URL;
-- evidence: volume, estimates, the competitor articles and when their outlines were read.
+- evidence: the idea's market or markets, volume, estimates, the competitor articles and when their outlines were read.
 
 Read the outlines first to get the subtopics into the brief. Review and edit everything before you save.
 
@@ -245,7 +254,7 @@ Once **3 tracked articles** of the same kind (new or update) and difficulty reac
 
 SEOcc proposes three kinds of members; tick the ones to keep and **Save plan**:
 
-- **Supporting articles:** other article ideas on the pillar's subject. The subject is the pillar's rarest words. For "mold on pepper" it is *mold*, because *pepper* appears in most of your searches.
+- **Supporting articles:** other article ideas on the pillar's subject, in a language of the pillar's markets. The subject is the pillar's rarest words. For "mold on pepper" it is *mold*, because *pepper* appears in most of your searches.
 - **Searches to consider:** your Search Console queries on the subject that no idea covers. They start unticked; keep one to plan an article for it.
 - **Your pages:** pages that already get impressions on the subject. They should link to the pillar.
 

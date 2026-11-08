@@ -20,7 +20,7 @@ final class InMemoryArticleIdeas implements ArticleIdeaRepository, ArticleIdeaSc
     /** @var array<int, ArticleIdeaRun> */
     public array $runs = [];
 
-    /** @var array<int, list<array{domain: string, found: bool, url: string, keyword: string, volume: ?int, difficulty: ?int, position: ?int, traffic: ?float, avg_rd: ?int}>> by run */
+    /** @var array<int, list<array{domain: string, found: bool, url: string, keyword: string, volume: ?int, difficulty: ?int, position: ?int, traffic: ?float, avg_rd: ?int, market?: ?string}>> by run */
     public array $rows = [];
 
     /** @var array<int, array{workspace_id: int, built_at: string, ideas: list<ArticleIdea>}> by project */
@@ -122,11 +122,11 @@ final class InMemoryArticleIdeas implements ArticleIdeaRepository, ArticleIdeaSc
         $this->rebuilds[$projectId . ':' . $window] ??= ['project_id' => $projectId, 'workspace_id' => $workspaceId];
     }
 
-    public function createRun(Project $project, array $competitors, ?string $market, float $estimatedCost, ?int $userId, string $now): ArticleIdeaRun
+    public function createRun(Project $project, array $competitors, ?string $market, float $estimatedCost, ?int $userId, string $now, array $markets = []): ArticleIdeaRun
     {
         $id = $this->nextId++;
 
-        return $this->runs[$id] = new ArticleIdeaRun($id, Uuid::v7($this->clock), $project->id, $project->workspaceId, ArticleIdeaRun::QUEUED, $market, $competitors, $estimatedCost, null, $now, null);
+        return $this->runs[$id] = new ArticleIdeaRun($id, Uuid::v7($this->clock), $project->id, $project->workspaceId, ArticleIdeaRun::QUEUED, $market, $competitors, $estimatedCost, null, $now, null, $markets);
     }
 
     public function run(int $runId): ?ArticleIdeaRun
@@ -191,7 +191,7 @@ final class InMemoryArticleIdeas implements ArticleIdeaRepository, ArticleIdeaSc
 
     public function rows(int $runId): array
     {
-        return $this->rows[$runId] ?? [];
+        return array_map(static fn(array $r): array => [...$r, 'market' => $r['market'] ?? null], $this->rows[$runId] ?? []);
     }
 
     public function replaceIdeas(int $projectId, int $workspaceId, int $runId, array $ideas, string $now): void
@@ -264,6 +264,6 @@ final class InMemoryArticleIdeas implements ArticleIdeaRepository, ArticleIdeaSc
         if ($run === null || !in_array($run->status, $from, true)) {
             return;
         }
-        $this->runs[$runId] = new ArticleIdeaRun($run->id, $run->publicId, $run->projectId, $run->workspaceId, $status, $run->market, $run->competitors, $run->estimatedCost, $error ?? $run->error, $run->createdAt, $finishedAt ?? $run->finishedAt);
+        $this->runs[$runId] = new ArticleIdeaRun($run->id, $run->publicId, $run->projectId, $run->workspaceId, $status, $run->market, $run->competitors, $run->estimatedCost, $error ?? $run->error, $run->createdAt, $finishedAt ?? $run->finishedAt, $run->markets);
     }
 }

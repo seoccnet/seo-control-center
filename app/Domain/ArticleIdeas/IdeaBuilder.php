@@ -27,6 +27,10 @@ use SeoControlCenter\Domain\Opportunities\SerpFormat;
  *    positions 2, 5 and 9; difficulty from keyword difficulty and the referring
  *    domains of page-one results; backlinks from those referring domains; months
  *    from stated assumptions by difficulty.
+ * 6. Markets: build() runs once per market on that market's rows, so every
+ *    rule above applies per market. merge() then joins ideas of different
+ *    markets only when their main search is the same query in the same
+ *    language; totals are kept with the split per market next to them.
  */
 final class IdeaBuilder
 {
@@ -50,9 +54,10 @@ final class IdeaBuilder
      * @param \Closure(string): bool $relevant false for searches the business profile or team ruled out
      * @param \Closure(int): float $ctr expected click-through (0–1) at a position
      * @param array<string, array{low: int, high: int, count: int}> $calibration the site's own months to the top 10 by "kind:level" (G3)
+     * @param ?string $market the market ("location:language") all $rows belong to; each idea and competitor then carries it
      * @return list<ArticleIdea> best first
      */
-    public static function build(array $rows, array $own, \Closure $relevant, \Closure $ctr, ?int $ownReferringDomains, array $calibration = []): array
+    public static function build(array $rows, array $own, \Closure $relevant, \Closure $ctr, ?int $ownReferringDomains, array $calibration = [], ?string $market = null): array
     {
         // Competitor articles and the searches they rank for on page one or two.
         $meta = [];
@@ -183,11 +188,137 @@ final class IdeaBuilder
             if ($variants > 0) {
                 $reasons[] = sprintf('%d close variant%s share%s one search volume and %s counted once.', $variants, $variants === 1 ? '' : 's', $variants === 1 ? 's' : '', $variants === 1 ? 'is' : 'are');
             }
-            $ideas[] = new ArticleIdea(hash('sha256', $label), $kind, $label, array_sum(array_column($demand, 'volume')), array_slice($keywords, 0, 15), $competitors, $best, $prediction, $score, $reasons);
+            if ($market !== null) {
+                $competitors = array_map(static fn(array $c): array => [...$c, 'market' => $market], $competitors);
+            }
+            $idea = new ArticleIdea(hash('sha256', $label), $kind, $label, array_sum(array_column($demand, 'volume')), array_slice($keywords, 0, 15), $competitors, $best, $prediction, $score, $reasons);
+            $ideas[] = $market !== null ? $idea->inMarket($market) : $idea;
         }
         usort($ideas, static fn(ArticleIdea $a, ArticleIdea $b): int => [$b->score, $a->mainKeyword] <=> [$a->score, $b->mainKeyword]);
 
         return array_slice($ideas, 0, self::MAX);
+    }
+
+    /**
+     * Joins the ideas of several markets (ADR-041, multi-market).
+     *
+     * Ideas are joined only when their main search is the same query in the
+     * same language (United States · English and Canada · English); other
+     * ideas stay apart, each with its market. A joined idea adds up the volume,
+     * traffic and score of its markets and keeps the split per market in
+     * $markets and per search in volumes; difficulty, backlinks and time to
+     * rank come from its hardest market. Keys stay hash(main search), so
+     * dismissals, plans and tracking carry over; only when one main search is
+     * an idea in two languages do the ideas outside the first market's
+     * language get a language-bound key.
+     *
+     * @param array<string, list<ArticleIdea>> $byMarket ideas per market key, in market priority order
+     * @return list<ArticleIdea> best first, at most MAX
+     */
+    public static function merge(array $byMarket): array
+    {
+        $order = array_keys($byMarket);
+        $first = self::firstLanguage($order);
+        $groups = [];
+        foreach ($byMarket as $market => $ideas) {
+            foreach ($ideas as $idea) {
+                $groups[ArticleIdea::language((string) $market) . "\0" . $idea->mainKeyword][] = $idea->inMarket((string) $market);
+            }
+        }
+        $languages = [];
+        foreach (array_keys($groups) as $group) {
+            [$language, $label] = explode("\0", (string) $group, 2);
+            $languages[$label][] = $language;
+        }
+        $ideas = [];
+        foreach ($groups as $group => $members) {
+            [$language, $label] = explode("\0", (string) $group, 2);
+            $key = count($languages[$label]) > 1 && $language !== ($first ?? $languages[$label][0]) ? hash('sha256', $language . ':' . $label) : hash('sha256', $label);
+            $ideas[] = self::join($members, $key, $order);
+        }
+        usort($ideas, static fn(ArticleIdea $a, ArticleIdea $b): int => [$b->score, $a->mainKeyword, $a->key] <=> [$a->score, $b->mainKeyword, $b->key]);
+
+        return array_slice($ideas, 0, self::MAX);
+    }
+
+    /** @param list<string> $order */
+    private static function firstLanguage(array $order): ?string
+    {
+        return $order === [] ? null : ArticleIdea::language($order[0]);
+    }
+
+    /**
+     * One idea from the same main search in several markets of one language.
+     *
+     * @param non-empty-list<ArticleIdea> $members one per market, each with its one market
+     * @param list<string> $order market priority
+     */
+    private static function join(array $members, string $key, array $order): ArticleIdea
+    {
+        $rank = array_flip($order);
+        usort($members, static fn(ArticleIdea $a, ArticleIdea $b): int => [$b->volume, $rank[$a->marketKeys()[0]] ?? PHP_INT_MAX] <=> [$a->volume, $rank[$b->marketKeys()[0]] ?? PHP_INT_MAX]);
+        $lead = $members[0];
+        if (count($members) === 1) {
+            return $key === $lead->key ? $lead : new ArticleIdea($key, $lead->kind, $lead->mainKeyword, $lead->volume, $lead->keywords, $lead->competitors, $lead->own, $lead->prediction, $lead->score, $lead->reasons, $lead->markets);
+        }
+        $levels = ['low' => 0, 'medium' => 1, 'hard' => 2];
+        $hardest = $lead;
+        $own = null;
+        $kind = ArticleIdea::NEW;
+        foreach ($members as $member) {
+            if (($levels[$member->prediction['difficulty']['level']] ?? 0) > ($levels[$hardest->prediction['difficulty']['level']] ?? 0)) {
+                $hardest = $member;
+            }
+            if ($member->own !== null && ($own === null || ($member->own['position'] ?? INF) < ($own['position'] ?? INF))) {
+                $own = $member->own;
+            }
+            if ($member->kind === ArticleIdea::UPDATE) {
+                $kind = ArticleIdea::UPDATE;
+            }
+        }
+        // Searches: one row per query; the volume is the sum, with the split per market beside it.
+        $keywords = [];
+        foreach ($members as $member) {
+            $market = $member->marketKeys()[0];
+            foreach ($member->keywords as $k) {
+                $row = $keywords[$k['keyword']] ?? ['keyword' => $k['keyword'], 'volume' => 0, 'difficulty' => null, 'volumes' => []];
+                $row['volume'] += $k['volume'];
+                $row['difficulty'] = $k['difficulty'] === null ? $row['difficulty'] : max($row['difficulty'] ?? 0, $k['difficulty']);
+                $row['volumes'][$market] = $k['volume'];
+                $keywords[$k['keyword']] = $row;
+            }
+        }
+        $keywords = array_values($keywords);
+        usort($keywords, static fn(array $a, array $b): int => [$a['keyword'] !== $lead->mainKeyword, -$a['volume'], $a['keyword']] <=> [$b['keyword'] !== $lead->mainKeyword, -$b['volume'], $b['keyword']]);
+        $competitors = array_merge(...array_map(static fn(ArticleIdea $m): array => $m->competitors, $members));
+        usort($competitors, static fn(array $a, array $b): int => [$b['traffic'], $a['url'], $a['market'] ?? ''] <=> [$a['traffic'], $b['url'], $b['market'] ?? '']);
+        $traffic = [];
+        foreach (['low', 'expected', 'high'] as $field) {
+            $traffic[$field] = array_sum(array_map(static fn(ArticleIdea $m): int => $m->prediction['traffic'][$field], $members));
+        }
+        $markets = array_map(static fn(ArticleIdea $m): array => $m->markets[0], $members);
+        $split = implode(', ', array_map(static fn(array $m): string => ArticleIdea::label($m['market']) . ' ' . number_format($m['volume']), $markets));
+        $reasons = [
+            sprintf('Searched in %d markets: %s a month. Volumes and traffic below add these markets up; the split is shown per market.', count($members), $split),
+            ...$lead->reasons,
+        ];
+        if ($hardest !== $lead) {
+            $reasons[] = sprintf('Difficulty and time to rank are those of %s, the hardest of its markets.', ArticleIdea::label($hardest->marketKeys()[0]));
+        }
+
+        return new ArticleIdea(
+            $key,
+            $kind,
+            $lead->mainKeyword,
+            array_sum(array_map(static fn(ArticleIdea $m): int => $m->volume, $members)),
+            array_slice($keywords, 0, 15),
+            array_slice($competitors, 0, 5),
+            $own,
+            [...$hardest->prediction, 'traffic' => $traffic],
+            round(array_sum(array_map(static fn(ArticleIdea $m): float => $m->score, $members)), 1),
+            $reasons,
+            $markets,
+        );
     }
 
     /**

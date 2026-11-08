@@ -100,6 +100,22 @@ final class InMemoryKeywords implements KeywordRepository, KeywordMetricsSchedul
         return $rows === [] ? null : $rows[count($rows) - 1]['locale'];
     }
 
+    public function marketsByCount(int $projectId, int $limit): array
+    {
+        $counts = [];
+        $locales = [];
+        foreach ($this->keywords[$projectId] ?? [] as $row) {
+            $key = $row['locale']->key();
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+            $locales[$key] ??= $row['locale'];
+        }
+        // Most keywords first; a stable sort keeps the first-added market first on ties.
+        $order = array_keys($counts);
+        usort($order, static fn(string $a, string $b): int => $counts[$b] <=> $counts[$a]);
+
+        return array_slice(array_map(static fn(string $key): KeywordLocale => $locales[$key], $order), 0, max(1, $limit));
+    }
+
     public function needingMetrics(int $projectId, int $workspaceId, \DateTimeImmutable $staleBefore, int $limit): array
     {
         $groups = [];

@@ -80,6 +80,8 @@ Flags never change a verdict. Filter by `status`; paging is `offset`/`limit`.
 
 Filters are `state`, `source` and `q`; paging is `offset`/`limit` with `next_offset`.
 
+**Article ideas across markets (Unreleased):** `article_ideas` returns `markets`: the markets a lookup covers, each with `market` (location:language key), `label` and `cost` (estimated USD for all competitors in it). `market_source` is `profile` (business profile), `keywords` (the tracked keywords' markets, most keywords first) or `default`; `skipped_markets` lists markets DataForSEO Labs has no data for (market, label, reason), which are never bought; `estimated_cost` is competitors × markets × the price per lookup; `last_lookup.markets` lists the markets the last lookup bought. The top-level `market` is kept for compatibility, as the labels joined. Each idea has `market` (its label, or several joined) and `markets` (market, label, volume, searches, traffic low/expected/high, difficulty, competitors). An idea in several markets is the same search in the same language: its volume and `prediction.traffic` add the markets up, `keywords[].volumes` gives each search's split, and competitors carry their `market`. Ideas of different languages are never joined. Each `published` article has `markets`.
+
 `article_ideas` adds `inventory` per new-article idea: inventory rows that already cover its main search, such as a draft or a page without rankings.
 
 **Business measurement (0.32.0, ADR-042):** `business_measurement` (pages:read) reports, over the last 28 complete GA4 days, the overall state and the state of each business event:

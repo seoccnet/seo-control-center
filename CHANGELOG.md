@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+- **Article ideas across markets.** *Research → Article ideas* now covers every market a project targets, not only the market of the newest tracked keyword. Markets come from the business profile; without them from the tracked keywords, most keywords first; without keywords the default market. The page names the source and links to the business profile to change them.
+- **Cost per market.** One lookup is bought per competitor and market. The page shows competitors × markets × the price per lookup, and the cost per market. The run buys exactly what you confirmed: if competitors or markets changed and the cost went up, it asks you to confirm again. The estimate now counts the rows of every lookup, so it is a little higher, and closer to the real cost, also for one market.
+- **Unsupported markets are skipped.** Markets DataForSEO Labs has no data for are named on the page and never bought, instead of failing the lookup.
+- **Ideas per market.** Ideas are built per market. The same search in markets of the same language becomes one idea with the split per market; other languages stay separate and are never added up. Each idea names its markets, and a market filter shows one at a time. Single-market projects look as before. *Rebuild ideas now* stays free and uses the stored rows of every market.
+- **Briefs, topic plans and tracking** carry the idea's markets: a brief's evidence names them, topic plans propose supporting articles in the pillar's languages, and published articles keep the markets with their prediction.
+- **MCP.** `article_ideas` returns `markets` (with cost), `market_source`, `skipped_markets`, `estimated_cost` and `last_lookup.markets`, and `market` and `markets` for each idea. The top-level `market` stays, as the market labels joined. Published articles return `markets`.
+- **Migration:** adds `article_idea_runs.markets` and `article_competitor_rows.market`. Earlier lookups keep working as their one market.
+
 ## [1.0.0] — 2026-11-08 — Open source
 
 - **SEO Control Center is now free and open source under AGPL-3.0.** Every feature is available, with no licence key, edition or limit on projects and workspaces.

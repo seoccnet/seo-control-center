@@ -14,6 +14,7 @@ final readonly class ArticleIdeaRun
 
     /**
      * @param list<array{domain: string, found: bool}> $competitors
+     * @param list<string> $markets locale keys bought by the run, first = $market; empty on runs saved before markets
      */
     public function __construct(
         public int $id,
@@ -27,10 +28,22 @@ final readonly class ArticleIdeaRun
         public ?string $error,
         public string $createdAt,
         public ?string $finishedAt,
+        public array $markets = [],
     ) {}
 
     public function active(): bool
     {
         return in_array($this->status, [self::QUEUED, self::RUNNING], true);
+    }
+
+    /**
+     * The run's markets: the stored list, or the one market of a run saved
+     * before markets were stored; empty when it has none.
+     *
+     * @return list<string>
+     */
+    public function marketKeys(): array
+    {
+        return $this->markets !== [] ? $this->markets : ($this->market !== null ? [$this->market] : []);
     }
 }

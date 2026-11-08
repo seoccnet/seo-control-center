@@ -17,7 +17,10 @@ use SeoControlCenter\Domain\Keywords\Keyword;
  *   → brandywine, "paste vs slicer plant" → paste, slicer. Relative, so it
  *   needs no threshold and works on any site (0.29.1; a share threshold let
  *   "pepper" through on a seed shop).
- * - Supporting articles: other ideas with a search on the subject.
+ * - Supporting articles: other ideas with a search on the subject, in a
+ *   language of the pillar's markets (an idea of another language is a
+ *   different site section, not a supporting article). Ideas without
+ *   markets (built before markets were stored) always qualify.
  * - Searches to consider: your Search Console queries on the subject that no
  *   idea covers (not kept until you keep them).
  * - Your pages: pages that get impressions for queries on the subject.
@@ -46,8 +49,12 @@ final class PlanProposer
 
         $members = [];
         $covered = array_flip(array_column($pillar->keywords, 'keyword'));
-        $supporting = array_values(array_filter($ideas, static function (ArticleIdea $idea) use ($pillar, $about): bool {
+        $languages = array_map(ArticleIdea::language(...), $pillar->marketKeys());
+        $supporting = array_values(array_filter($ideas, static function (ArticleIdea $idea) use ($pillar, $about, $languages): bool {
             if ($idea->key === $pillar->key) {
+                return false;
+            }
+            if ($languages !== [] && $idea->markets !== [] && array_intersect($languages, array_map(ArticleIdea::language(...), $idea->marketKeys())) === []) {
                 return false;
             }
             foreach ($idea->keywords as $keyword) {

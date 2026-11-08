@@ -62,6 +62,8 @@ final class ArticleIdeasModule implements Module, ProvidesJobs
             static fn(\SeoControlCenter\Domain\Projects\Project $project): array => $c->make(ArticleTrackingService::class)->calibration($project),
             static fn(\SeoControlCenter\Domain\Projects\Project $project): array => $c->make(ArticleTrackingService::class)->published($project),
             $c->has(\SeoControlCenter\Modules\ContentInventory\ContentInventoryService::class) ? static fn(\SeoControlCenter\Domain\Projects\Project $project, array $topics): array => $c->make(\SeoControlCenter\Modules\ContentInventory\ContentInventoryService::class)->covering($project, array_values(array_map(strval(...), $topics))) : null,
+            // The business profile's markets decide which markets a lookup covers.
+            $c->has(\SeoControlCenter\Domain\Opportunities\BusinessContextRepository::class) ? $c->make(\SeoControlCenter\Domain\Opportunities\BusinessContextRepository::class) : null,
         ));
         $container->singleton(\SeoControlCenter\Domain\ArticleIdeas\ArticleTrackingRepository::class, static fn(Container $c): \SeoControlCenter\Domain\ArticleIdeas\ArticleTrackingRepository => new PdoArticleTrackingRepository($c->make(\SeoControlCenter\Core\Database\Connection::class), $c->make(Clock::class)));
         $container->singleton(ArticleTrackingService::class, static fn(Container $c): ArticleTrackingService => new ArticleTrackingService(

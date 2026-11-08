@@ -75,6 +75,19 @@ final class PlanProposerTest extends TestCase
         return array_map(static fn(string $name): array => ['query' => $name . ' ' . $word, 'url' => 'https://shop.test/tastes/' . str_replace(' ', '-', $name), 'impressions' => 5], ['banana', 'grape', 'cherry', 'tropical', 'spicy', 'sweet', 'fruity', 'lemon', 'mint', 'berry', 'orange', 'pine']);
     }
 
+    public function testSupportingIdeasShareALanguageOfThePillarsMarkets(): void
+    {
+        $pillar = self::idea('brandywine', ['brandywine'], 900.0)->inMarket('2840:en');
+        $members = PlanProposer::propose($pillar, [
+            $pillar,
+            self::idea('brandywine seeds', ['brandywine seeds'], 500.0)->inMarket('2124:en'),
+            self::idea('brandywine samen', ['brandywine samen'], 400.0)->inMarket('2276:de'),
+            self::idea('brandywine vs roma', ['brandywine vs roma'], 300.0),
+        ], []);
+
+        self::assertSame(['brandywine seeds', 'brandywine vs roma'], array_column(array_values(array_filter($members, static fn(array $m): bool => $m['type'] === TopicPlan::IDEA)), 'label'), 'Another language is left out; ideas without markets still count.');
+    }
+
     /** @param list<string> $keywords */
     private static function idea(string $main, array $keywords, float $score): ArticleIdea
     {

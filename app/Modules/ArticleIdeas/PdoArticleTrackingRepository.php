@@ -110,6 +110,7 @@ final readonly class PdoArticleTrackingRepository implements ArticleTrackingRepo
             [
                 'traffic' => ['low' => $int($traffic['low'] ?? 0), 'expected' => $int($traffic['expected'] ?? 0), 'high' => $int($traffic['high'] ?? 0)],
                 'months' => ['low' => $int($months['low'] ?? 0), 'high' => $int($months['high'] ?? 0), 'basis' => (string) ($months['basis'] ?? '')],
+                ...(is_array($p['markets'] ?? null) ? ['markets' => array_values(array_filter($p['markets'], is_string(...)))] : []),
             ],
             (string) $row['url'],
             substr((string) $row['published_on'], 0, 10),

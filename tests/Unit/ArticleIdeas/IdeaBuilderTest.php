@@ -219,16 +219,88 @@ final class IdeaBuilderTest extends TestCase
         self::assertSame('https://shop.acme.test/seeds/blue-dream', $ideas[0]->own['url'] ?? null);
     }
 
+    public function testEachIdeaCarriesItsMarket(): void
+    {
+        $ideas = $this->build([self::row('how to grow tomatoes', 'https://rival.test/blog/grow-tomatoes', 900)], market: '2840:en');
+
+        self::assertSame(['2840:en'], $ideas[0]->marketKeys());
+        self::assertSame('United States · English', $ideas[0]->marketLabel());
+        self::assertSame(['market' => '2840:en', 'volume' => 900, 'searches' => 1, 'traffic' => $ideas[0]->prediction['traffic'], 'difficulty' => 'low', 'competitors' => 1], $ideas[0]->markets[0]);
+        self::assertSame('2840:en', $ideas[0]->competitors[0]['market'] ?? null);
+        self::assertSame(hash('sha256', 'how to grow tomatoes'), $ideas[0]->key, 'The key of a one-market idea is unchanged.');
+        self::assertEquals($ideas[0], ArticleIdea::fromArray($ideas[0]->present()), 'Markets are stored and read back.');
+        self::assertSame('United States · English', $ideas[0]->present()['market']);
+    }
+
+    public function testSameQueryInSameLanguageIsOneIdeaWithTheSplitPerMarket(): void
+    {
+        $us = $this->build([self::row('how to grow tomatoes', 'https://rival.test/blog/grow-tomatoes', 900), self::row('tomato seedlings care', 'https://rival.test/blog/seedlings', 300)], market: '2840:en');
+        $ca = $this->build([self::row('how to grow tomatoes', 'https://rival.ca.test/blog/grow-tomatoes', 200, domain: 'rival.ca.test', difficulty: 70, avgRd: 60)], market: '2124:en');
+
+        $ideas = IdeaBuilder::merge(['2840:en' => $us, '2124:en' => $ca]);
+        $byLabel = array_column(array_map(static fn(ArticleIdea $i): array => [$i->mainKeyword, $i], $ideas), 1, 0);
+        self::assertCount(2, $ideas, 'The same topic in two markets is listed once, not twice.');
+
+        $joined = $byLabel['how to grow tomatoes'];
+        self::assertSame(hash('sha256', 'how to grow tomatoes'), $joined->key);
+        self::assertSame(['2840:en', '2124:en'], $joined->marketKeys(), 'Most volume first.');
+        self::assertSame(1100, $joined->volume);
+        self::assertSame([900, 200], array_column($joined->markets, 'volume'), 'The total is shown with its split.');
+        self::assertSame(['2840:en' => 900, '2124:en' => 200], $joined->keywords[0]['volumes'] ?? null);
+        self::assertSame($us[0]->prediction['traffic']['expected'] + $ca[0]->prediction['traffic']['expected'], $joined->prediction['traffic']['expected']);
+        self::assertSame($ca[0]->prediction['difficulty'], $joined->prediction['difficulty'], 'Difficulty is that of the hardest market.');
+        self::assertSame(['2840:en', '2124:en'], array_map(static fn(array $c): ?string => $c['market'] ?? null, $joined->competitors));
+        self::assertStringStartsWith('Searched in 2 markets: United States · English 900, Canada · English 200 a month.', $joined->reasons[0]);
+
+        $single = $byLabel['tomato seedlings care'];
+        self::assertSame(['2840:en'], $single->marketKeys());
+        self::assertSame($us[1], $single, 'An idea of one market is unchanged.');
+    }
+
+    public function testDifferentLanguagesNeverMergeOrAddUp(): void
+    {
+        $us = $this->build([self::row('sunflower seeds', 'https://rival.test/blog/sunflower-seeds', 900)], market: '2840:en');
+        $de = $this->build([
+            self::row('sunflower seeds', 'https://rival.de.test/blog/sunflower-seeds', 400, domain: 'rival.de.test'),
+            self::row('sonnenblumen pflanzen', 'https://rival.de.test/blog/sonnenblumen', 700, domain: 'rival.de.test'),
+        ], market: '2276:de');
+
+        $ideas = IdeaBuilder::merge(['2840:en' => $us, '2276:de' => $de]);
+
+        self::assertCount(3, $ideas, 'The same words in another language are another idea.');
+        foreach ($ideas as $idea) {
+            self::assertCount(1, $idea->markets, 'No idea adds up markets of different languages.');
+            self::assertSame($idea->markets[0]['volume'], $idea->volume);
+        }
+        $keys = array_map(static fn(ArticleIdea $i): string => $i->marketKeys()[0] . ' ' . $i->mainKeyword . ' ' . $i->key, $ideas);
+        self::assertContains('2840:en sunflower seeds ' . hash('sha256', 'sunflower seeds'), $keys, 'The first market keeps the plain key.');
+        self::assertContains('2276:de sunflower seeds ' . hash('sha256', 'de:sunflower seeds'), $keys, 'Another language gets its own key.');
+        self::assertCount(3, array_unique(array_map(static fn(ArticleIdea $i): string => $i->key, $ideas)));
+    }
+
+    public function testRelevanceAppliesPerMarket(): void
+    {
+        $relevantIn = ['2840:en' => static fn(string $k): bool => true, '2124:en' => static fn(string $k): bool => $k !== 'tomato cages'];
+        $us = $this->build([self::row('tomato cages', 'https://rival.test/blog/tomato-cages', 500)], relevant: $relevantIn['2840:en'], market: '2840:en');
+        $ca = $this->build([self::row('tomato cages', 'https://rival.ca.test/blog/tomato-cages', 400, domain: 'rival.ca.test')], relevant: $relevantIn['2124:en'], market: '2124:en');
+
+        $ideas = IdeaBuilder::merge(['2840:en' => $us, '2124:en' => $ca]);
+
+        self::assertCount(1, $ideas);
+        self::assertSame(['2840:en'], $ideas[0]->marketKeys(), 'A search ruled out in one market adds nothing from it.');
+        self::assertSame(500, $ideas[0]->volume);
+    }
+
     /**
      * @param list<array{domain: string, found: bool, url: string, keyword: string, volume: ?int, difficulty: ?int, position: ?int, traffic: ?float, avg_rd: ?int}> $rows
      * @param array<string, array{url: string, position: ?float, impressions: int}> $own
      * @return list<ArticleIdea>
      */
-    private function build(array $rows, array $own = [], ?\Closure $relevant = null, ?int $ownRd = null): array
+    private function build(array $rows, array $own = [], ?\Closure $relevant = null, ?int $ownRd = null, ?string $market = null): array
     {
         $ctr = [2 => 0.15, 5 => 0.05, 9 => 0.02];
 
-        return IdeaBuilder::build($rows, $own, $relevant ?? static fn(string $k): bool => true, static fn(int $position): float => $ctr[$position] ?? 0.01, $ownRd);
+        return IdeaBuilder::build($rows, $own, $relevant ?? static fn(string $k): bool => true, static fn(int $position): float => $ctr[$position] ?? 0.01, $ownRd, [], $market);
     }
 
     /** @return array{domain: string, found: bool, url: string, keyword: string, volume: ?int, difficulty: ?int, position: ?int, traffic: ?float, avg_rd: ?int} */

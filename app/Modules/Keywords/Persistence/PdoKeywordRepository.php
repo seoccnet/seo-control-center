@@ -108,6 +108,22 @@ final readonly class PdoKeywordRepository implements KeywordRepository
         }
     }
 
+    public function marketsByCount(int $projectId, int $limit): array
+    {
+        $out = [];
+        foreach ($this->db->fetchAll(
+            sprintf('SELECT location_code, language_code FROM project_keywords WHERE project_id = ? GROUP BY location_code, language_code ORDER BY COUNT(*) DESC, MIN(id) ASC LIMIT %d', max(1, $limit)),
+            [$projectId],
+        ) as $row) {
+            try {
+                $out[] = new KeywordLocale((int) $row['location_code'], (string) $row['language_code']);
+            } catch (\InvalidArgumentException) {
+            }
+        }
+
+        return $out;
+    }
+
     public function needingMetrics(int $projectId, int $workspaceId, \DateTimeImmutable $staleBefore, int $limit): array
     {
         $rows = $this->db->fetchAll(

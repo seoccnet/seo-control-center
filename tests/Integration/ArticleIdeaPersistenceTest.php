@@ -99,5 +99,23 @@ final class ArticleIdeaPersistenceTest extends FullStackTestCase
         $repo->pruneRows($project->id, 1);
         self::assertSame([], $repo->rows($run->id));
         self::assertCount(2, $repo->rows($second->id));
+        self::assertSame([null, null], array_column($repo->rows($second->id), 'market'), 'Rows saved without a market read back as null.');
+        self::assertSame([], $second->markets);
+
+        // A run over several markets keeps them all; each row keeps its market.
+        $multi = $repo->createRun($project, [['domain' => 'rival.test', 'found' => false]], '2840:en', 0.14, null, $now, ['2840:en', '2276:de']);
+        self::assertSame(['2840:en', '2276:de'], $repo->run($multi->id)?->markets);
+        self::assertSame('2840:en', $repo->run($multi->id)?->market);
+        $repo->saveRows($multi->id, $project->id, [[...$rows[0], 'market' => '2840:en'], [...$rows[1], 'market' => '2276:de']]);
+        self::assertSame(['2840:en', '2276:de'], array_column($repo->rows($multi->id), 'market'));
+
+        // Ideas with markets are stored and read back unchanged.
+        $merged = IdeaBuilder::merge([
+            '2840:en' => IdeaBuilder::build([$rows[0]], [], static fn(string $k): bool => true, static fn(int $p): float => 0.05, null, [], '2840:en'),
+            '2124:en' => IdeaBuilder::build([[...$rows[0], 'volume' => 50]], [], static fn(string $k): bool => true, static fn(int $p): float => 0.05, null, [], '2124:en'),
+        ]);
+        $repo->replaceIdeas($project->id, $workspace, $multi->id, $merged, $now);
+        self::assertEquals($merged, $repo->ideas($project, 50));
+        self::assertSame(['2840:en', '2124:en'], $repo->ideas($project, 50)[0]->marketKeys());
     }
 }

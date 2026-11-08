@@ -150,6 +150,7 @@ final readonly class ArticleTrackingService
         return $this->trackings->track($project, $idea, array_values(array_unique([$idea->mainKeyword, ...array_column($idea->keywords, 'keyword')])), [
             'traffic' => $p['traffic'],
             'months' => $p['months'],
+            'markets' => $idea->marketKeys(),
         ], $url, $publishedOn, $source, $userId, $this->clock->now()->format('Y-m-d H:i:s'));
     }
 

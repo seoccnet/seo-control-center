@@ -12,7 +12,13 @@ declare(strict_types=1);
  * @var ?SeoControlCenter\Domain\ArticleIdeas\ArticleIdeaRun $run
  * @var list<array{domain: string, found: bool}> $competitors
  * @var float $estimated_cost
+ * @var float $lookup_cost price of one lookup: one competitor in one market
  * @var string $market
+ * @var list<array{key: string, label: string, cost: float}> $markets the markets a lookup covers
+ * @var string $market_source profile, keywords or default
+ * @var list<array{market: string, label: string, reason: string}> $skipped_markets
+ * @var list<array{key: string, label: string}> $idea_markets markets the listed ideas come from
+ * @var ?string $market_filter
  * @var bool $can_edit
  * @var bool $featureOn
  * @var bool $available
@@ -37,6 +43,8 @@ $path = static function (string $url): string {
 };
 $levels = ['low' => 'Low', 'medium' => 'Medium', 'hard' => 'Hard'];
 $briefs = '/projects/' . $project->publicId . '/content-briefs/new';
+$profile = '/projects/' . $project->publicId . '/opportunities/business';
+$multi = count($markets) > 1 || count($idea_markets) > 1;
 ?>
 <div class="research-workspace">
 <header class="research-intro"><div><p class="portfolio-eyebrow">Research · Article ideas</p><h2>Article ideas</h2><p class="muted">Articles to write or update next, from the searches your competitors' articles rank for and how your own pages do. Each idea shows the likely traffic, how hard the competition is, links that would speed it up and a rough time to rank. These are estimates with ranges, each with the basis it was made on.</p></div></header>
@@ -46,7 +54,15 @@ $briefs = '/projects/' . $project->publicId . '/content-briefs/new';
     <?php if ($competitors === []): ?>
         <p class="muted">No competitors yet. Add them under <a href="<?= $view->e('/projects/' . $project->publicId . '/competitors') ?>">Competitors</a>, or track keywords so SEOcc can find the sites that rank for them.</p>
     <?php else: ?>
-        <p class="muted small">Compared with: <?php foreach ($competitors as $i => $competitor): ?><?= $i > 0 ? ', ' : '' ?><?= $view->e($competitor['domain']) ?><?= $competitor['found'] ? ' <span class="muted">(found in your results pages)</span>' : '' ?><?php endforeach; ?>. Market: <?= $view->e($market) ?>.</p>
+        <p class="muted small">Compared with: <?php foreach ($competitors as $i => $competitor): ?><?= $i > 0 ? ', ' : '' ?><?= $view->e($competitor['domain']) ?><?= $competitor['found'] ? ' <span class="muted">(found in your results pages)</span>' : '' ?><?php endforeach; ?>. <?= count($markets) > 1 ? 'Markets' : 'Market' ?>: <?= $view->e($market !== '' ? $market : 'none DataForSEO Labs covers') ?>.</p>
+    <?php endif; ?>
+    <p class="muted small article-ideas-market-source"><?= match ($market_source) {
+        'profile' => 'Markets from your business profile.',
+        'keywords' => 'No markets in your business profile, so the markets of your tracked keywords are used, most keywords first.',
+        default => 'No markets in your business profile and no tracked keywords, so the default market is used.',
+    } ?> <a href="<?= $view->e($profile) ?>">Change the markets in the business profile</a>.</p>
+    <?php if ($skipped_markets !== []): ?>
+    <p class="small article-ideas-skipped" role="note">Skipped, because DataForSEO Labs has no competitor rankings for them: <?php foreach ($skipped_markets as $i => $skip): ?><?= $i > 0 ? '; ' : '' ?><?= $view->e($skip['label']) ?><?php endforeach; ?>. They are not looked up or paid for.</p>
     <?php endif; ?>
     <?php if ($run !== null): ?>
         <p class="small"><?= match ($run->status) {
@@ -57,9 +73,13 @@ $briefs = '/projects/' . $project->publicId . '/content-briefs/new';
         } ?><?= $built_at !== null ? ' Ideas rebuilt ' . $view->e(substr($built_at, 0, 16)) . ' UTC (daily, free, from the stored lookup).' : '' ?></p>
     <?php endif; ?>
     <?php if ($can_edit && $featureOn && !$available): ?><p class="muted small">Connect DataForSEO under <a href="/integrations">Integrations</a> to look up competitor articles.</p>
-    <?php elseif ($can_edit && $featureOn && $competitors !== [] && ($run === null || !$run->active())): ?>
+    <?php elseif ($can_edit && $featureOn && $competitors !== [] && $markets !== [] && ($run === null || !$run->active())): ?>
+    <?php if (count($markets) > 1): ?>
+    <p class="small article-ideas-cost">Cost: <?= count($competitors) ?> competitor<?= count($competitors) === 1 ? '' : 's' ?> × <?= count($markets) ?> markets × about $<?= $view->e(number_format($lookup_cost, 2)) ?> per lookup = about $<?= $view->e(number_format($estimated_cost, 2)) ?> in total. Per market: <?php foreach ($markets as $i => $m): ?><?= $i > 0 ? ' · ' : '' ?><?= $view->e($m['label']) ?> $<?= $view->e(number_format($m['cost'], 2)) ?><?php endforeach; ?>.</p>
+    <?php endif; ?>
     <form method="post" action="<?= $view->e($base) ?>" class="inline-form"><?= $view->csrfField() ?>
-        <label class="small"><input type="checkbox" name="confirm_paid" value="1" required> Pay about $<?= $view->e(number_format($estimated_cost, 2)) ?> to DataForSEO for these competitors' rankings</label>
+        <input type="hidden" name="confirmed_cost" value="<?= $view->e(number_format($estimated_cost, 2, '.', '')) ?>">
+        <label class="small"><input type="checkbox" name="confirm_paid" value="1" required> Pay about $<?= $view->e(number_format($estimated_cost, 2)) ?> to DataForSEO for these competitors' rankings<?= count($markets) > 1 ? ' in ' . count($markets) . ' markets' : '' ?></label>
         <?php if ($run !== null && $run->status === 'done'): ?><label class="small"><input type="checkbox" name="confirm_repeat" value="1"> Run again and pay (last lookup <?= $view->e(substr((string) ($run->finishedAt ?? $run->createdAt), 0, 10)) ?>)</label><?php endif; ?>
         <button class="button button-primary"><?= $run === null ? 'Find article ideas' : 'Look up again' ?></button>
     </form>
@@ -67,7 +87,7 @@ $briefs = '/projects/' . $project->publicId . '/content-briefs/new';
     <?php if ($can_edit && $featureOn && $rebuildable && ($run === null || !$run->active())): ?>
     <form method="post" action="<?= $view->e($base . '/rebuild') ?>" class="inline-form"><?= $view->csrfField() ?>
         <button class="button button-ghost button-small">Rebuild ideas now</button>
-        <span class="muted small">Free: uses the stored lookup with your current rankings and relevance rules.</span>
+        <span class="muted small">Free: uses the stored lookup<?= $multi ? ' of every market' : '' ?> with your current rankings and relevance rules.</span>
     </form>
     <?php endif; ?>
 </section>
@@ -104,12 +124,23 @@ $briefs = '/projects/' . $project->publicId . '/content-briefs/new';
 <section class="card"><p class="muted">No article ideas: either you already rank in the top 3 for the topics your competitors' articles win, their ranking pages are not articles, or your business profile rules the searches out.</p></section>
 <?php endif; ?>
 
+<?php if (count($idea_markets) > 1): ?>
+<form method="get" action="<?= $view->e($base) ?>" class="inline-form article-ideas-filter">
+    <label class="small" for="ideas-market">Market</label>
+    <select id="ideas-market" name="market">
+        <option value="">All markets</option>
+        <?php foreach ($idea_markets as $m): ?><option value="<?= $view->e($m['key']) ?>"<?= $market_filter === $m['key'] ? ' selected' : '' ?>><?= $view->e($m['label']) ?></option><?php endforeach; ?>
+    </select>
+    <button class="button button-small button-ghost">Show</button>
+</form>
+<?php endif; ?>
+
 <?php foreach ($ideas as $rank => $idea): ?>
-<?php $p = $idea->prediction; ?>
+<?php $p = $idea->prediction; $split = count($idea->markets) > 1; ?>
 <section class="card article-idea" aria-labelledby="idea-<?= $view->e(substr($idea->key, 0, 12)) ?>">
-    <div class="sync-row"><div><p class="portfolio-eyebrow"><?= $idea->kind === ArticleIdea::UPDATE ? 'Update your article' : 'New article' ?> · #<?= $rank + 1 ?></p>
+    <div class="sync-row"><div><p class="portfolio-eyebrow"><?= $idea->kind === ArticleIdea::UPDATE ? 'Update your article' : 'New article' ?> · #<?= $rank + 1 ?><?= $multi && $idea->markets !== [] ? ' · ' . $view->e($idea->marketLabel()) : '' ?></p>
         <h2 id="idea-<?= $view->e(substr($idea->key, 0, 12)) ?>"><?= $view->e(mb_strtoupper(mb_substr($idea->mainKeyword, 0, 1)) . mb_substr($idea->mainKeyword, 1)) ?></h2>
-        <p class="muted small"><?= count($idea->keywords) ?> search<?= count($idea->keywords) === 1 ? '' : 'es' ?>, <?= $view->e(number_format($idea->volume)) ?> a month in total. <?php foreach ($idea->reasons as $reason): ?><?= $view->e($reason) ?> <?php endforeach; ?></p></div>
+        <p class="muted small"><?= count($idea->keywords) ?> search<?= count($idea->keywords) === 1 ? '' : 'es' ?>, <?= $view->e(number_format($idea->volume)) ?> a month in total<?= $split ? ' across ' . count($idea->markets) . ' markets' : '' ?>. <?php foreach ($idea->reasons as $reason): ?><?= $view->e($reason) ?> <?php endforeach; ?></p></div>
         <span class="indexing-badge">~<?= $view->e(number_format($p['traffic']['expected'])) ?> clicks/month</span></div>
     <?php $existing = $inventory[$idea->key] ?? []; $written = array_values(array_filter($existing, static fn(array $r): bool => $r['article'])); $other = array_values(array_filter($existing, static fn(array $r): bool => !$r['article'])); ?>
     <?php if ($written !== []): ?>
@@ -120,17 +151,22 @@ $briefs = '/projects/' . $project->publicId . '/content-briefs/new';
     <?php if ($other !== []): ?>
     <p class="muted small article-idea-other-pages">Other pages on this topic, not articles: <?php foreach ($other as $i => $row): ?><?= $i > 0 ? ', ' : '' ?><a href="<?= $view->e((string) $row['url']) ?>" rel="noopener noreferrer" target="_blank"><?= $view->e($row['title'] ?? (string) $row['url']) ?></a><?php endforeach; ?>. Link them to the new article.</p>
     <?php endif; ?>
+    <?php if ($split): ?>
+    <div class="table-scroll"><table class="table table-dense article-idea-markets" data-no-table-controls><caption class="visually-hidden">Per market</caption><thead><tr><th scope="col">Market</th><th scope="col" class="num">Searches a month</th><th scope="col" class="num">Clicks/month (positions 9 to 2)</th><th scope="col">Difficulty</th><th scope="col" class="num">Competitor articles</th></tr></thead><tbody>
+    <?php foreach ($idea->markets as $m): ?><tr><td><?= $view->e(ArticleIdea::label($m['market'])) ?></td><td class="num"><?= $view->e(number_format($m['volume'])) ?></td><td class="num"><?= $view->e(number_format($m['traffic']['low']) . '–' . number_format($m['traffic']['high'])) ?></td><td><?= $view->e($levels[$m['difficulty']] ?? $m['difficulty']) ?></td><td class="num"><?= (int) $m['competitors'] ?></td></tr><?php endforeach; ?>
+    </tbody></table></div>
+    <?php endif; ?>
     <div class="article-idea-estimates">
-        <div><h3>Traffic</h3><p><strong><?= $view->e(number_format($p['traffic']['low'])) ?>–<?= $view->e(number_format($p['traffic']['high'])) ?></strong> clicks/month</p><p class="muted small">At positions 9 to 2; about <?= $view->e(number_format($p['traffic']['expected'])) ?> at position 5. Volume × your site's click-through by position.</p></div>
+        <div><h3>Traffic</h3><p><strong><?= $view->e(number_format($p['traffic']['low'])) ?>–<?= $view->e(number_format($p['traffic']['high'])) ?></strong> clicks/month</p><p class="muted small">At positions 9 to 2; about <?= $view->e(number_format($p['traffic']['expected'])) ?> at position 5. Volume × your site's click-through by position<?= $split ? ', added up over the markets above' : '' ?>.</p></div>
         <div><h3>Difficulty</h3><p><strong><?= $view->e($levels[$p['difficulty']['level']] ?? $p['difficulty']['level']) ?></strong></p><p class="muted small"><?= $view->e(implode(' ', $p['difficulty']['reasons'])) ?></p></div>
         <div><h3>Backlinks to speed it up</h3><?php if ($p['backlinks'] === null): ?><p class="muted small">Unknown: no referring-domain data for these results.</p><?php else: ?><p><strong><?= $p['backlinks']['high'] === 0 ? 'None needed' : $view->e($p['backlinks']['low'] . '–' . $p['backlinks']['high']) . ' referring domains' ?></strong></p><p class="muted small"><?= $view->e($p['backlinks']['basis']) ?></p><?php endif; ?></div>
         <div><h3>Time to rank</h3><p><strong><?= $view->e($p['months']['low'] . '–' . $p['months']['high']) ?> months</strong></p><p class="muted small"><?= $view->e($p['months']['basis']) ?></p></div>
     </div>
     <details><summary>Competitor articles and searches</summary>
         <div class="table-scroll"><table class="table table-dense" data-no-table-controls><thead><tr><th scope="col">Competitor article</th><th scope="col" class="num">Best position</th><th scope="col" class="num">Est. traffic/month</th><th scope="col" class="num">Searches</th></tr></thead><tbody>
-        <?php foreach ($idea->competitors as $c): ?><tr><td><?= $view->e($c['domain']) ?><?= $c['found'] ? ' <span class="muted small">(found)</span>' : '' ?><br><a href="<?= $view->e($c['url']) ?>" rel="noopener noreferrer" target="_blank" class="small"><?= $view->e($path($c['url'])) ?></a></td><td class="num"><?= $view->e($c['position'] ?? '—') ?></td><td class="num"><?= $view->e(number_format($c['traffic'])) ?></td><td class="num"><?= (int) $c['keywords'] ?></td></tr><?php endforeach; ?>
+        <?php foreach ($idea->competitors as $c): ?><tr><td><?= $view->e($c['domain']) ?><?= $c['found'] ? ' <span class="muted small">(found)</span>' : '' ?><?= $split && isset($c['market']) ? ' <span class="muted small">(' . $view->e(ArticleIdea::label($c['market'])) . ')</span>' : '' ?><br><a href="<?= $view->e($c['url']) ?>" rel="noopener noreferrer" target="_blank" class="small"><?= $view->e($path($c['url'])) ?></a></td><td class="num"><?= $view->e($c['position'] ?? '—') ?></td><td class="num"><?= $view->e(number_format($c['traffic'])) ?></td><td class="num"><?= (int) $c['keywords'] ?></td></tr><?php endforeach; ?>
         </tbody></table></div>
-        <p class="small"><?php foreach ($idea->keywords as $i => $k): ?><?= $i > 0 ? ' · ' : '' ?><?= $view->e($k['keyword']) ?> <span class="muted">(<?= $view->e(number_format($k['volume'])) ?><?= $k['difficulty'] !== null ? ', KD ' . (int) $k['difficulty'] : '' ?>)</span><?php endforeach; ?></p>
+        <p class="small"><?php foreach ($idea->keywords as $i => $k): ?><?= $i > 0 ? ' · ' : '' ?><?= $view->e($k['keyword']) ?> <span class="muted">(<?= $view->e(number_format($k['volume'])) ?><?php if (count($k['volumes'] ?? []) > 1): ?>: <?php $vi = 0; foreach ($k['volumes'] ?? [] as $vm => $vv): ?><?= $vi++ > 0 ? ' + ' : '' ?><?= $view->e(ArticleIdea::label((string) $vm) . ' ' . number_format($vv)) ?><?php endforeach; ?><?php endif; ?><?= $k['difficulty'] !== null ? ', KD ' . (int) $k['difficulty'] : '' ?>)</span><?php endforeach; ?></p>
         <?php if ($idea->own !== null): ?><p class="small">Your page: <a href="<?= $view->e($idea->own['url']) ?>" rel="noopener" target="_blank"><?= $view->e($path($idea->own['url'])) ?></a><?= $idea->own['position'] !== null ? ', around position ' . $view->e(number_format($idea->own['position'], 1)) : '' ?>.</p><?php endif; ?>
     </details>
     <?php $outline = $outlines[$idea->key] ?? null; ?>

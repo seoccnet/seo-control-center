@@ -16,16 +16,16 @@ use SeoControlCenter\Domain\Projects\Project;
 
 final readonly class PdoArticleIdeaRepository implements ArticleIdeaRepository
 {
-    private const string RUN = 'id, public_id, project_id, workspace_id, status, market, competitors, estimated_cost, error, created_at, finished_at';
+    private const string RUN = 'id, public_id, project_id, workspace_id, status, market, markets, competitors, estimated_cost, error, created_at, finished_at';
     private const int CHUNK = 200;
 
     public function __construct(private Connection $db, private Clock $clock) {}
 
-    public function createRun(Project $project, array $competitors, ?string $market, float $estimatedCost, ?int $userId, string $now): ArticleIdeaRun
+    public function createRun(Project $project, array $competitors, ?string $market, float $estimatedCost, ?int $userId, string $now, array $markets = []): ArticleIdeaRun
     {
         $this->db->execute(
-            "INSERT INTO article_idea_runs (public_id, workspace_id, project_id, status, market, competitors, estimated_cost, requested_by, created_at) VALUES (?, ?, ?, 'queued', ?, ?, ?, ?, ?)",
-            [Uuid::v7($this->clock), $project->workspaceId, $project->id, $market, json_encode($competitors, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), $estimatedCost, $userId, $now],
+            "INSERT INTO article_idea_runs (public_id, workspace_id, project_id, status, market, markets, competitors, estimated_cost, requested_by, created_at) VALUES (?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?)",
+            [Uuid::v7($this->clock), $project->workspaceId, $project->id, $market, $markets === [] ? null : json_encode(array_values($markets), JSON_THROW_ON_ERROR), json_encode($competitors, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), $estimatedCost, $userId, $now],
         );
 
         return $this->run($this->db->lastInsertId()) ?? throw new \RuntimeException('Article idea run missing after insert.');
@@ -76,9 +76,9 @@ final readonly class PdoArticleIdeaRepository implements ArticleIdeaRepository
     {
         foreach (array_chunk($rows, self::CHUNK) as $chunk) {
             $this->db->execute(
-                'INSERT INTO article_competitor_rows (run_id, project_id, domain, found, url, keyword, volume, difficulty, position, traffic, avg_rd) VALUES ' . implode(', ', array_fill(0, count($chunk), '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')),
+                'INSERT INTO article_competitor_rows (run_id, project_id, market, domain, found, url, keyword, volume, difficulty, position, traffic, avg_rd) VALUES ' . implode(', ', array_fill(0, count($chunk), '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')),
                 array_merge(...array_map(static fn(array $r): array => [
-                    $runId, $projectId, mb_substr($r['domain'], 0, 255), $r['found'] ? 1 : 0, mb_substr($r['url'], 0, 2048), mb_substr($r['keyword'], 0, 255),
+                    $runId, $projectId, isset($r['market']) ? mb_substr($r['market'], 0, 64) : null, mb_substr($r['domain'], 0, 255), $r['found'] ? 1 : 0, mb_substr($r['url'], 0, 2048), mb_substr($r['keyword'], 0, 255),
                     $r['volume'] !== null ? max(0, $r['volume']) : null, $r['difficulty'] !== null ? max(0, min(100, $r['difficulty'])) : null,
                     $r['position'] !== null ? max(0, min(65535, $r['position'])) : null, $r['traffic'], $r['avg_rd'] !== null ? max(0, $r['avg_rd']) : null,
                 ], $chunk)),
@@ -92,8 +92,8 @@ final readonly class PdoArticleIdeaRepository implements ArticleIdeaRepository
             'domain' => (string) $r['domain'], 'found' => (bool) $r['found'], 'url' => (string) $r['url'], 'keyword' => (string) $r['keyword'],
             'volume' => $r['volume'] !== null ? (int) $r['volume'] : null, 'difficulty' => $r['difficulty'] !== null ? (int) $r['difficulty'] : null,
             'position' => $r['position'] !== null ? (int) $r['position'] : null, 'traffic' => $r['traffic'] !== null ? (float) $r['traffic'] : null,
-            'avg_rd' => $r['avg_rd'] !== null ? (int) $r['avg_rd'] : null,
-        ], $this->db->fetchAll('SELECT domain, found, url, keyword, volume, difficulty, position, traffic, avg_rd FROM article_competitor_rows WHERE run_id = ? ORDER BY id LIMIT 10000', [$runId]));
+            'avg_rd' => $r['avg_rd'] !== null ? (int) $r['avg_rd'] : null, 'market' => $r['market'] !== null ? (string) $r['market'] : null,
+        ], $this->db->fetchAll('SELECT market, domain, found, url, keyword, volume, difficulty, position, traffic, avg_rd FROM article_competitor_rows WHERE run_id = ? ORDER BY id LIMIT 10000', [$runId]));
     }
 
     public function replaceIdeas(int $projectId, int $workspaceId, int $runId, array $ideas, string $now): void
@@ -239,6 +239,7 @@ final readonly class PdoArticleIdeaRepository implements ArticleIdeaRepository
     private static function runRow(array $row): ArticleIdeaRun
     {
         $competitors = json_decode((string) $row['competitors'], true);
+        $markets = json_decode((string) ($row['markets'] ?? ''), true);
 
         return new ArticleIdeaRun(
             (int) $row['id'],
@@ -252,6 +253,7 @@ final readonly class PdoArticleIdeaRepository implements ArticleIdeaRepository
             $row['error'] !== null ? (string) $row['error'] : null,
             (string) $row['created_at'],
             $row['finished_at'] !== null ? (string) $row['finished_at'] : null,
+            is_array($markets) ? array_values(array_filter($markets, is_string(...))) : [],
         );
     }
 
