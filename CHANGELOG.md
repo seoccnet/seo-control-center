@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.1.0] — 2026-11-08 — Article ideas across markets
 
 - **Article ideas across markets.** *Research → Article ideas* now covers every market a project targets, not only the market of the newest tracked keyword. Markets come from the business profile; without them from the tracked keywords, most keywords first; without keywords the default market. The page names the source and links to the business profile to change them.
 - **Cost per market.** One lookup is bought per competitor and market. The page shows competitors × markets × the price per lookup, and the cost per market. The run buys exactly what you confirmed: if competitors or markets changed and the cost went up, it asks you to confirm again. The estimate now counts the rows of every lookup, so it is a little higher, and closer to the real cost, also for one market.
