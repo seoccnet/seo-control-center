@@ -45,6 +45,18 @@ enum IssueType: string
     case MissingQuestions = 'missing_questions';
     case MissingSpecTable = 'missing_spec_table';
     case MissingBusinessDetails = 'missing_business_details';
+    // Hreflang (1.2.0).
+    case HreflangInvalidCode = 'hreflang_invalid_code';
+    case HreflangConflict = 'hreflang_conflict';
+    case HreflangNoReturn = 'hreflang_no_return';
+    case HreflangBadTarget = 'hreflang_bad_target';
+    case HreflangMissingSelf = 'hreflang_missing_self';
+    case HreflangMissingDefault = 'hreflang_missing_default';
+    case HreflangLangMismatch = 'hreflang_lang_mismatch';
+    // Structured data validation (1.2.0).
+    case InvalidStructuredData = 'invalid_structured_data';
+    case IncompleteStructuredData = 'incomplete_structured_data';
+    case StructuredDataMismatch = 'structured_data_mismatch';
 
     public function severity(): string
     {
@@ -52,7 +64,9 @@ enum IssueType: string
             self::BrokenPage, self::ServerError, self::Unreachable, self::MissingTitle => 'error',
             self::RedirectChain, self::HttpUrl, self::DuplicateTitle, self::MissingDescription,
             self::DuplicateDescription, self::MissingH1, self::SlowPage, self::LargePage,
-            self::BrokenAsset, self::BrokenExternalLink, self::MixedContent, self::FetchRefused => 'warning',
+            self::BrokenAsset, self::BrokenExternalLink, self::MixedContent, self::FetchRefused,
+            self::HreflangInvalidCode, self::HreflangConflict, self::HreflangNoReturn, self::HreflangBadTarget,
+            self::InvalidStructuredData => 'warning',
             default => 'notice',
         };
     }
@@ -73,6 +87,16 @@ enum IssueType: string
             self::MissingQuestions => 'Product or category page without answered questions',
             self::MissingSpecTable => 'Product page without a specification table',
             self::MissingBusinessDetails => 'Business details missing',
+            self::HreflangInvalidCode => 'Hreflang code not valid',
+            self::HreflangConflict => 'Hreflang code used for two addresses',
+            self::HreflangNoReturn => 'Hreflang without a return link',
+            self::HreflangBadTarget => 'Hreflang points at a page that cannot rank',
+            self::HreflangMissingSelf => 'Hreflang without a self-reference',
+            self::HreflangMissingDefault => 'Hreflang without x-default',
+            self::HreflangLangMismatch => 'Page language differs from its hreflang',
+            self::InvalidStructuredData => 'Structured data with errors',
+            self::IncompleteStructuredData => 'Structured data missing recommended fields',
+            self::StructuredDataMismatch => 'Structured data not matching the page',
             self::BrokenPage => 'Broken page (4xx)',
             self::FetchRefused => 'Access denied or rate limited',
             self::ServerError => 'Server error (5xx)',
@@ -115,6 +139,16 @@ enum IssueType: string
             self::MissingQuestions => 'The product or category page answers no buyer questions on the page: no heading phrased as a question and no FAQ markup. Add a short section with the questions buyers ask before choosing, each with a direct answer. Google no longer shows FAQ rich results, so the value is in the answers themselves.',
             self::MissingBusinessDetails => 'Neither the home page nor a contact page states some of the details that tell search engines and shoppers who runs the site: Organization (or LocalBusiness) structured data, a phone number as a tel: link, or an address. Add them to the home or contact page, the same as everywhere else the business is listed.',
             self::MissingSpecTable => 'The product page has no table or list of terms with its key facts. Put specifications (size, material, compatibility, flowering time …) in a table or a list of terms, so shoppers, search engines and AI answers can compare them at a glance.',
+            self::HreflangInvalidCode => 'An hreflang code is not an ISO 639-1 language with an optional ISO 3166-1 country (such as de, en-GB or es-419) or x-default. Search engines ignore that line, so the language version it names is never shown to its audience.',
+            self::HreflangConflict => 'The same hreflang code names two different addresses. Search engines cannot tell which one to show and may ignore both. Keep one address per code.',
+            self::HreflangNoReturn => 'This page names another language version, but that page does not name this one back. Hreflang only counts when both pages confirm each other, so add the missing line to the other page.',
+            self::HreflangBadTarget => 'An hreflang line points at a page that redirects, is missing, is excluded by noindex or names another canonical. Point it at the final, indexable address of that language version.',
+            self::HreflangMissingSelf => 'The page lists other language versions but not itself. Each page in a set should include an hreflang line for its own address and language.',
+            self::HreflangMissingDefault => 'The page lists several language versions but no x-default. Add x-default for the page shown to visitors whose language or country has no version of its own, often a language chooser or the international version.',
+            self::HreflangLangMismatch => 'The language in the html lang attribute differs from the language the page’s own hreflang line gives it. Check which is right; one of them tells search engines and screen readers the wrong language.',
+            self::InvalidStructuredData => 'The page’s JSON-LD has errors that stop rich results: it does not parse, lacks a schema.org @context, or misses a property Google requires for its type (such as a product’s offers or price, or a breadcrumb item’s position). Fix it and test the page in Google’s Rich Results Test. Microdata is not validated.',
+            self::IncompleteStructuredData => 'The page’s JSON-LD is valid but misses properties Google recommends, such as an article’s image, author and datePublished or a product’s image and availability. Adding them makes rich results more likely and more complete.',
+            self::StructuredDataMismatch => 'The structured data names a product or price that the page’s HTML does not show. Google can withhold rich results or act against markup that does not match the visible page. Check the page: names and prices that JavaScript writes in after loading are not seen by this check.',
             self::BrokenPage => 'Links on your site lead to a page that does not exist. Fix or remove the links, or redirect the address to the right page.',
             self::FetchRefused => 'The server refused the crawler with HTTP 401, 403 or 429. Check access rules or rate limits; this is not proof that the page is missing.',
             self::ServerError => 'The server failed to deliver the page. Search engines drop pages that keep failing; check the server or application logs.',

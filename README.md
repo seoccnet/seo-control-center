@@ -64,6 +64,9 @@ Your search data stays in your own database. There are no seat limits, project l
 | Core Web Vitals and speed tests | Real-user data from Google CrUX, with lab tests to investigate slow pages |
 | Page monitoring | Alerts when titles, descriptions, headings, canonicals or indexing directives change |
 | Internal links and keyword cannibalization | Suggests useful internal links and finds pages competing for the same search |
+| Hreflang and structured data checks | Finds broken language sets and JSON-LD that misses what Google requires for rich results |
+| Site migration assistant | Maps old URLs to new ones, exports redirects for Apache or nginx, tests them and compares clicks after launch |
+| Search bot log analysis | Shows what Googlebot, Bingbot and AI crawlers request, from your server's access log |
 
 ### Keyword research and content
 

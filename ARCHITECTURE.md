@@ -4,6 +4,14 @@ Forecast review is documented in [docs/forecast-review.md](docs/forecast-review.
 
 Project Overview's persisted evidence dashboard is documented in [docs/overview-dashboard.md](docs/overview-dashboard.md). `OverviewEvidence` receives repository/read services through an explicit factory after project authorization. `OverviewCalculations` contains pure comparison/scoring operations; views contain no SQL. Completed audit reads do not change audit lifecycle state, and the page performs no provider calls. Source coverage and bounded samples govern comparison eligibility.
 
+## Hreflang, structured data, site migrations and bot logs (Unreleased)
+
+`HtmlPage` reads hreflang alternates, the html lang attribute and JSON-LD problems (`Crawler\StructuredDataCheck`, pure); `IssueDetector` compares hreflang sets across the fetched pages (`Crawler\Hreflang` validates codes). New issue types flow through the existing issue storage, opportunity rule and playbooks.
+
+SiteMigrationModule (after Pages) keeps plans in `SiteMigrationRepository`. `Domain\SiteMigration\RedirectMatcher` (pure, indexed by path, slug and path words) suggests targets and `RedirectCheck` (pure) grades a probe result. One queued job type runs either matching or redirect tests; tests resume from a saved cursor and queue a continuation before the job's time runs out. `UrlProbe` wraps `SiteCrawler`, so tests share its SSRF, HTTPS and robots.txt rules. Post-launch results read `SearchPerformanceReader` only; no provider calls.
+
+BotLogsModule stores uploads under `storage/tmp/bot-logs`. `Domain\BotLogs\LogLineParser` (pure) reads Common/Combined Log Format lines and recognises crawlers by user agent. `BotLogService::run` reads with `gzopen` (plain or gzip), saves each 20,000-line chunk's totals and byte offset in one transaction, and continues in a new job when time runs short. Reports read only the stored totals and `SearchPerformanceReader`.
+
 ## Page monitoring (Unreleased)
 
 PageMonitoringModule follows SiteAudit and reuses SiteCrawler for robots-aware bounded HTTPS checks. Project editors select up to 50 exact-domain URLs. The repository locks the project row for capacity and the watch row for atomic baseline/change persistence. Watch generations reject stopped/re-added work; successful job IDs suppress immediate replays. Hourly lease-protected dispatch queues up to 50 due URLs installation-wide; each check has a per-URL lease and validates current project identity/domain before fetching and saving. Failed or truncated responses never replace a complete snapshot. Snapshot comparisons avoid treating non-HTML metadata as removed. Two additive tables hold current watches and the latest 500 changes per project.

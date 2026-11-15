@@ -34,6 +34,8 @@ return [
     SeoControlCenter\Modules\PageMonitoring\PageMonitoringModule::class,
     SeoControlCenter\Modules\ChangeBundles\ChangeBundlesModule::class,
     SeoControlCenter\Modules\Pages\PagesModule::class,
+    SeoControlCenter\Modules\SiteMigration\SiteMigrationModule::class,
+    SeoControlCenter\Modules\BotLogs\BotLogsModule::class,
     SeoControlCenter\Modules\ContentInventory\ContentInventoryModule::class,
     SeoControlCenter\Modules\ContentBriefs\ContentBriefsModule::class,
     SeoControlCenter\Modules\DataQuality\DataQualityModule::class,

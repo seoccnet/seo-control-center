@@ -1,5 +1,15 @@
 # Database Design
 
+## Hreflang, structured data, site migrations and bot logs (Unreleased, migrations 2026_11_15_000100–000300)
+
+`site_audit_pages` gains `hreflang_links` (TEXT, JSON list of `{lang, url}`, at most 50 and trimmed to fit), `html_lang` (VARCHAR 35) and `schema_problems` (VARCHAR 4000, JSON list of `{level, type, problem}`, at most 10). Pages crawled before stay NULL and count as unknown. New issue types reuse the existing `site_audit_issues.type` column (VARCHAR 40), so no issue schema changes.
+
+`site_migrations` holds one plan per row (public UUID, workspace and project FKs, old and new HTTPS origin, optional launch DATE, match and test state, the test's resume cursor, last test time). `site_migration_urls` holds the old addresses keyed by `(migration_id, SHA-1 of the address)`, with Search Console clicks, the suggestion, the chosen target, a manual flag and the last test result; forms identify rows by that hash, never by internal ID. `site_migration_targets` holds the new site's addresses. Rows cascade with their plan, plans with their project. Caps (10 plans, 20,000 old and 50,000 new addresses) are enforced in the service; address imports lock the plan row so concurrent imports keep the cap.
+
+`bot_log_imports` records each uploaded log: file name and size, status, the byte offset reached, lines and crawler lines read, dropped hits, first and last request time (UTC). `bot_log_hits` keeps totals per `(import_id, bot, SHA-1 of path, status)` with the path; no IP address, visitor request or single request time is stored. Each chunk's totals and the new offset are written in one transaction, after locking the import row, so a retried job resumes without counting a line twice. At most 100,000 distinct rows per import; further new rows add to `dropped_hits`. An hourly cleanup keeps the newest five imports per project and fails imports without progress for six hours.
+
+All new tables are InnoDB with utf8mb4_unicode_ci (ASCII binary for state columns). Forward-only; older files ignore the new tables and columns.
+
 ## AI/MCP read coverage and hardening (Unreleased)
 
 No schema migration. GA4 totals and daily reads join existing current-currency/timezone import metadata, distinguish imported zero days from missing days, and remain project scoped. Landing-page pagination adds a stable URL tie-breaker and offset. Conversation serialization reuses existing lease locks; provider cooldowns/attempt caps reuse rate-limit buckets and spending accounting reuses usage reservations. No new provider data store or model cache is introduced.

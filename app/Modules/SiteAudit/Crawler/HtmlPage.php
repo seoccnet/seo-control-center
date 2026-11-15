@@ -33,6 +33,10 @@ final readonly class HtmlPage
      * @param array{types: list<string>, name: ?string, phones: list<string>, address: ?string}|array{} $business the business
      *        details the page states (0.46.0): the first structured-data node with an address or telephone (its types,
      *        name and address) and every phone number in that markup or in tel: links, as digits; empty when not read
+     * @param list<array{lang: string, url: string}>|null $hreflang the page's hreflang alternates (1.2.0), codes lower case,
+     *        at most Hreflang::MAX_LINKS; null when not read
+     * @param ?string $htmlLang the lang attribute of the html element (1.2.0), lower case
+     * @param list<array{level: string, type: string, problem: string}>|null $schemaProblems JSON-LD problems (1.2.0); null when not read
      */
     public function __construct(
         public ?string $title,
@@ -54,6 +58,9 @@ final readonly class HtmlPage
         public int $sourceLinks = 0,
         public array $citation = [],
         public array $business = [],
+        public ?array $hreflang = null,
+        public ?string $htmlLang = null,
+        public ?array $schemaProblems = null,
     ) {}
 
     /**
@@ -145,7 +152,10 @@ final readonly class HtmlPage
                 break;
             }
         }
-        [$schemaTypes, $schemaAuthor, $schemaModified, $business] = self::structuredData($document);
+        [$schemaTypes, $schemaAuthor, $schemaModified, $business, $jsonLd] = self::structuredData($document);
+        $hreflang = self::hreflang($document, $base);
+        $htmlLang = strtolower(trim((string) $document->documentElement?->getAttribute('lang')));
+        $htmlLang = preg_match('/^[a-z0-9_-]{1,35}$/', $htmlLang) === 1 ? $htmlLang : null;
         foreach ($document->querySelectorAll('a[href]') as $anchor) {
             $href = trim((string) $anchor->getAttribute('href'));
             if (str_starts_with(strtolower($href), 'tel:')) {
@@ -178,6 +188,8 @@ final readonly class HtmlPage
             }
             $wordCount = (int) preg_match_all('/[\p{L}\p{N}]+/u', mb_substr($body->textContent ?? '', 0, 1_000_000));
         }
+        // Compared with the markup's product name and price (1.2.0); the title and H1 count as page text too.
+        $schemaProblems = $jsonLd === [] ? [] : StructuredDataCheck::check($jsonLd, implode(' ', [$title ?? '', implode(' ', $h1s), mb_substr($body->textContent ?? '', 0, 1_000_000)]));
 
         return new self(
             $title !== null ? mb_substr($title, 0, 500) : null,
@@ -199,7 +211,37 @@ final readonly class HtmlPage
             count($sources),
             $citation,
             $business,
+            $hreflang,
+            $htmlLang,
+            $schemaProblems,
         );
+    }
+
+    /**
+     * The hreflang alternates in the head: link rel="alternate" with a
+     * hreflang attribute, codes lower case, URLs absolute (1.2.0).
+     *
+     * @return list<array{lang: string, url: string}>
+     */
+    private static function hreflang(\Dom\HTMLDocument $document, string $base): array
+    {
+        $out = [];
+        foreach ($document->querySelectorAll('link[hreflang][href]') as $link) {
+            if (!in_array('alternate', self::directives((string) $link->getAttribute('rel'), ' '), true)) {
+                continue;
+            }
+            $lang = strtolower(trim((string) $link->getAttribute('hreflang')));
+            $url = UrlNormalizer::resolve((string) $link->getAttribute('href'), $base);
+            if ($lang === '' || $url === null || strlen($url) > 1000) {
+                continue;
+            }
+            $out[] = ['lang' => mb_substr($lang, 0, 35), 'url' => $url];
+            if (count($out) >= Hreflang::MAX_LINKS) {
+                break;
+            }
+        }
+
+        return $out;
     }
 
     /** A phone number as digits, with a leading + kept. */
@@ -370,7 +412,7 @@ final readonly class HtmlPage
      * Structured data types from JSON-LD (including @graph) and microdata,
      * plus whether any of it names an author and states a modified date.
      *
-     * @return array{list<string>, bool, bool, array{types: list<string>, name: ?string, phones: list<string>, address: ?string}}
+     * @return array{list<string>, bool, bool, array{types: list<string>, name: ?string, phones: list<string>, address: ?string}, list<array{json: mixed}|array{error: string}>}
      */
     private static function structuredData(\Dom\HTMLDocument $document): array
     {
@@ -378,6 +420,7 @@ final readonly class HtmlPage
         $author = false;
         $modified = false;
         $business = ['types' => [], 'name' => null, 'phones' => [], 'address' => null];
+        $blocks = [];
         $visit = static function (mixed $node, int $depth) use (&$visit, &$types, &$author, &$modified, &$business): void {
             if (!is_array($node) || $depth > 6) {
                 return;
@@ -426,7 +469,15 @@ final readonly class HtmlPage
             if (strlen($json) > 200_000) {
                 continue;
             }
-            $visit(json_decode($json, true), 0);
+            $decoded = json_decode($json, true);
+            if (trim($json) === '') {
+                $blocks[] = ['error' => 'An empty JSON-LD script'];
+            } elseif ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+                $blocks[] = ['error' => 'JSON-LD does not parse: ' . json_last_error_msg()];
+            } else {
+                $blocks[] = ['json' => $decoded];
+            }
+            $visit($decoded, 0);
         }
         foreach ($document->querySelectorAll('[itemtype]') as $element) {
             foreach (preg_split('/\s+/', trim((string) $element->getAttribute('itemtype'))) ?: [] as $itemType) {
@@ -437,7 +488,7 @@ final readonly class HtmlPage
             }
         }
 
-        return [array_slice(array_keys($types), 0, 20), $author, $modified, $business];
+        return [array_slice(array_keys($types), 0, 20), $author, $modified, $business, array_slice($blocks, 0, 20)];
     }
 
     /**

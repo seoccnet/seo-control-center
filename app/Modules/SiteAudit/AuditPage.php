@@ -57,6 +57,20 @@ final readonly class AuditPage
          * @var array{types: list<string>, name: ?string, phones: list<string>, address: ?string}|null
          */
         public ?array $business = null,
+        /**
+         * Hreflang alternates (1.2.0); [] when the page has none, null when crawled before they were recorded.
+         *
+         * @var list<array{lang: string, url: string}>|null
+         */
+        public ?array $hreflang = null,
+        /** The html element's lang attribute (1.2.0), lower case. */
+        public ?string $htmlLang = null,
+        /**
+         * JSON-LD problems (1.2.0); [] when none, null when crawled before they were checked.
+         *
+         * @var list<array{level: string, type: string, problem: string}>|null
+         */
+        public ?array $schemaProblems = null,
     ) {}
 
     public function isHtml(): bool
@@ -107,6 +121,9 @@ final readonly class AuditPage
             $result->page?->sourceLinks,
             $result->page !== null && $result->page->citation !== [] ? $result->page->citation : null,
             $result->page !== null && $result->page->business !== [] ? $result->page->business : null,
+            $result->page?->hreflang,
+            $result->page?->htmlLang,
+            $result->page?->schemaProblems,
         );
     }
 

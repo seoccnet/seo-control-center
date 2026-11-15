@@ -20,6 +20,8 @@ $tabs = [
     'inventory' => ['Content inventory', $base . '/inventory'],
     'indexing' => ['Google indexing', $base . '/indexing'],
     'page-monitoring' => ['Page monitoring', $base . '/page-monitoring'],
+    'site-migration' => ['Site migration', $base . '/site-migration'],
+    'bot-logs' => ['Bot logs', $base . '/bot-logs'],
     'keywords' => ['Keywords', $base . '/keywords'],
     'rankings' => ['Rankings', $base . '/rankings'],
     'competitors' => ['Competitors', $base . '/competitors'],
@@ -41,7 +43,7 @@ $tabs = [
 $initial = mb_strtoupper(mb_substr($project->name, 0, 1)) ?: '?';
 $tabGroups = [
     'Research' => ['pages', 'inventory', 'keywords', 'rankings', 'competitors', 'article-ideas', 'topic-plans'],
-    'Improve' => ['content-briefs', 'site-audit', 'lab-tests', 'page-monitoring', 'backlinks'],
+    'Improve' => ['content-briefs', 'site-audit', 'lab-tests', 'page-monitoring', 'site-migration', 'bot-logs', 'backlinks'],
     'Visibility' => ['indexing', 'ai-visibility', 'local'],
     'Manage' => ['annotations', 'change-bundles', 'data-quality', 'reports', 'settings'],
 ];

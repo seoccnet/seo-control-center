@@ -19,7 +19,7 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
     private const string AUDIT_COLUMNS = 'id, public_id, project_id, workspace_id, status, trigger_type, start_url, max_pages, pages_crawled,
         pages_found, health_score, errors, warnings, notices, error, created_at, started_at, finished_at, updated_at';
     private const string PAGE_COLUMNS = 'id, url, depth, state, status_code, content_type, redirect_to, duration_ms, bytes, truncated, title,
-        description, h1_count, h1, canonical, noindex, word_count, internal_links, external_links, error, schema_types, og_type, has_author, source_links, citation_signals, business_signals';
+        description, h1_count, h1, canonical, noindex, word_count, internal_links, external_links, error, schema_types, og_type, has_author, source_links, citation_signals, business_signals, hreflang_links, html_lang, schema_problems';
     private const int CHUNK = 200;
 
     public function __construct(
@@ -186,7 +186,7 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
             $this->db->execute(
                 'UPDATE site_audit_pages SET state = ?, status_code = ?, content_type = ?, redirect_to = ?, duration_ms = ?, bytes = ?, truncated = ?,
                         title = ?, description = ?, h1_count = ?, h1 = ?, canonical = ?, noindex = ?, word_count = ?, internal_links = ?,
-                        external_links = ?, error = ?, schema_types = ?, og_type = ?, has_author = ?, source_links = ?, citation_signals = ?, business_signals = ?, crawled_at = ?
+                        external_links = ?, error = ?, schema_types = ?, og_type = ?, has_author = ?, source_links = ?, citation_signals = ?, business_signals = ?, hreflang_links = ?, html_lang = ?, schema_problems = ?, crawled_at = ?
                  WHERE id = ? AND audit_id = ?',
                 [
                     $result->state, $result->statusCode, $result->contentType, $result->redirectTo !== null ? mb_substr($result->redirectTo, 0, 2048) : null,
@@ -197,6 +197,9 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
                     $html !== null ? min(65535, $html->sourceLinks) : null,
                     $html !== null && $html->citation !== [] ? json_encode($html->citation, JSON_THROW_ON_ERROR) : null,
                     $html !== null && $html->business !== [] ? mb_substr(json_encode($html->business, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), 0, 1000) : null,
+                    $html?->hreflang !== null ? self::jsonList($html->hreflang, 60000) : null,
+                    $html?->htmlLang,
+                    $html?->schemaProblems !== null ? self::jsonList($html->schemaProblems, 4000) : null,
                     $now, $page->id, $audit->id,
                 ],
             );
@@ -561,7 +564,59 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
             array_key_exists('source_links', $row) && $row['source_links'] !== null ? (int) $row['source_links'] : null,
             self::citation($row['citation_signals'] ?? null),
             self::business($row['business_signals'] ?? null),
+            self::hreflang($row['hreflang_links'] ?? null),
+            $str($row['html_lang'] ?? null),
+            self::schemaProblems($row['schema_problems'] ?? null),
         );
+    }
+
+    /**
+     * A list as JSON, dropping entries from the end until it fits the column.
+     *
+     * @param list<array<string, string>> $list
+     */
+    private static function jsonList(array $list, int $bytes): string
+    {
+        do {
+            $json = json_encode($list, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            array_pop($list);
+        } while (strlen($json) > $bytes);
+
+        return $json;
+    }
+
+    /** @return list<array{lang: string, url: string}>|null */
+    private static function hreflang(mixed $json): ?array
+    {
+        $data = is_string($json) ? json_decode($json, true) : null;
+        if (!is_array($data)) {
+            return null;
+        }
+        $out = [];
+        foreach ($data as $entry) {
+            if (is_array($entry) && is_string($entry['lang'] ?? null) && is_string($entry['url'] ?? null)) {
+                $out[] = ['lang' => $entry['lang'], 'url' => $entry['url']];
+            }
+        }
+
+        return $out;
+    }
+
+    /** @return list<array{level: string, type: string, problem: string}>|null */
+    private static function schemaProblems(mixed $json): ?array
+    {
+        $data = is_string($json) ? json_decode($json, true) : null;
+        if (!is_array($data)) {
+            return null;
+        }
+        $out = [];
+        foreach ($data as $entry) {
+            if (is_array($entry) && is_string($entry['level'] ?? null) && is_string($entry['type'] ?? null) && is_string($entry['problem'] ?? null)) {
+                $out[] = ['level' => $entry['level'], 'type' => $entry['type'], 'problem' => $entry['problem']];
+            }
+        }
+
+        return $out;
     }
 
     /** @return array{types: list<string>, name: ?string, phones: list<string>, address: ?string}|null */

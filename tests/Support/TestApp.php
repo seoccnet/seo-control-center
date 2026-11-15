@@ -393,6 +393,17 @@ final class TestApp
         $container->instance(\SeoControlCenter\Modules\Pages\PageExportScheduler::class, $pageExports);
         // Export files go to a per-container temporary directory, never the repository's storage.
         $container->instance(\SeoControlCenter\Modules\Pages\PageExportDirectory::class, new \SeoControlCenter\Modules\Pages\PageExportDirectory(sys_get_temp_dir() . '/scc-page-exports-' . bin2hex(random_bytes(6))));
+        $siteMigrations = new Fakes\InMemorySiteMigrations($container->make(Clock::class));
+        $container->instance(Fakes\InMemorySiteMigrations::class, $siteMigrations);
+        $container->instance(\SeoControlCenter\Modules\SiteMigration\SiteMigrationRepository::class, $siteMigrations);
+        $container->instance(\SeoControlCenter\Modules\SiteMigration\SiteMigrationScheduler::class, $siteMigrations);
+        $container->instance(\SeoControlCenter\Modules\SiteMigration\UrlProbe::class, $siteMigrations);
+        $botLogs = new Fakes\InMemoryBotLogs($container->make(Clock::class));
+        $container->instance(Fakes\InMemoryBotLogs::class, $botLogs);
+        $container->instance(\SeoControlCenter\Modules\BotLogs\BotLogRepository::class, $botLogs);
+        $container->instance(\SeoControlCenter\Modules\BotLogs\BotLogScheduler::class, $botLogs);
+        // Uploaded logs go to a per-container temporary directory, never the repository's storage.
+        $container->instance(\SeoControlCenter\Modules\BotLogs\BotLogDirectory::class, new \SeoControlCenter\Modules\BotLogs\BotLogDirectory(sys_get_temp_dir() . '/scc-bot-logs-' . bin2hex(random_bytes(6))));
         $vitals = new \SeoControlCenter\Tests\Support\Fakes\InMemoryWebVitals();
         $container->instance(\SeoControlCenter\Tests\Support\Fakes\InMemoryWebVitals::class, $vitals);
         $container->instance(\SeoControlCenter\Modules\WebVitals\WebVitalsRepository::class, $vitals);

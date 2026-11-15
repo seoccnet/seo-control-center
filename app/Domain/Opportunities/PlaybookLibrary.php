@@ -1011,6 +1011,16 @@ final class PlaybookLibrary
         'missing_business_details' => ['State who runs the site', 'On the home page add Organization structured data (or the most specific LocalBusiness type if customers visit you) with the business name, logo, website, phone number and address, and the links to your social profiles in sameAs. Show the phone number as a tel: link and the address as text on the contact page, written the same as in your Google Business Profile and directories.'],
         'missing_spec_table' => ['Put product facts in a table', 'Collect the facts shoppers compare (size, material, compatibility, contents, flowering time …) in a table or a list of terms on each product page, generated from the product data so it stays consistent, and keep the selling text for what the table cannot say.'],
         'missing_author' => ['Show who wrote each article', 'Add a visible byline linking to an author page with a short bio and credentials, and add the author to the Article markup.'],
+        'hreflang_invalid_code' => ['Fix hreflang codes', 'Use an ISO 639-1 language, optionally with an ISO 3166-1 country (de, en-GB, es-419), or x-default. Correct the template or plugin setting that writes the codes, not single pages.'],
+        'hreflang_conflict' => ['Give each hreflang code one address', 'Make every language and country code in a set point to exactly one address; remove or rename the duplicate line.'],
+        'hreflang_no_return' => ['Add the missing hreflang return links', 'Every page in a language set must list all the others and itself. Generate the hreflang lines for all versions from one shared list, so adding a language updates every page.'],
+        'hreflang_bad_target' => ['Point hreflang at final, indexable addresses', 'Replace hreflang URLs that redirect, fail, are noindex or name another canonical with the final, indexable address of that language version.'],
+        'hreflang_missing_self' => ['Add a self-referencing hreflang line', 'Include each page’s own address and language in its hreflang set.'],
+        'hreflang_missing_default' => ['Add x-default', 'Add an x-default line pointing to the version for visitors whose language has no version of its own, usually the international page or a language chooser.'],
+        'hreflang_lang_mismatch' => ['Align the page language', 'Make the html lang attribute and the page’s own hreflang code name the same language.'],
+        'invalid_structured_data' => ['Fix structured data errors', 'Correct the JSON-LD so it parses, declares the schema.org @context and has the properties Google requires for its type, ideally in the template that generates it. Check a fixed page in the Rich Results Test, then re-run the audit.'],
+        'incomplete_structured_data' => ['Complete structured data', 'Add the recommended properties the audit lists (image, author, dates, availability, telephone) from the same data the page shows.'],
+        'structured_data_mismatch' => ['Match structured data to the page', 'Generate product names and prices in the markup from the same data the page shows, and make sure the visible page states them; update both together when prices change.'],
     ];
 
     /** @return array<string, mixed> */

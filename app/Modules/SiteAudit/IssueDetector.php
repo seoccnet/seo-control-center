@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace SeoControlCenter\Modules\SiteAudit;
 
+use SeoControlCenter\Modules\SiteAudit\Crawler\Hreflang;
 use SeoControlCenter\Modules\SiteAudit\Crawler\Pagination;
+use SeoControlCenter\Modules\SiteAudit\Crawler\StructuredDataCheck;
 
 /**
  * Turns the crawled pages of an audit into issues and a health score.
@@ -162,6 +164,17 @@ final class IssueDetector
                 $add($page, IssueType::MissingContentMarkup, $missingType);
             }
             // Null citation signals mean the page was crawled before 0.43.0: unknown, not missing.
+            // JSON-LD validation (1.2.0); null means crawled before it was checked.
+            foreach ([
+                StructuredDataCheck::INVALID => IssueType::InvalidStructuredData,
+                StructuredDataCheck::INCOMPLETE => IssueType::IncompleteStructuredData,
+                StructuredDataCheck::MISMATCH => IssueType::StructuredDataMismatch,
+            ] as $level => $type) {
+                $found = array_values(array_filter($page->schemaProblems ?? [], static fn(array $p): bool => $p['level'] === $level));
+                if ($found !== []) {
+                    $add($page, $type, self::listed(array_map(static fn(array $p): string => $p['type'] . ': ' . $p['problem'], $found)));
+                }
+            }
             if (!$laterPage && $page->citation !== null && ($page->isProduct() || $page->isCategory())) {
                 $kind = $page->isProduct() ? 'Product page' : 'Category page';
                 if ($page->citation['questions'] === 0 && array_intersect($page->schemaTypes ?? [], AuditPage::QUESTION_TYPES) === []) {
@@ -171,6 +184,9 @@ final class IssueDetector
                     $add($page, IssueType::MissingSpecTable, 'No table or list of terms (such as size, material or flowering time)');
                 }
             }
+        }
+        foreach (self::hreflang($pages, $byUrl) as [$page, $type, $detail]) {
+            $add($page, $type, $detail);
         }
         $business = self::missingBusinessDetails($pages);
         if ($business !== null) {
@@ -202,6 +218,114 @@ final class IssueDetector
         }
 
         return ['issues' => $issues, ...self::score($pages, $issues)];
+    }
+
+    /**
+     * Hreflang checks (1.2.0) on every fetched HTML page with alternates:
+     * codes Google cannot read, one code for two addresses, no line for the
+     * page itself, no x-default in a set of several languages, an html lang
+     * that disagrees with the page's own code, and, for alternates this
+     * audit fetched, targets that cannot rank or do not link back. Targets
+     * the audit did not fetch (other hosts, beyond the page limit) are
+     * unknown and not reported. At most one issue of each type per page.
+     *
+     * @param list<AuditPage> $pages
+     * @param array<string, AuditPage> $byUrl
+     * @return list<array{AuditPage, IssueType, string}>
+     */
+    private static function hreflang(array $pages, array $byUrl): array
+    {
+        $issues = [];
+        foreach ($pages as $page) {
+            if ($page->state !== 'done' || !$page->isHtml() || $page->hreflang === null || $page->hreflang === []) {
+                continue;
+            }
+            $invalid = [];
+            $codes = [];
+            $self = null;
+            foreach ($page->hreflang as $entry) {
+                $problem = Hreflang::problem($entry['lang']);
+                if ($problem !== null) {
+                    $invalid[] = $problem;
+                    continue;
+                }
+                $codes[$entry['lang']][$entry['url']] = true;
+                if ($entry['url'] === $page->url) {
+                    $self ??= $entry['lang'];
+                }
+            }
+            if ($invalid !== []) {
+                $issues[] = [$page, IssueType::HreflangInvalidCode, self::listed(array_values(array_unique($invalid)))];
+            }
+            $conflicts = [];
+            foreach ($codes as $code => $urls) {
+                if (count($urls) > 1) {
+                    $conflicts[] = sprintf('%s → %s', $code, implode(' and ', array_map(static fn(string $u): string => self::relative($u, $page->url), array_slice(array_keys($urls), 0, 2))));
+                }
+            }
+            if ($conflicts !== []) {
+                $issues[] = [$page, IssueType::HreflangConflict, self::listed($conflicts)];
+            }
+            if ($codes === []) {
+                continue;
+            }
+            if ($self === null) {
+                $issues[] = [$page, IssueType::HreflangMissingSelf, sprintf('Lists %s but not %s', implode(', ', array_slice(array_keys($codes), 0, 5)), self::relative($page->url, $page->url))];
+            }
+            $languages = array_filter(array_keys($codes), static fn(string $c): bool => $c !== Hreflang::DEFAULT);
+            if (count($languages) >= 2 && !isset($codes[Hreflang::DEFAULT])) {
+                $issues[] = [$page, IssueType::HreflangMissingDefault, sprintf('%d language versions, no x-default', count($languages))];
+            }
+            if ($self !== null && $self !== Hreflang::DEFAULT && $page->htmlLang !== null && Hreflang::language($page->htmlLang) !== Hreflang::language($self)) {
+                $issues[] = [$page, IssueType::HreflangLangMismatch, sprintf('html lang="%s", hreflang %s', $page->htmlLang, $self)];
+            }
+            $bad = [];
+            $noReturn = [];
+            foreach ($codes as $code => $urls) {
+                foreach (array_keys($urls) as $url) {
+                    $target = $byUrl[$url] ?? null;
+                    if ($url === $page->url || $target === null || $target->state !== 'done') {
+                        continue;
+                    }
+                    $why = match (true) {
+                        $target->statusCode === null || $target->statusCode === 0 => 'not reachable',
+                        $target->isRedirect() => sprintf('redirects (%d)', $target->statusCode),
+                        $target->statusCode >= 400 => sprintf('HTTP %d', $target->statusCode),
+                        !$target->isHtml() => null,
+                        $target->noindex => 'noindex',
+                        $target->canonical !== null && $target->canonical !== $target->url => 'canonical elsewhere',
+                        default => null,
+                    };
+                    if ($why !== null) {
+                        $bad[] = sprintf('%s → %s (%s)', $code, self::relative($url, $page->url), $why);
+                        continue;
+                    }
+                    if ($target->isHtml() && $target->hreflang !== null && !in_array($page->url, array_column($target->hreflang, 'url'), true)) {
+                        $noReturn[] = sprintf('%s → %s', $code, self::relative($url, $page->url));
+                    }
+                }
+            }
+            if ($bad !== []) {
+                $issues[] = [$page, IssueType::HreflangBadTarget, self::listed($bad)];
+            }
+            if ($noReturn !== []) {
+                $issues[] = [$page, IssueType::HreflangNoReturn, 'Not linking back: ' . self::listed($noReturn)];
+            }
+        }
+
+        return $issues;
+    }
+
+    /**
+     * Up to three items, then how many more.
+     *
+     * @param list<string> $items
+     */
+    private static function listed(array $items): string
+    {
+        $more = count($items) - 3;
+
+        return implode('; ', array_slice($items, 0, 3)) . ($more > 0 ? sprintf(' and %d more', $more) : '');
     }
 
     /**

@@ -8,6 +8,14 @@ Paid data and client websites are out of scope for testing: use your own install
 
 # Security Requirements
 
+## Site migrations and bot logs (Unreleased)
+
+Site migration plans and bot logs are project data: routes resolve the project through `ProjectService` (404 for foreign or invisible projects) and the plan or log by public UUID within that project. Creating, importing, choosing targets and deleting need *Edit projects*; redirect tests need *Run analyses* and the Site audit feature. All changes are CSRF-protected and audited (`project.site_migration_*`, `project.bot_log_*`). Forms identify addresses by a SHA-1 of the URL, never an internal ID.
+
+Redirect tests go through `SiteCrawler`: HTTPS only, no ports, public hosts only, robots.txt respected, redirects reported but never followed, and only to the plan's two hosts. A plan's old or new origin must be on the project's domain, so a plan cannot turn SEOcc into a request proxy for unrelated sites; tests are rate-limited to four per project and hour.
+
+Uploaded logs are moved to `storage/tmp/bot-logs` outside the web root under a random name, refused unless gzip or NUL-free text, capped at 200 MB and ten uploads per project and hour, and deleted when read, refused or failed (an hourly cleanup removes leftovers). Only crawler requests are kept, as totals per crawler, path and status; IP addresses and visitor requests are never stored. Log lines are parsed with a bounded regular expression (16 KB per line) and never executed or rendered unescaped.
+
 ## Page monitoring (Unreleased)
 
 Watch and annotation POSTs require CSRF and ProjectsEdit after project visibility resolution. Watches accept bounded exact HTTPS URLs on the current primary domain/www, without credentials, port, fragment or whitespace. The existing crawler enforces public-address/TLS/request limits and robots.txt; no redirect target or discovered link is fetched. Jobs bind workspace/project/public UUID plus watch generation and revalidate the current domain and active watch. Leases serialize checks and scheduling; row locks serialize capacity, snapshots and annotation linking. Failed/truncated checks retain evidence. Views escape all page text and use no-store. Mutation audits contain project/annotation identifiers, not fetched content. Detection summaries and annotations are untrusted plain text; no website writes or new AI permissions are added.

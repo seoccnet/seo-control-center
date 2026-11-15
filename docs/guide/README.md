@@ -14,7 +14,9 @@ It brings together:
 - **Backlinks**: your link profile next to your competitors', referring domains, new and lost links, anchor texts and the link gap;
 - **AI visibility**: Google AI Overviews and how often ChatGPT and Google's AI mention you and your competitors;
 - **Local SEO**: Google Maps positions, a ranking grid across your city, and your Business Profile;
-- **Site audit**: broken links, redirects and on-page problems on your own site;
+- **Site audit**: broken links, redirects, on-page problems, hreflang and structured data errors on your own site;
+- **Site migration**: redirect plans for a domain move or restructure, redirect tests and post-launch results;
+- **Bot logs**: what Googlebot, Bingbot and AI crawlers request, from your server's access log;
 - **Opportunities**: concrete, prioritised to-dos found in all of this data;
 - **Reports** by e-mail, weekly or monthly;
 - **Alerts and weekly digest:** ranking and traffic drops, new audit errors, lost strong links and budget warnings;
@@ -51,6 +53,8 @@ It brings together:
 26. [The Quest Log](26-quest-log.md)
 27. [Data quality](27-data-quality.md)
 28. [Investigations](28-investigations.md)
+29. [Site migration](29-site-migration.md)
+30. [Bot logs](30-bot-logs.md)
 
 ## Getting help
 

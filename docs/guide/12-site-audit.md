@@ -33,6 +33,32 @@ Four growth notices point at improvements rather than errors and do not lower th
 
 These appear as opportunities with their own action plans.
 
+### Hreflang
+
+For sites with language or country versions, every page's `<link rel="alternate" hreflang="…">` lines are read and compared across the pages the audit fetched:
+
+| Severity | Issue |
+|---|---|
+| Warning | **Hreflang code not valid**: not an ISO 639-1 language with an optional ISO 3166-1 country, such as `de`, `en-GB` or `es-419`. The most common mistakes are explained: `en-UK` (use `en-GB`), `us-en` (the region comes second), `en_GB` (use a hyphen) and `en-EU` (EU is not a country). |
+| Warning | **Hreflang code used for two addresses**: the same code points to different pages. |
+| Warning | **Hreflang without a return link**: page A names page B, but B does not name A back. Hreflang only counts when both pages confirm each other. |
+| Warning | **Hreflang points at a page that cannot rank**: the target redirects, fails, is excluded by noindex or names another canonical. |
+| Notice | **Hreflang without a self-reference**: the page lists other versions but not itself. |
+| Notice | **Hreflang without x-default**: two or more language versions and no `x-default`. |
+| Notice | **Page language differs from its hreflang**: the `html lang` attribute and the page's own hreflang code name different languages. |
+
+Only versions the audit fetched are compared. Language versions on another host, or beyond the audit's page limit, are not reported, because whether they link back is unknown. Language versions that are only reachable through hreflang (not through a link or the sitemap) are not fetched; most sites link them from a language switcher. Pages crawled before 1.2.0 did not record hreflang, so the checks start with the next audit.
+
+### Structured data validation
+
+The JSON-LD on indexable pages is checked against what Google documents for its rich results:
+
+- **Structured data with errors** (warning): a script that does not parse, a missing schema.org `@context`, or a property Google requires for the type, for example a product without `offers`, `review` or `aggregateRating`; an offer without a price or a three-letter currency; a breadcrumb item without a position or name; a FAQ question without an answer; a local business without a name or address; an event, recipe, video or job posting without its required fields.
+- **Structured data missing recommended fields** (growth notice): valid, but without what Google recommends, such as an article's image, author and `datePublished`, a product's image or an offer's availability, or a local business's telephone.
+- **Structured data not matching the page** (growth notice): the product name or price in the markup does not appear in the page's HTML. Names and prices that JavaScript writes in after loading are not seen by this check, so read it as a reason to look, then confirm with Google's Rich Results Test.
+
+Each issue lists up to three problems with the type they belong to. Microdata is recognised for the *No structured data* check but not validated. Pages crawled before 1.2.0 were not validated; the next audit checks them.
+
 Title, description, heading and text checks apply only to pages that are meant to be indexed. The pages of a paginated listing (`?page=2`, `?page=3`, …) usually share a title, so they count as one page for duplicate titles and descriptions. Pages with *noindex*, or with a canonical tag pointing to another address, are listed once as such and not checked further.
 
 ## Reading the results
