@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — Verified crawlers, countries next to hreflang, MCP for migrations and logs
+## [1.2.1] — 2026-11-16 — Verified crawlers, countries next to hreflang, MCP for migrations and logs
 
 - **Verified Googlebot and Bingbot in bot logs.** While a log is read, each Googlebot and Bingbot request is checked against the IP ranges Google and Bing publish (`googlebot.json`, `special-crawlers.json`, `bingbot.json`, fetched at most daily and cached; a copy up to 30 days old is used when they cannot be read). The crawler table gets a **Verified** column with the share that really came from them. The address is checked and dropped; no IP is stored. A crawler counts as verified only when every part of the log could be checked; otherwise, and for logs read before, it shows “–”.
 - **Countries and language versions** on the site audit page, when the audit found hreflang: each valid code with the pages that use it, and the 15 countries with the most Search Console clicks in the last 28 days with the versions that target them by country code. Sites that target languages only are reported as such, without guessing languages per country.
