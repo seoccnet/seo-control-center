@@ -43,6 +43,7 @@ final readonly class SiteAuditController
         private \SeoControlCenter\Modules\WebVitals\WebVitalsRepository $vitals,
         private \SeoControlCenter\Modules\SiteAudit\RenderedAuditService $rendered,
         private ?\SeoControlCenter\Modules\SiteAudit\TitleTriage $titleTriage = null,
+        private ?\SeoControlCenter\Modules\SiteAudit\InternationalTargeting $international = null,
     ) {}
 
     public function show(ServerRequestInterface $request): ResponseInterface
@@ -168,6 +169,8 @@ final readonly class SiteAuditController
             'project' => $project,
             // Which long titles cost clicks (0.48.0), read only on the "Title too long" filter.
             'titleTriage' => $type === IssueType::TitleTooLong && $audit !== null && $audit->isCompleted() && $page === 1 ? $this->titleTriage?->triage($project, $audit) : null,
+            // Countries next to the hreflang setup (1.2.1), on the overview and the hreflang filters.
+            'international' => $audit !== null && $audit->isCompleted() && $page === 1 && ($type === null || str_starts_with($type->value, 'hreflang_')) ? $this->international?->report($project, $audit) : null,
             'webVitals' => $this->vitals->list($project->id, 100),
             'renderedResult' => $this->rendered->current($project),
             'renderedAvailable' => $this->rendered->available($project),

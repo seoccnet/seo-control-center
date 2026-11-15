@@ -43,6 +43,12 @@ final class BotLogsModule implements Module, ProvidesJobs
         $container->singleton(BotLogRepository::class, static fn(Container $c): BotLogRepository => new PdoBotLogRepository($c->make(Connection::class), $c->make(Clock::class)));
         $container->singleton(BotLogScheduler::class, static fn(Container $c): BotLogScheduler => new BotLogJobs($c->make(Queue::class)));
         $container->singleton(BotLogDirectory::class, static fn(Container $c): BotLogDirectory => new BotLogDirectory($c->make(Paths::class)->storage('tmp/bot-logs')));
+        $container->singleton(CrawlerRangeSource::class, static fn(Container $c): CrawlerRangeSource => new PublishedCrawlerRanges(
+            $c->make(\SeoControlCenter\Core\Http\Client\HttpClient::class),
+            $c->make(Clock::class),
+            $c->make(LoggerInterface::class),
+            $c->make(Paths::class)->storage('cache'),
+        ));
         $container->singleton(BotLogService::class, static fn(Container $c): BotLogService => new BotLogService(
             $c->make(BotLogRepository::class),
             $c->make(BotLogScheduler::class),
@@ -53,6 +59,7 @@ final class BotLogsModule implements Module, ProvidesJobs
             $c->make(Clock::class),
             $c->make(LoggerInterface::class),
             $c->make(BotLogDirectory::class)->path,
+            $c->make(CrawlerRangeSource::class),
         ));
         $container->singleton(BotLogController::class, static fn(Container $c): BotLogController => new BotLogController($c->make(ProjectService::class), $c->make(BotLogService::class), $c->make(ResponseFactory::class), $c->make(ViewRenderer::class)));
     }

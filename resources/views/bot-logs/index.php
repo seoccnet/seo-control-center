@@ -9,7 +9,7 @@ use SeoControlCenter\Domain\BotLogs\LogLineParser;
  * @var SeoControlCenter\Domain\Projects\Project $project
  * @var list<SeoControlCenter\Modules\BotLogs\BotLogImport> $imports
  * @var ?SeoControlCenter\Modules\BotLogs\BotLogImport $selected
- * @var array{bots: array<string, array{hits: int, paths: int, ok: int, redirects: int, client_errors: int, server_errors: int, with_query: int}>, bot: string, top: list<array{path: string, status: int, hits: int}>, errors: list<array{path: string, status: int, hits: int}>, redirects: list<array{path: string, status: int, hits: int}>, parameters: list<array{path: string, status: int, hits: int}>, missed: list<array{url: string, clicks: int}>, missedChecked: int}|null $report
+ * @var array{bots: array<string, array{hits: int, paths: int, ok: int, redirects: int, client_errors: int, server_errors: int, with_query: int, verified: ?int}>, bot: string, top: list<array{path: string, status: int, hits: int}>, errors: list<array{path: string, status: int, hits: int}>, redirects: list<array{path: string, status: int, hits: int}>, parameters: list<array{path: string, status: int, hits: int}>, missed: list<array{url: string, clicks: int}>, missedChecked: int}|null $report
  * @var bool $canEdit
  * @var int $limitMb
  */
@@ -43,7 +43,7 @@ $table = static function (string $id, string $title, string $empty, array $rows)
         <button class="button button-primary">Upload and analyse</button>
     </form>
     <p class="muted small">In cPanel, open <strong>Metrics → Raw Access</strong> and download the log of this site; other hosts offer it under logs or statistics. Common and Combined Log Format (Apache, nginx, LiteSpeed) are read. SEOcc keeps only the requests of search and AI crawlers, counted per path and status code, and deletes the file once it is read. Visitor IP addresses are never stored.</p>
-    <p class="muted small">Crawlers are recognised by their user agent, which anyone can copy, so a share of “Googlebot” requests may come from other tools. The newest <?= $view->e((string) SeoControlCenter\Modules\BotLogs\BotLogService::KEEP) ?> logs of a project are kept.</p>
+    <p class="muted small">Crawlers are recognised by their user agent, which anyone can copy. Googlebot and Bingbot requests are also checked against the IP ranges Google and Bing publish, while the log is read; the <em>Verified</em> column shows how many really came from them. The newest <?= $view->e((string) SeoControlCenter\Modules\BotLogs\BotLogService::KEEP) ?> logs of a project are kept.</p>
 </section>
 <?php endif; ?>
 
@@ -77,10 +77,10 @@ $table = static function (string $id, string $title, string $empty, array $rows)
     <p class="muted">The log has no requests from known search or AI crawlers. Check that it is the access log of this site in a standard format.</p>
     <?php else: ?>
     <div class="table-scroll"><table class="table table-dense">
-        <thead><tr><th scope="col">Crawler</th><th scope="col">Requests</th><th scope="col">Distinct paths</th><th scope="col">Success (2xx)</th><th scope="col">Redirects (3xx)</th><th scope="col">Errors (4xx)</th><th scope="col">Server errors (5xx)</th><th scope="col">With parameters</th></tr></thead>
+        <thead><tr><th scope="col">Crawler</th><th scope="col">Requests</th><th scope="col">Distinct paths</th><th scope="col">Success (2xx)</th><th scope="col">Redirects (3xx)</th><th scope="col">Errors (4xx)</th><th scope="col">Server errors (5xx)</th><th scope="col">With parameters</th><th scope="col">Verified</th></tr></thead>
         <tbody>
         <?php foreach ($report['bots'] as $key => $t): ?>
-            <tr><td><a href="<?= $view->e($base . '?' . http_build_query(['log' => $selected->publicId, 'bot' => $key])) ?>"<?= $key === $report['bot'] ? ' aria-current="true"' : '' ?>><?= $view->e(LogLineParser::label($key)) ?></a></td><td><?= $view->e(number_format($t['hits'])) ?></td><td><?= $view->e(number_format($t['paths'])) ?></td><td><?= $view->e($share($t['ok'], $t['hits'])) ?></td><td><?= $view->e($share($t['redirects'], $t['hits'])) ?></td><td><?= $view->e($share($t['client_errors'], $t['hits'])) ?></td><td><?= $view->e($share($t['server_errors'], $t['hits'])) ?></td><td><?= $view->e($share($t['with_query'], $t['hits'])) ?></td></tr>
+            <tr><td><a href="<?= $view->e($base . '?' . http_build_query(['log' => $selected->publicId, 'bot' => $key])) ?>"<?= $key === $report['bot'] ? ' aria-current="true"' : '' ?>><?= $view->e(LogLineParser::label($key)) ?></a></td><td><?= $view->e(number_format($t['hits'])) ?></td><td><?= $view->e(number_format($t['paths'])) ?></td><td><?= $view->e($share($t['ok'], $t['hits'])) ?></td><td><?= $view->e($share($t['redirects'], $t['hits'])) ?></td><td><?= $view->e($share($t['client_errors'], $t['hits'])) ?></td><td><?= $view->e($share($t['server_errors'], $t['hits'])) ?></td><td><?= $view->e($share($t['with_query'], $t['hits'])) ?></td><td><?= $t['verified'] !== null ? $view->e($share($t['verified'], $t['hits'])) : '<span class="muted" title="This crawler publishes no IP ranges, or they could not be read">–</span>' ?></td></tr>
         <?php endforeach; ?>
         </tbody>
     </table></div>

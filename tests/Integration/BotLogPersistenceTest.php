@@ -21,7 +21,10 @@ final class BotLogPersistenceTest extends FullStackTestCase
         $import = $repo->create($projectId, $owner['workspace']->id, 'access.log', 1000, $owner['user']->id);
         self::assertFalse($repo->saveChunk($import->id, [], 10, 1, 0, null, null, 10), 'Only a running import takes chunks.');
         $repo->markRunning($import->id);
-        $hit = static fn(string $bot, string $path, int $status, int $hits): array => ['bot' => $bot, 'path' => $path, 'status' => $status, 'hits' => $hits];
+        $hit = static fn(string $bot, string $path, int $status, int $hits): array => ['bot' => $bot, 'path' => $path, 'status' => $status, 'hits' => $hits, 'verified' => $bot === 'googlebot' ? $hits - 1 : 0];
+        // The first run could verify both crawlers, a continuation only Googlebot: Bingbot's count would be partial.
+        $repo->restrictVerifiedBots($import->id, ['googlebot', 'bingbot'], true);
+        $repo->restrictVerifiedBots($import->id, ['googlebot'], false);
         self::assertTrue($repo->saveChunk($import->id, [
             'a' => $hit('googlebot', '/a', 200, 5),
             'b' => $hit('googlebot', '/b?x=1', 200, 2),
@@ -42,8 +45,10 @@ final class BotLogPersistenceTest extends FullStackTestCase
         self::assertSame('2026-11-03 00:00:00', $saved->lastSeen);
 
         $totals = $repo->botTotals($import->id);
-        self::assertSame(['hits' => 11, 'paths' => 3, 'ok' => 8, 'redirects' => 0, 'client_errors' => 3, 'server_errors' => 0, 'with_query' => 2], $totals['googlebot']);
+        self::assertSame(['hits' => 11, 'paths' => 3, 'ok' => 8, 'redirects' => 0, 'client_errors' => 3, 'server_errors' => 0, 'with_query' => 2, 'verified' => 7], $totals['googlebot']);
         self::assertSame(1, $totals['bingbot']['redirects']);
+        self::assertNull($totals['bingbot']['verified']);
+        self::assertSame(['googlebot'], $saved->verifiedBots);
         self::assertSame([['path' => '/a', 'status' => 200, 'hits' => 6]], $repo->topPaths($import->id, 'googlebot', 1));
         self::assertSame([['path' => '/gone', 'status' => 404, 'hits' => 3]], $repo->topPaths($import->id, 'googlebot', 5, 400, 599));
         self::assertSame([['path' => '/b?x=1', 'status' => 200, 'hits' => 2]], $repo->topPaths($import->id, 'googlebot', 5, null, null, true));

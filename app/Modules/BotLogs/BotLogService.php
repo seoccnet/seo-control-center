@@ -54,6 +54,7 @@ final readonly class BotLogService
         private Clock $clock,
         private LoggerInterface $logger,
         private string $directory,
+        private ?CrawlerRangeSource $ranges = null,
     ) {}
 
     /** @return list<BotLogImport> */
@@ -152,6 +153,9 @@ final readonly class BotLogService
             return;
         }
         $this->logs->markRunning($import->id);
+        // Published crawler IP ranges (1.2.1); a crawler counts as verified only if every run could check it.
+        $ranges = $this->ranges?->ranges() ?? [];
+        $this->logs->restrictVerifiedBots($import->id, array_keys($ranges), $import->byteOffset === 0);
         $handle = @gzopen($path, 'rb');
         if ($handle === false) {
             throw new \RuntimeException('The log file cannot be opened.');
@@ -174,8 +178,12 @@ final readonly class BotLogService
                     }
                     ++$botLines;
                     $key = $hit['bot'] . '|' . $hit['status'] . '|' . $hit['path'];
-                    $hits[$key] ??= ['bot' => $hit['bot'], 'path' => $hit['path'], 'status' => $hit['status'], 'hits' => 0];
+                    $hits[$key] ??= ['bot' => $hit['bot'], 'path' => $hit['path'], 'status' => $hit['status'], 'hits' => 0, 'verified' => 0];
                     ++$hits[$key]['hits'];
+                    // The address is checked here and then dropped; it is never stored.
+                    if ($hit['ip'] !== null && isset($ranges[$hit['bot']]) && $ranges[$hit['bot']]->contains($hit['ip'])) {
+                        ++$hits[$key]['verified'];
+                    }
                     if ($hit['time'] !== null) {
                         $first = $first === null || $hit['time'] < $first ? $hit['time'] : $first;
                         $last = $last === null || $hit['time'] > $last ? $hit['time'] : $last;
@@ -246,7 +254,7 @@ final readonly class BotLogService
      * What one bot did in the log.
      *
      * @return array{
-     *     bots: array<string, array{hits: int, paths: int, ok: int, redirects: int, client_errors: int, server_errors: int, with_query: int}>,
+     *     bots: array<string, array{hits: int, paths: int, ok: int, redirects: int, client_errors: int, server_errors: int, with_query: int, verified: ?int}>,
      *     bot: string,
      *     top: list<array{path: string, status: int, hits: int}>,
      *     errors: list<array{path: string, status: int, hits: int}>,

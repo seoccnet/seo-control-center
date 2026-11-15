@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased] — Verified crawlers, countries next to hreflang, MCP for migrations and logs
+
+- **Verified Googlebot and Bingbot in bot logs.** While a log is read, each Googlebot and Bingbot request is checked against the IP ranges Google and Bing publish (`googlebot.json`, `special-crawlers.json`, `bingbot.json`, fetched at most daily and cached; a copy up to 30 days old is used when they cannot be read). The crawler table gets a **Verified** column with the share that really came from them. The address is checked and dropped; no IP is stored. A crawler counts as verified only when every part of the log could be checked; otherwise, and for logs read before, it shows “–”.
+- **Countries and language versions** on the site audit page, when the audit found hreflang: each valid code with the pages that use it, and the 15 countries with the most Search Console clicks in the last 28 days with the versions that target them by country code. Sites that target languages only are reported as such, without guessing languages per country.
+- **MCP: `site_migrations` and `bot_logs`** (`pages:read`, read-only). `site_migrations` lists plans, and for one plan its redirects with match, target and last test (filterable, paged) and the post-launch click comparison. `bot_logs` lists uploads and reports one crawler's errors, parameter URLs, redirects, top paths and missed pages, with verified counts. 67 tools.
+- **Migration:** `2026_11_16_000100` adds `bot_log_hits.verified_hits` and `bot_log_imports.verified_bots`. No dependency added.
+
 ## [1.2.0] — 2026-11-15 — Hreflang, structured data, site migrations and bot logs
 
 - **Hreflang checks in the site audit.** Each page's hreflang lines are read and compared across the pages the audit fetched. New warnings: codes Google cannot read (with the fix for `en-UK`, `us-en`, `en_GB` and `en-EU`), one code for two addresses, a version that does not link back, and a target that redirects, fails, is noindex or names another canonical. New notices: no self-reference, no `x-default` in a set of several languages, and an `html lang` that disagrees with the page's own code. Versions the audit did not fetch are not reported.

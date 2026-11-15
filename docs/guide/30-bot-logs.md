@@ -16,7 +16,9 @@ Only requests of known crawlers are kept, and only as totals: per crawler, path 
 
 Recognised crawlers: Googlebot (including the inspection tool and shopping crawlers), Bingbot, GPTBot, ChatGPT search and users, Claude, Perplexity, Applebot, Google-Extended and GoogleOther, YandexBot, DuckDuckBot, Baiduspider, and common SEO tools.
 
-Crawlers are recognised by their user agent, which anyone can copy. A share of “Googlebot” requests may come from other tools; SEOcc does not verify the IP addresses.
+Crawlers are recognised by their user agent, which anyone can copy. Since 1.2.1, Googlebot and Bingbot requests are also checked against the IP ranges Google and Bing publish for their crawlers. The **Verified** column shows the share that really came from them; the rest only used their name, usually scrapers and SEO tools. Each address is checked while the log is read and then dropped, so no IP address is stored.
+
+To check, SEOcc downloads Google's `googlebot.json` and `special-crawlers.json` and Bing's `bingbot.json` from their documentation sites, at most once a day (they are cached under `storage/cache`). Nothing about your installation or your logs is sent. If a file cannot be read, a copy up to 30 days old is used; without one, that crawler shows “–” instead of a share. The other crawlers are not verified. Logs uploaded before 1.2.1 show “–” too.
 
 ## The report
 

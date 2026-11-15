@@ -1,5 +1,9 @@
 # Database Design
 
+## Bot log verification (Unreleased, migration 2026_11_16_000100)
+
+`bot_log_hits.verified_hits` (INT UNSIGNED, default 0) counts the requests of each total that came from the crawler's published IP ranges, merged with the same `ON DUPLICATE KEY UPDATE` as `hits`. `bot_log_imports.verified_bots` (ASCII, comma-separated, NULL before) lists the crawlers every run of the import could verify: the first run sets it and continuations only remove crawlers, under a row lock, so a verified count never covers part of a log. Reads report `verified` only for listed crawlers and NULL otherwise. No IP address is stored. Forward-only; older files ignore the columns.
+
 ## Hreflang, structured data, site migrations and bot logs (Unreleased, migrations 2026_11_15_000100–000300)
 
 `site_audit_pages` gains `hreflang_links` (TEXT, JSON list of `{lang, url}`, at most 50 and trimmed to fit), `html_lang` (VARCHAR 35) and `schema_problems` (VARCHAR 4000, JSON list of `{level, type, problem}`, at most 10). Pages crawled before stay NULL and count as unknown. New issue types reuse the existing `site_audit_issues.type` column (VARCHAR 40), so no issue schema changes.

@@ -31,10 +31,13 @@ final class LogLineParser
     ];
     public const int MAX_PATH = 1024;
 
-    private const string PATTERN = '/^(?:\S+\s+)?(?:\S+) \S+ \S+ \[(?<time>[^\]]+)\] "(?<method>[A-Z]{3,10}) (?<target>\S+)(?: [^"]*)?" (?<status>\d{3}) \S+(?: "(?:[^"\\\\]|\\\\.)*" "(?<agent>(?:[^"\\\\]|\\\\.)*)")?/';
+    private const string PATTERN = '/^(?:\S+\s+)?(?<ip>\S+) \S+ \S+ \[(?<time>[^\]]+)\] "(?<method>[A-Z]{3,10}) (?<target>\S+)(?: [^"]*)?" (?<status>\d{3}) \S+(?: "(?:[^"\\\\]|\\\\.)*" "(?<agent>(?:[^"\\\\]|\\\\.)*)")?/';
 
     /**
-     * @return array{bot: string, path: string, status: int, time: ?string}|null null for a line that is not a bot request or cannot be read
+     * The client IP is returned only so a caller can check it against the
+     * crawler's published ranges while reading; it must never be stored.
+     *
+     * @return array{bot: string, path: string, status: int, time: ?string, ip: ?string}|null null for a line that is not a bot request or cannot be read
      */
     public static function parse(string $line): ?array
     {
@@ -60,7 +63,9 @@ final class LogLineParser
             return null;
         }
 
-        return ['bot' => $bot, 'path' => $path, 'status' => (int) $m['status'], 'time' => self::time($m['time'])];
+        $ip = filter_var($m['ip'], FILTER_VALIDATE_IP);
+
+        return ['bot' => $bot, 'path' => $path, 'status' => (int) $m['status'], 'time' => self::time($m['time']), 'ip' => is_string($ip) ? $ip : null];
     }
 
     public static function label(string $bot): string

@@ -156,6 +156,8 @@ final class McpModule implements Module
                     new \SeoControlCenter\Modules\Mcp\Tools\OutcomesTool($c->make(\SeoControlCenter\Modules\Opportunities\OpportunityService::class)),
                     new \SeoControlCenter\Modules\Mcp\Tools\InternalLinksTool($c->make(\SeoControlCenter\Modules\SiteAudit\LinkSuggestionService::class)),
                     new \SeoControlCenter\Modules\Mcp\Tools\LabTestsTool($c->make(\SeoControlCenter\Modules\LabTests\LabTestService::class)),
+                    new \SeoControlCenter\Modules\Mcp\Tools\SiteMigrationsTool($c->make(\SeoControlCenter\Modules\SiteMigration\SiteMigrationService::class)),
+                    new \SeoControlCenter\Modules\Mcp\Tools\BotLogsTool($c->make(\SeoControlCenter\Modules\BotLogs\BotLogService::class)),
                     new \SeoControlCenter\Modules\Mcp\Tools\ArticleIdeasTool($c->make(\SeoControlCenter\Modules\ArticleIdeas\ArticleIdeaService::class)),
                     new \SeoControlCenter\Modules\Mcp\Tools\TopicPlansTool($c->make(\SeoControlCenter\Modules\ArticleIdeas\TopicPlanService::class)),
                     // Write tools (ADR-036): listed only for tokens with a write scope.

@@ -28,12 +28,21 @@ interface BotLogRepository
      * retry resumes exactly after the last saved chunk. New (bot, path,
      * status) rows beyond $maxRows are counted as dropped hits instead.
      *
-     * @param array<string, array{bot: string, path: string, status: int, hits: int}> $hits
+     * @param array<string, array{bot: string, path: string, status: int, hits: int, verified: int}> $hits verified: requests from the crawler's published IP ranges
      * @return bool false when the import is no longer running (deleted or failed)
      */
     public function saveChunk(int $id, array $hits, int $offset, int $lines, int $botLines, ?string $firstSeen, ?string $lastSeen, int $maxRows): bool;
 
     public function finish(int $id, string $status, ?string $error = null): void;
+
+    /**
+     * Records which crawlers this run could verify: the first run sets the
+     * list, later runs keep only crawlers that are still verifiable, so a
+     * verified count never covers part of the log.
+     *
+     * @param list<string> $bots
+     */
+    public function restrictVerifiedBots(int $id, array $bots, bool $first): void;
 
     /**
      * Imports without progress since $staleBefore (still active), and imports beyond the newest $keep of each project.
@@ -42,7 +51,7 @@ interface BotLogRepository
      */
     public function due(string $staleBefore, int $keep): array;
 
-    /** @return array<string, array{hits: int, paths: int, ok: int, redirects: int, client_errors: int, server_errors: int, with_query: int}> bot => totals */
+    /** @return array<string, array{hits: int, paths: int, ok: int, redirects: int, client_errors: int, server_errors: int, with_query: int, verified: ?int}> bot => totals; verified is null when the crawler could not be verified */
     public function botTotals(int $importId): array;
 
     /**

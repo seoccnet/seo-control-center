@@ -71,6 +71,8 @@ For useful answers, specify the project, dates and page or keyword. Large lists 
 | `page_changes` | Watched pages and detected title, description, H1, canonical, noindex and status changes | Pages |
 | `seo_change_impact`, `indexing_status` | Before/after comparison around a recorded change; saved Google indexing evidence | Pages |
 | `content_briefs_list`, `content_brief_details` | Saved writing plans and their original evidence | Pages |
+| `site_migrations` | Migration plans, each old address's redirect target and last test, and clicks before and after launch | Pages |
+| `bot_logs` | Uploaded access logs: what each crawler requested, its errors, parameter URLs and missed pages, and how many requests were verified | Pages |
 
 The three search tools combine Google and Bing by default. Ask for one engine with `source`: *google* or *bing* (for example "Bing clicks of the last 28 days"). Combined figures use Google's average position, because Bing reports none per day. Page details read stored data without fetching another paid lookup.
 

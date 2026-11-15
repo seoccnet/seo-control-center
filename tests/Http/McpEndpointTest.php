@@ -212,7 +212,7 @@ final class McpEndpointTest extends TestCase
         $pages->queryRows[$this->s->acmeProject->id] = [new \SeoControlCenter\Modules\Pages\PageQuery('seo tools', $url, new Metrics(3, 100, 5))];
         $token = $this->token($this->s->member, ['pages:read'], ownerFallback: false);
         $tools = array_column($this->rpcResult($this->rpc($token, 'tools/list'))['tools'], 'name');
-        self::assertSame(['seo_change_impact', 'change_bundles', 'what_worked', 'pages_list', 'page_details', 'analytics_summary', 'business_measurement', 'content_inventory', 'overlap_review', 'brief_claims', 'indexing_status', 'content_briefs_list', 'content_brief_details', 'web_vitals', 'page_changes', 'internal_links', 'lab_tests'], $tools);
+        self::assertSame(['seo_change_impact', 'change_bundles', 'what_worked', 'pages_list', 'page_details', 'analytics_summary', 'business_measurement', 'content_inventory', 'overlap_review', 'brief_claims', 'indexing_status', 'content_briefs_list', 'content_brief_details', 'web_vitals', 'page_changes', 'internal_links', 'lab_tests', 'site_migrations', 'bot_logs'], $tools);
         $result = $this->rpcResult($this->rpc($token, 'tools/call', ['name' => 'page_details', 'arguments' => ['project_id' => $this->s->acmeProject->publicId, 'url' => $url]]));
         self::assertFalse($result['isError']);
         self::assertSame($url, $result['structuredContent']['url']);
@@ -252,7 +252,7 @@ final class McpEndpointTest extends TestCase
         $list = $this->rpc($token, 'tools/list');
         self::assertStringContainsString('"properties":{}', (string) $list->getBody(), 'Empty schemas are JSON objects.');
         $tools = array_column($this->rpcResult($list)['tools'], 'name');
-        self::assertCount(65, $tools);
+        self::assertCount(67, $tools);
 
         $scopes = array_map(static fn(\SeoControlCenter\Domain\Mcp\McpScope $s): string => $s->value, \SeoControlCenter\Domain\Mcp\McpScope::cases());
         foreach ($tools as $i => $tool) {

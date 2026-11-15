@@ -47,6 +47,8 @@ For sites with language or country versions, every page's `<link rel="alternate"
 | Notice | **Hreflang without x-default**: two or more language versions and no `x-default`. |
 | Notice | **Page language differs from its hreflang**: the `html lang` attribute and the page's own hreflang code name different languages. |
 
+When the audit found hreflang, the audit page also shows **Countries and language versions** (1.2.1): every valid code with the number of pages that use it for themselves, and the 15 countries with the most Search Console clicks in the last 28 days, each with the versions that target it by country code (`en-GB` for the United Kingdom). A country without its own version is served by a language-only version or `x-default`; that is fine unless the country brings many clicks and needs different prices, delivery, spelling or legal content. A site that uses language codes only (`en`, `de`) is reported as such, because SEOcc does not guess which language a country speaks.
+
 Only versions the audit fetched are compared. Language versions on another host, or beyond the audit's page limit, are not reported, because whether they link back is unknown. Language versions that are only reachable through hreflang (not through a link or the sitemap) are not fetched; most sites link them from a language switcher. Pages crawled before 1.2.0 did not record hreflang, so the checks start with the next audit.
 
 ### Structured data validation

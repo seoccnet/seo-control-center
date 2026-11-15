@@ -104,6 +104,7 @@ final class SiteAuditModule implements Module, ProvidesJobs
             $c->make(\SeoControlCenter\Modules\WebVitals\WebVitalsRepository::class),
             $c->make(RenderedAuditService::class),
             $c->has(\SeoControlCenter\Domain\SearchConsole\SearchPerformanceReader::class) ? new TitleTriage($c->make(SiteAuditRepository::class), $c->make(\SeoControlCenter\Domain\SearchConsole\SearchPerformanceReader::class)) : null,
+            $c->has(\SeoControlCenter\Domain\SearchConsole\SearchPerformanceReader::class) ? new InternationalTargeting($c->make(SiteAuditRepository::class), $c->make(\SeoControlCenter\Domain\SearchConsole\SearchPerformanceReader::class), $c->make(\SeoControlCenter\Core\Support\Clock::class)) : null,
         ));
     }
 

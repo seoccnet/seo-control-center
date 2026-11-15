@@ -29,7 +29,9 @@ final class BotLogsHttpTest extends TestCase
             $lines[] = '66.249.66.1 - - [0' . (1 + $i % 3) . '/Nov/2026:10:00:00 +0000] "GET /shop?sort=price&page=' . $i . ' HTTP/1.1" 200 100 "-" ' . $google;
         }
         $lines[] = '66.249.66.1 - - [04/Nov/2026:10:00:00 +0000] "GET /old-page HTTP/1.1" 404 100 "-" ' . $google;
-        $lines[] = '66.249.66.1 - - [04/Nov/2026:10:00:00 +0000] "GET /old-page HTTP/1.1" 404 100 "-" ' . $google;
+        // A tool using Googlebot's name from an address outside Google's ranges.
+        $lines[] = '203.0.113.9 - - [04/Nov/2026:10:00:00 +0000] "GET /old-page HTTP/1.1" 404 100 "-" ' . $google;
+        $store->ranges = ['googlebot' => ['66.249.64.0/19']];
         $lines[] = '40.77.167.1 - - [04/Nov/2026:11:00:00 +0000] "GET /about HTTP/1.1" 301 0 "-" "Mozilla/5.0 (compatible; bingbot/2.0)"';
         $lines[] = '9.9.9.9 - - [04/Nov/2026:11:00:00 +0000] "GET /about HTTP/1.1" 200 10 "-" "Mozilla/5.0 Firefox/130"';
         $s->container->get(SearchPerformanceStore::class)->replaceDay($s->acmeProject->id, '2026-11-02', ['query' => [], 'page' => [
@@ -51,10 +53,16 @@ final class BotLogsHttpTest extends TestCase
         self::assertSame(33, $done->botLines);
         self::assertSame('2026-11-01 10:00:00', $done->firstSeen);
         self::assertSame('2026-11-04 11:00:00', $done->lastSeen);
+        self::assertSame(['googlebot'], $done->verifiedBots);
+        $totals = $store->botTotals($import->id);
+        self::assertSame([32, 31], [$totals['googlebot']['hits'], $totals['googlebot']['verified']], 'The request from outside Google\'s ranges is not verified.');
+        self::assertNull($totals['bingbot']['verified'], 'Without published ranges, Bingbot stays unverified rather than zero.');
+        self::assertStringNotContainsString('203.0.113.9', (string) json_encode($store->hits), 'No IP address is stored.');
         self::assertSame([], glob(dirname($path) . '/*') ?: [], 'The log file is deleted once read.');
 
         $page = html_entity_decode((string) $s->loggedIn($s->owner)->get('/projects/' . $s->acmeProject->publicId . '/bot-logs')->getBody());
         self::assertStringContainsString('Crawlers in access_log.gz', $page);
+        self::assertStringContainsString('<td>96.9%</td></tr>', $page, 'Googlebot\'s verified share.');
         self::assertStringContainsString('/shop?sort=price&page=0', $page);
         self::assertStringContainsString('https://shop.acme.test/best-seller', $page, 'A page with clicks that Googlebot never requested.');
         self::assertStringNotContainsString('<td class="brief-url">https://shop.acme.test/old-page</td>', $page, 'Requested pages are not listed as missed.');

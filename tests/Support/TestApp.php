@@ -401,6 +401,7 @@ final class TestApp
         $botLogs = new Fakes\InMemoryBotLogs($container->make(Clock::class));
         $container->instance(Fakes\InMemoryBotLogs::class, $botLogs);
         $container->instance(\SeoControlCenter\Modules\BotLogs\BotLogRepository::class, $botLogs);
+        $container->instance(\SeoControlCenter\Modules\BotLogs\CrawlerRangeSource::class, $botLogs);
         $container->instance(\SeoControlCenter\Modules\BotLogs\BotLogScheduler::class, $botLogs);
         // Uploaded logs go to a per-container temporary directory, never the repository's storage.
         $container->instance(\SeoControlCenter\Modules\BotLogs\BotLogDirectory::class, new \SeoControlCenter\Modules\BotLogs\BotLogDirectory(sys_get_temp_dir() . '/scc-bot-logs-' . bin2hex(random_bytes(6))));

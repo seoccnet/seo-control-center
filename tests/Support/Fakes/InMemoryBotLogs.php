@@ -6,19 +6,26 @@ namespace SeoControlCenter\Tests\Support\Fakes;
 
 use SeoControlCenter\Core\Support\Clock;
 use SeoControlCenter\Core\Support\Uuid;
+use SeoControlCenter\Domain\BotLogs\CrawlerIpRanges;
 use SeoControlCenter\Modules\BotLogs\BotLogImport;
 use SeoControlCenter\Modules\BotLogs\BotLogRepository;
 use SeoControlCenter\Modules\BotLogs\BotLogScheduler;
+use SeoControlCenter\Modules\BotLogs\CrawlerRangeSource;
 
-/** Bot log imports in memory, plus the queue (records what was scheduled). */
-final class InMemoryBotLogs implements BotLogRepository, BotLogScheduler
+/**
+ * Bot log imports in memory, plus the queue (records what was scheduled)
+ * and published crawler ranges ($ranges, bot => CIDR list; empty by default).
+ */
+final class InMemoryBotLogs implements BotLogRepository, BotLogScheduler, CrawlerRangeSource
 {
     /** @var array<int, BotLogImport> */
     public array $imports = [];
-    /** @var array<int, array<string, array{bot: string, path: string, status: int, hits: int}>> */
+    /** @var array<int, array<string, array{bot: string, path: string, status: int, hits: int, verified: int}>> */
     public array $hits = [];
     /** @var list<array{id: int, offset: int}> */
     public array $scheduled = [];
+    /** @var array<string, list<string>> */
+    public array $ranges = [];
 
     public function __construct(private readonly Clock $clock) {}
 
@@ -76,8 +83,9 @@ final class InMemoryBotLogs implements BotLogRepository, BotLogScheduler
                 $dropped += $hit['hits'];
                 continue;
             }
-            $this->hits[$id][$key] ??= [...$hit, 'hits' => 0];
+            $this->hits[$id][$key] ??= [...$hit, 'hits' => 0, 'verified' => 0];
             $this->hits[$id][$key]['hits'] += $hit['hits'];
+            $this->hits[$id][$key]['verified'] += $hit['verified'];
         }
         $this->with($id, [
             'byteOffset' => $offset, 'linesRead' => $import->linesRead + $lines, 'botLines' => $import->botLines + $botLines, 'droppedHits' => $import->droppedHits + $dropped,
@@ -90,6 +98,18 @@ final class InMemoryBotLogs implements BotLogRepository, BotLogScheduler
     public function finish(int $id, string $status, ?string $error = null): void
     {
         $this->with($id, ['status' => $status, 'error' => $error]);
+    }
+
+    public function restrictVerifiedBots(int $id, array $bots, bool $first): void
+    {
+        $keep = $first ? $bots : array_values(array_intersect($this->imports[$id]->verifiedBots ?? [], $bots));
+        sort($keep);
+        $this->with($id, ['verifiedBots' => $keep]);
+    }
+
+    public function ranges(): array
+    {
+        return array_map(static fn(array $cidrs): CrawlerIpRanges => new CrawlerIpRanges($cidrs), $this->ranges);
     }
 
     public function due(string $staleBefore, int $keep): array
@@ -110,7 +130,8 @@ final class InMemoryBotLogs implements BotLogRepository, BotLogScheduler
     {
         $out = [];
         foreach ($this->hits[$importId] ?? [] as $h) {
-            $t = $out[$h['bot']] ?? ['hits' => 0, 'paths' => [], 'ok' => 0, 'redirects' => 0, 'client_errors' => 0, 'server_errors' => 0, 'with_query' => 0];
+            $t = $out[$h['bot']] ?? ['hits' => 0, 'paths' => [], 'ok' => 0, 'redirects' => 0, 'client_errors' => 0, 'server_errors' => 0, 'with_query' => 0, 'verified' => 0];
+            $t['verified'] += $h['verified'];
             $t['hits'] += $h['hits'];
             $t['paths'][$h['path']] = true;
             $band = match (true) {
@@ -125,7 +146,9 @@ final class InMemoryBotLogs implements BotLogRepository, BotLogScheduler
         }
         uasort($out, static fn(array $a, array $b): int => $b['hits'] <=> $a['hits']);
 
-        return array_map(static fn(array $t): array => [...$t, 'paths' => count($t['paths'])], $out);
+        $verifiable = $this->imports[$importId]->verifiedBots ?? [];
+
+        return array_map(static fn(array $t): array => [...$t, 'paths' => count($t['paths'])], array_combine(array_keys($out), array_map(static fn(string $bot, array $t): array => [...$t, 'verified' => in_array($bot, $verifiable, true) ? $t['verified'] : null], array_keys($out), $out)));
     }
 
     public function topPaths(int $importId, string $bot, int $limit, ?int $minStatus = null, ?int $maxStatus = null, bool $withQuery = false): array

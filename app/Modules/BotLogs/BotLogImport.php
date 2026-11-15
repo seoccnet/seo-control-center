@@ -29,6 +29,12 @@ final readonly class BotLogImport
         public ?string $error,
         public string $createdAt,
         public string $updatedAt,
+        /**
+         * Crawlers whose requests were checked against their published IP ranges in every chunk (1.2.1); null before.
+         *
+         * @var list<string>|null
+         */
+        public ?array $verifiedBots = null,
     ) {}
 
     public function active(): bool

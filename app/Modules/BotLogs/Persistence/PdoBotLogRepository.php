@@ -88,9 +88,9 @@ final readonly class PdoBotLogRepository implements BotLogRepository
                 }
                 if ($insert !== []) {
                     $this->db->execute(
-                        'INSERT INTO bot_log_hits (import_id, bot, path_hash, status, path, hits) VALUES ' . implode(', ', array_fill(0, count($insert), '(?, ?, UNHEX(?), ?, ?, ?)'))
-                        . ' ON DUPLICATE KEY UPDATE hits = hits + VALUES(hits)',
-                        array_merge(...array_map(static fn(array $h): array => [$id, $h['bot'], sha1($h['path']), $h['status'], $h['path'], $h['hits']], $insert)),
+                        'INSERT INTO bot_log_hits (import_id, bot, path_hash, status, path, hits, verified_hits) VALUES ' . implode(', ', array_fill(0, count($insert), '(?, ?, UNHEX(?), ?, ?, ?, ?)'))
+                        . ' ON DUPLICATE KEY UPDATE hits = hits + VALUES(hits), verified_hits = verified_hits + VALUES(verified_hits)',
+                        array_merge(...array_map(static fn(array $h): array => [$id, $h['bot'], sha1($h['path']), $h['status'], $h['path'], $h['hits'], $h['verified']], $insert)),
                     );
                 }
             }
@@ -122,21 +122,40 @@ final readonly class PdoBotLogRepository implements BotLogRepository
         return array_map(self::hydrate(...), $rows);
     }
 
+    public function restrictVerifiedBots(int $id, array $bots, bool $first): void
+    {
+        $this->db->transaction(function () use ($id, $bots, $first): void {
+            $current = $this->db->fetchValue('SELECT verified_bots FROM bot_log_imports WHERE id = ? FOR UPDATE', [$id]);
+            $keep = $first ? $bots : array_values(array_intersect(self::bots($current) ?? [], $bots));
+            sort($keep);
+            $this->db->execute('UPDATE bot_log_imports SET verified_bots = ? WHERE id = ?', [implode(',', $keep), $id]);
+        });
+    }
+
     public function botTotals(int $importId): array
     {
+        $verifiable = self::bots($this->db->fetchValue('SELECT verified_bots FROM bot_log_imports WHERE id = ?', [$importId])) ?? [];
         $out = [];
         foreach ($this->db->fetchAll(
             "SELECT bot, SUM(hits) AS hits, COUNT(DISTINCT path_hash) AS paths,
                     SUM(IF(status BETWEEN 200 AND 299, hits, 0)) AS ok, SUM(IF(status BETWEEN 300 AND 399, hits, 0)) AS redirects,
                     SUM(IF(status BETWEEN 400 AND 499, hits, 0)) AS client_errors, SUM(IF(status >= 500, hits, 0)) AS server_errors,
-                    SUM(IF(LOCATE('?', path) > 0, hits, 0)) AS with_query
+                    SUM(IF(LOCATE('?', path) > 0, hits, 0)) AS with_query, SUM(verified_hits) AS verified
              FROM bot_log_hits WHERE import_id = ? GROUP BY bot ORDER BY hits DESC",
             [$importId],
         ) as $row) {
-            $out[(string) $row['bot']] = ['hits' => (int) $row['hits'], 'paths' => (int) $row['paths'], 'ok' => (int) $row['ok'], 'redirects' => (int) $row['redirects'], 'client_errors' => (int) $row['client_errors'], 'server_errors' => (int) $row['server_errors'], 'with_query' => (int) $row['with_query']];
+            $bot = (string) $row['bot'];
+            $out[$bot] = ['hits' => (int) $row['hits'], 'paths' => (int) $row['paths'], 'ok' => (int) $row['ok'], 'redirects' => (int) $row['redirects'], 'client_errors' => (int) $row['client_errors'], 'server_errors' => (int) $row['server_errors'], 'with_query' => (int) $row['with_query'],
+                'verified' => in_array($bot, $verifiable, true) ? (int) $row['verified'] : null];
         }
 
         return $out;
+    }
+
+    /** @return list<string>|null */
+    private static function bots(mixed $value): ?array
+    {
+        return is_string($value) ? array_values(array_filter(explode(',', $value), static fn(string $b): bool => $b !== '')) : null;
     }
 
     public function topPaths(int $importId, string $bot, int $limit, ?int $minStatus = null, ?int $maxStatus = null, bool $withQuery = false): array
@@ -197,6 +216,7 @@ final readonly class PdoBotLogRepository implements BotLogRepository
             $row['error'] !== null ? (string) $row['error'] : null,
             (string) $row['created_at'],
             (string) $row['updated_at'],
+            self::bots($row['verified_bots'] ?? null),
         );
     }
 }

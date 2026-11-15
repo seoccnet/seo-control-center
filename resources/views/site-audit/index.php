@@ -18,6 +18,7 @@
  * @var bool $isLatest
  * @var array<string, string> $errors
  * @var array<string, mixed>|null $titleTriage
+ * @var array<string, mixed>|null $international
  */
 use SeoControlCenter\Modules\SiteAudit\IssueType;
 use SeoControlCenter\Modules\SiteAudit\SiteAuditSettings;
@@ -133,6 +134,10 @@ $startForm = static function (string $label, bool $ghost = false) use ($view, $b
 
     <?php if (($titleTriage ?? null) !== null): ?>
         <?= $view->partial('site-audit/title-triage', ['base' => '/projects/' . $project->publicId, 'triage' => $titleTriage]) ?>
+    <?php endif; ?>
+
+    <?php if (($international ?? null) !== null): ?>
+        <?= $view->partial('site-audit/international', ['international' => $international]) ?>
     <?php endif; ?>
 
     <?php if ($counts !== []): ?>
