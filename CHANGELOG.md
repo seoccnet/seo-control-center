@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — Hreflang, structured data, site migrations and bot logs
+## [1.2.0] — 2026-11-15 — Hreflang, structured data, site migrations and bot logs
 
 - **Hreflang checks in the site audit.** Each page's hreflang lines are read and compared across the pages the audit fetched. New warnings: codes Google cannot read (with the fix for `en-UK`, `us-en`, `en_GB` and `en-EU`), one code for two addresses, a version that does not link back, and a target that redirects, fails, is noindex or names another canonical. New notices: no self-reference, no `x-default` in a set of several languages, and an `html lang` that disagrees with the page's own code. Versions the audit did not fetch are not reported.
 - **Structured data validation.** JSON-LD is checked against what Google requires and recommends for Product, Offer, AggregateRating, Review, Article types, BreadcrumbList, FAQPage, LocalBusiness types, Event, Recipe, VideoObject and JobPosting, plus scripts that do not parse or lack a schema.org `@context`. *Structured data with errors* is a warning; *missing recommended fields* and *not matching the page* (a product name or price the HTML does not show) are growth notices. All become opportunities with action plans. Microdata is not validated.
