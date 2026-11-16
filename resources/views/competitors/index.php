@@ -29,7 +29,7 @@ $change = static function (?SeoControlCenter\Domain\Rankings\RankingDay $now, ?S
 ?>
 <?= $view->partial('partials/project-header', ['project' => $project, 'active' => 'competitors']) ?>
 <div class="research-workspace research-competitors">
-<header class="research-intro"><div><p class="portfolio-eyebrow">Research · Competitors</p><h2>Your competitive landscape</h2><p class="muted">Compare tracked-keyword visibility, find gaps and explore competing domains.</p></div><nav class="research-shortcuts" aria-label="Research sections"><a href="#research-competitor-comparison">Visibility comparison</a><?php if ($canEdit && $candidates !== []): ?><a href="#research-competitor-suggestions">Suggested domains</a><?php endif; ?></nav></header>
+<header class="research-intro"><div><p class="portfolio-eyebrow">Research · Competitors</p><h2>Your competitive landscape</h2><p class="muted">Compare tracked-keyword visibility, find gaps and explore competing domains.</p></div><nav class="research-shortcuts" aria-label="Research sections"><a href="#research-competitor-comparison">Visibility comparison</a><a href="<?= $view->e($base) ?>/competitors/new-pages">New pages</a><?php if ($canEdit && $candidates !== []): ?><a href="#research-competitor-suggestions">Suggested domains</a><?php endif; ?></nav></header>
 
 <?php if ($latest === null): ?>
     <section class="card">

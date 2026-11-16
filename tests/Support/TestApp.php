@@ -198,6 +198,11 @@ final class TestApp
         $competitors = new InMemoryCompetitors($keywords, $rankings, $container->make(Clock::class));
         $container->instance(InMemoryCompetitors::class, $competitors);
         $container->instance(CompetitorRepository::class, $competitors);
+        $competitorWatch = new Fakes\InMemoryCompetitorWatch();
+        $container->instance(Fakes\InMemoryCompetitorWatch::class, $competitorWatch);
+        $container->instance(\SeoControlCenter\Modules\Competitors\CompetitorWatchRepository::class, $competitorWatch);
+        $container->instance(\SeoControlCenter\Modules\Competitors\CompetitorWatchScheduler::class, $competitorWatch);
+        $container->instance(\SeoControlCenter\Modules\Competitors\CompetitorSitemapReader::class, $competitorWatch);
         $aiOverviews = new InMemoryAiOverviews($directory, $keywords, $rankings);
         $container->instance(InMemoryAiOverviews::class, $aiOverviews);
         $container->instance(AiOverviewRepository::class, $aiOverviews);
