@@ -1,5 +1,9 @@
 # Database Design
 
+## Report client links (Unreleased, migration 2026_11_16_000300)
+
+`report_share_links` stores a public UUID, workspace and project FKs (cascading), the SHA-256 of the link token (BINARY(32), unique) and its first six characters as a hint, a label, creator, expiry, revocation time, view count and last view. The token itself is never stored. Lookups join `projects` and `workspaces` and exclude deleted ones, so a deleted project's links stop working without a cleanup job. InnoDB, utf8mb4_unicode_ci, forward-only.
+
 ## Site health (Unreleased, migration 2026_11_16_000200)
 
 `site_health_state` holds one row per project (PK `project_id`, workspace and project FKs, cascading): whether monitoring is on, the latest uptime answer (status, code, milliseconds, error, consecutive failures, down since), certificate expiry and issuer, the registered domain with expiry and registrar, robots.txt status, SHA-1 and text (up to 65,000 characters, to show what changed), sitemap URL count, and the time of each check. A project without a row is monitored with the defaults. `site_health_events` records each event once per `(project_id, dedupe_key)` (`INSERT IGNORE`), with a public UUID, kind, title, detail and UTC time; the dispatcher keeps the newest 200 per project. Both are InnoDB, utf8mb4_unicode_ci, forward-only.

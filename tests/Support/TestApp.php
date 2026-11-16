@@ -398,6 +398,9 @@ final class TestApp
         $container->instance(\SeoControlCenter\Modules\SiteMigration\SiteMigrationRepository::class, $siteMigrations);
         $container->instance(\SeoControlCenter\Modules\SiteMigration\SiteMigrationScheduler::class, $siteMigrations);
         $container->instance(\SeoControlCenter\Modules\SiteMigration\UrlProbe::class, $siteMigrations);
+        $shareLinks = new Fakes\InMemoryShareLinks($container->make(Clock::class), $directory);
+        $container->instance(Fakes\InMemoryShareLinks::class, $shareLinks);
+        $container->instance(\SeoControlCenter\Modules\Reports\ShareLinkRepository::class, $shareLinks);
         $siteHealth = new Fakes\InMemorySiteHealth($container->make(Clock::class));
         $container->instance(Fakes\InMemorySiteHealth::class, $siteHealth);
         foreach ([\SeoControlCenter\Modules\SiteHealth\SiteHealthRepository::class, \SeoControlCenter\Modules\SiteHealth\SiteHealthScheduler::class, \SeoControlCenter\Modules\SiteHealth\SiteProbe::class, \SeoControlCenter\Modules\SiteHealth\CertificateProbe::class, \SeoControlCenter\Modules\SiteHealth\DomainExpiryLookup::class] as $contract) {

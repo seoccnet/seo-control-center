@@ -8,6 +8,8 @@
  * @var bool $canManage
  * @var array<string, string> $errors
  * @var array<string, string> $old
+ * @var list<SeoControlCenter\Modules\Reports\ShareLink> $shareLinks
+ * @var string $now
  */
 $view->extend('layouts/app', ['title' => 'Reports · ' . $project->name, 'crumbs' => [['/projects', 'Projects'], ['/projects/' . $project->publicId, $project->name], [null, 'Reports']]]);
 $base = '/projects/' . $project->publicId . '/reports';
@@ -90,6 +92,41 @@ $recipients = $old['recipients'] ?? implode("\n", $schedule->recipients ?? []);
         <?php endif; ?>
     <?php elseif ($schedule === null): ?>
         <p class="muted">No e-mail schedule. Project editors can set one up.</p>
+    <?php endif; ?>
+</section>
+
+<section class="card" id="client-links" aria-labelledby="client-links-heading">
+    <h2 id="client-links-heading">Client links</h2>
+    <p class="muted">A secret link to this project's report that your client can open without an account, with the same sections and branding. Anyone who has the link can see the report until it expires or you revoke it, so send it only to the people it is for.</p>
+    <?php if (($newLink = $view->flash('report_link')) !== null): ?>
+        <div class="notice notice-success" role="status"><p><strong>Copy this link now.</strong> For security it is stored only as a fingerprint and cannot be shown again.</p><p><input class="share-link-url" type="text" readonly value="<?= $view->e($newLink) ?>" aria-label="New client link"></p></div>
+    <?php endif; ?>
+    <?php if ($canManage): ?>
+    <form method="post" action="<?= $view->e($base . '/links') ?>" class="inline-form">
+        <?= $view->csrfField() ?>
+        <label for="link-label" class="small">For</label><input id="link-label" name="label" required maxlength="120" placeholder="Garden Shop Ltd, marketing team">
+        <label for="link-days" class="small">Works for</label><select id="link-days" name="days"><?php foreach (SeoControlCenter\Modules\Reports\ShareLinkService::DAYS as $d): ?><option value="<?= $d ?>"<?= $d === 90 ? ' selected' : '' ?>><?= $d === 365 ? '1 year' : $d . ' days' ?></option><?php endforeach; ?></select>
+        <button class="button button-small">Create link</button>
+    </form>
+    <?php endif; ?>
+    <?php if ($shareLinks !== []): ?>
+    <div class="table-scroll"><table class="table table-dense">
+        <thead><tr><th scope="col">For</th><th scope="col">Link</th><th scope="col">Expires (UTC)</th><th scope="col">Views</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody>
+        <?php foreach ($shareLinks as $link): ?>
+            <tr>
+                <td><?= $view->e($link->label) ?></td>
+                <td><code>/share/<?= $view->e($link->tokenHint) ?>…</code></td>
+                <td><?= $view->e(substr($link->expiresAt, 0, 16)) ?></td>
+                <td><?= $view->e(number_format($link->views)) ?><?= $link->lastViewedAt !== null ? '<br><span class="muted small">last ' . $view->e(substr($link->lastViewedAt, 0, 16)) . '</span>' : '' ?></td>
+                <td><?php if ($link->revokedAt !== null): ?><span class="badge">Revoked</span><?php elseif (!$link->activeAt($now)): ?><span class="badge">Expired</span><?php else: ?><span class="badge badge-ok">Active</span><?php endif; ?></td>
+                <td><?php if ($canManage && $link->activeAt($now)): ?><form method="post" action="<?= $view->e($base . '/links/' . $link->publicId . '/revoke') ?>"><?= $view->csrfField() ?><button class="button button-small button-ghost" data-confirm="Revoke this link? It stops working right away.">Revoke</button></form><?php endif; ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table></div>
+    <?php elseif (!$canManage): ?>
+    <p class="muted">No client links. Project editors can create them.</p>
     <?php endif; ?>
 </section>
 

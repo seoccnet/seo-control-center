@@ -8,6 +8,10 @@ Paid data and client websites are out of scope for testing: use your own install
 
 # Security Requirements
 
+## Report client links (Unreleased)
+
+`/share/{token}` is the only unauthenticated page with project data. The token is 32 bytes from `random_bytes`, base64url-encoded (43 characters) and checked against a route pattern before any lookup; only its SHA-256 is stored (as for sessions, ADR-019), so a database copy yields no working links. Unknown, malformed, expired and revoked tokens and links of deleted projects or workspaces all answer the same 404. The page renders only the project report (the sections the project chose), its branding stylesheet, logo and PDF, with no links into the app and no session-dependent content; responses carry `Cache-Control: no-store, private`, `X-Robots-Tag: noindex, nofollow` and `Referrer-Policy: no-referrer` so the token does not leak through caches, search engines or outbound links. Requests are rate-limited to 60 per minute per client address. Creating and revoking need *Edit projects* on the project (404 for foreign projects and links) and are audited (`project.report_link_*`); at most 20 links per project are active.
+
 ## Site health (Unreleased)
 
 Health checks contact only the project's own primary domain (HTTPS through `HttpClient`, so public addresses only, pinned, no redirects followed), IANA's RDAP bootstrap file at `data.iana.org` and the RDAP server it names for the domain's ending (HTTPS, exact host allowlist, 512 KB cap). The certificate probe resolves the host, refuses non-public addresses, connects to the first resolved address with SNI and full peer verification, reads the presented certificate and sends nothing after the handshake. No installation, user or project data is sent anywhere. Switching monitoring off or on needs *Edit projects* and is audited (`project.site_health_*`); *Check now* is rate-limited to three runs per project and hour. robots.txt text is stored to show changes and always rendered escaped.

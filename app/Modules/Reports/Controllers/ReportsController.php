@@ -34,6 +34,7 @@ final readonly class ReportsController
         private ViewRenderer $views,
         private Clock $clock,
         private \SeoControlCenter\Modules\Reports\ReportCustomization $customization,
+        private ?\SeoControlCenter\Modules\Reports\ShareLinkService $shareLinks = null,
     ) {}
 
     public function show(ServerRequestInterface $request): ResponseInterface
@@ -134,6 +135,8 @@ final readonly class ReportsController
             'project' => $project,
             ...$this->service->page($project),
             'canManage' => $this->projects->can(WebContext::user($request), Permission::ProjectsEdit, $project),
+            'shareLinks' => $this->shareLinks?->forProject($project) ?? [],
+            'now' => $this->clock->now()->format('Y-m-d H:i:s'),
             'canBrand' => $this->customization->canBrand(WebContext::user($request), $project), 'reportBranding' => $this->customization->settingsBrand($project), 'sections' => $this->customization->sections($project), 'hasWorkspaceLogo' => $this->customization->logo($project) !== null,
             'errors' => $errors,
             'old' => $old,

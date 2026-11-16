@@ -91,6 +91,22 @@ final class ReportsModule implements Module, ProvidesJobs
             $c->make(ViewRenderer::class),
             $c->make(Clock::class),
             $c->make(ReportCustomization::class),
+            $c->make(ShareLinkService::class),
+        ));
+        // Read-only client links (1.3.0).
+        $container->singleton(ShareLinkRepository::class, static fn(Container $c): ShareLinkRepository => new Persistence\PdoShareLinkRepository($c->make(Connection::class), $c->make(Clock::class)));
+        $container->singleton(ShareLinkService::class, static fn(Container $c): ShareLinkService => new ShareLinkService($c->make(ShareLinkRepository::class), $c->make(ProjectRepository::class), $c->make(Authorizer::class), $c->make(AuditLogger::class), $c->make(Clock::class)));
+        $container->singleton(Controllers\ShareLinksController::class, static fn(Container $c): Controllers\ShareLinksController => new Controllers\ShareLinksController(
+            $c->make(ShareLinkService::class),
+            $c->make(ProjectService::class),
+            $c->make(ReportBuilder::class),
+            $c->make(ReportService::class),
+            $c->make(ReportCustomization::class),
+            $c->make(RateLimiter::class),
+            $c->make(ResponseFactory::class),
+            $c->make(ViewRenderer::class),
+            $c->make(Clock::class),
+            rtrim($c->make(Config::class)->string('app.url'), '/'),
         ));
     }
 
@@ -98,6 +114,13 @@ final class ReportsModule implements Module, ProvidesJobs
     {
         $base = '/projects/{project:' . Uuid::ROUTE_PATTERN . '}/reports';
         $routes->get($base, ReportsController::class, 'show', 'projects.reports');
+        $routes->post($base . '/links', Controllers\ShareLinksController::class, 'create', 'projects.reports.links.create');
+        $routes->post($base . '/links/{link:' . Uuid::ROUTE_PATTERN . '}/revoke', Controllers\ShareLinksController::class, 'revoke', 'projects.reports.links.revoke');
+        $share = '/share/{token:' . ShareLinkService::TOKEN_PATTERN . '}';
+        $routes->get($share, Controllers\ShareLinksController::class, 'view', 'share.report', public: true);
+        $routes->get($share . '/pdf', Controllers\ShareLinksController::class, 'pdf', 'share.report.pdf', public: true);
+        $routes->get($share . '/logo', Controllers\ShareLinksController::class, 'logo', 'share.report.logo', public: true);
+        $routes->get($share . '/branding.css', Controllers\ShareLinksController::class, 'stylesheet', 'share.report.css', public: true);
         $routes->post($base, ReportsController::class, 'save');
         $routes->post($base . '/test', ReportsController::class, 'test');
         $routes->get($base . '/view', ReportsController::class, 'view', 'projects.reports.view');

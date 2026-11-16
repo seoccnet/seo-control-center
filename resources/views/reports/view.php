@@ -16,12 +16,16 @@
  * @var string|null $pdfUrl
  * @var string|null $laterUrl
  * @var (Closure(): SeoControlCenter\Core\Branding\Branding)|null $brand
+ * @var string|null $reportStylesheetUrl
+ * @var bool|null $shared true on a read-only client link
  */
 $branding = $reportBranding ?? (isset($brand) ? $brand() : SeoControlCenter\Core\Branding\Branding::none());
 $sections ??= new SeoControlCenter\Modules\Reports\ReportSections();
 $project = $report['project'];
 $base = '/projects/' . $project->publicId;
-$view->extend('layouts/app', ['title' => 'Report ' . $report['label'] . ' · ' . $project->name, 'crumbs' => [['/projects', 'Projects'], [$base, $project->name], [$base . '/reports', 'Reports'], [null, $report['label']]]]);
+// A client link (1.3.0) shows the report alone, without links into the app.
+$shared ??= false;
+$view->extend('layouts/app', $shared ? ['title' => $report['label'] . ' · ' . $project->name, 'wide' => true] : ['title' => 'Report ' . $report['label'] . ' · ' . $project->name, 'crumbs' => [['/projects', 'Projects'], [$base, $project->name], [$base . '/reports', 'Reports'], [null, $report['label']]]]);
 $num = static fn(float|int $v): string => number_format((float) $v);
 $pct = static fn(float $v): string => number_format($v * 100, 1) . ' %';
 $search = $report['search'];
@@ -37,7 +41,7 @@ if ($both) {
 }
 ?>
 <div class="report manage-workspace manage-reports">
-    <link rel="stylesheet" href="<?= $view->e($base . '/reports/branding.css') ?>">
+    <link rel="stylesheet" href="<?= $view->e($reportStylesheetUrl ?? ($base . '/reports/branding.css')) ?>">
     <div class="section-header no-print">
         <nav class="segmented" aria-label="Report period">
             <a href="?frequency=weekly"<?= $report['frequency'] === 'weekly' ? ' aria-current="true"' : '' ?>>Week</a>

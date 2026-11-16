@@ -85,6 +85,12 @@ E-mail must be set up under *System → E-mail*.
 
 **Customize client reports:** in Reports, project editors choose the included search, rankings, GA4, audit and opportunity sections. The selection applies to printable reports and both email formats. Workspace managers can set a report brand name, accent and footer shared by all projects in that workspace. Blank fields inherit installation branding. Upload a PNG/JPEG/WebP logo (up to 512 KB, 16–2,000 pixels per side) for printable reports; emails use text branding without loading images. Separate client workspaces can therefore have separate report brands.
 
+**Client links** (1.3.0): under *Reports → Client links*, project editors create a secret link to the project's report that works without an account, for 7, 30 or 90 days or a year. The client sees the same report, with your sections and branding, can move between weeks and months, and download the PDF; nothing else of the project or of SEOcc is shown, and search engines are told not to index it.
+
+- **Copy the link when it is created.** For security only a fingerprint of it is stored, so it cannot be shown again; create a new one if it is lost.
+- **Anyone who has the link can open the report**, so send it only to the people it is for. The list shows each link's views and when it was last opened.
+- **Revoke** stops a link at once. A link also stops when it expires or when the project is deleted. Up to 20 links per project can work at a time.
+
 ## Alerts and the weekly digest
 
 SEO Control Center watches your projects and e-mails you when something needs attention. It checks every hour and sends each alert once:

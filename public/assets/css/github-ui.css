@@ -704,3 +704,5 @@ main.content .brief-list > .brief-list-item:hover { background: color-mix(in srg
 .migration-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1.25rem; }
 .migration-columns fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: .25rem; }
 .health-detail { white-space: pre-line; }
+.page.page-wide { max-width: 72rem; padding-top: var(--space-6); }
+.share-link-url { width: 100%; font-family: var(--font-mono, monospace); }

@@ -9,6 +9,7 @@
  * @var string $sourceUrl
  * @var (Closure(): SeoControlCenter\Core\Branding\Branding)|null $brand  white label (System → Branding)
  * @var list<array{0: string|null, 1: string}>|null $crumbs  breadcrumb trail: [href or null, label]
+ * @var bool|null $wide  for visitors without an account: a full-width page without the sign-in header
  * @var (Closure(string, SeoControlCenter\Core\View\Template): string)|null $widgets  module widgets per slot (Core\View\LayoutWidgets)
  * @var array{email: string, community: string}|null $support  help links in the sidebar
  */
@@ -178,6 +179,11 @@ $initials = static function (string $name): string {
     </div>
     <?= $widget(SeoControlCenter\Core\View\LayoutWidgets::FLOATING) ?>
     <script type="module" src="/assets/js/app.js?v=<?= $view->e($assetVersion ?? '0') ?>"></script>
+<?php elseif ($wide ?? false): ?>
+    <?php /* A wide page for visitors without an account, such as a read-only client report (1.3.0). */ ?>
+    <main class="page page-wide" id="content">
+        <?= $content ?>
+    </main>
 <?php else: ?>
     <main class="page">
         <div class="auth-brand"><?= $view->partial('partials/logo-mark') ?><span><?= $view->e($appName) ?></span></div>
