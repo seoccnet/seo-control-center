@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased] — Clearer project overview
+
+- **Prognosis and audience side by side.** On wide screens the performance prognosis sits on the left and a new **Where your traffic comes from** card on the right: Google and Bing clicks as a share bar, GA4 organic sessions and key events, Google's top six countries (with names, share and change against the previous period) and the mobile/desktop/tablet split with CTR and position. Changes appear only when both periods were imported completely. Countries and devices are Google only, because Bing and the GA4 import do not provide them. Saved imports only; no provider call.
+- **Overview sections explain themselves.** The page is grouped into *Outlook & audience*, *Do next*, *Why it changed* and *Growth & risks*, each with one line on what it shows, and a row of links jumps between them. *Why it changed* now uses two columns: what moved and landing-page outcomes on the left, rankings and recent SEO changes on the right. No migration.
+
 ## [1.3.1] — 2026-11-16 — Rank checks find positions again
 
 - **Fixed: rank checks found no positions and listed google.com as every top result.** Since November 2026 DataForSEO reports Google's organic results with a Google redirect link (`google.com/goto?url=…`) and the domain `google.com`, so every result was credited to google.com and no tracked domain was found. SCC now traces such links to the real site: a plain link inside the redirect, the result's domain, the address in its breadcrumb, or a known platform in its website name (YouTube, Facebook, Reddit and others). For these results the stored ranking URL is the site's address, because Google hides the page; positions and domains are exact. A redirect that cannot be traced is left out rather than counted for google.com. The same applies to AI Overview sources. Checks stored before this fix keep their empty positions until the next check of that keyword.

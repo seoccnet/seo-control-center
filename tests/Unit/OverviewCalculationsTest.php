@@ -67,4 +67,35 @@ final class OverviewCalculationsTest extends TestCase
         $rows[] = new DimensionRow('out of range', new Metrics(0, 1000, 30));
         self::assertSame([], OverviewCalculations::ctrActions($rows));
     }
+
+    public function testBreakdownSharesTopRowsSumsTheRestAndComparesOnlyWithAPreviousPeriod(): void
+    {
+        $rows = [new DimensionRow('usa', new Metrics(30, 900, 6)), new DimensionRow('deu', new Metrics(60, 1000, 5)), new DimensionRow('fra', new Metrics(6, 300, 9)), new DimensionRow('nld', new Metrics(4, 100, 9))];
+        $split = OverviewCalculations::breakdown($rows, [new DimensionRow('deu', new Metrics(40, 800, 5))], 2);
+        self::assertSame('clicks', $split['metric']);
+        self::assertSame(100, $split['total']);
+        self::assertSame(['deu', 'usa'], array_column($split['rows'], 'key'));
+        self::assertEqualsWithDelta(0.6, $split['rows'][0]['share'], 1e-9);
+        self::assertSame(40, $split['rows'][0]['previousClicks']);
+        self::assertSame(0, $split['rows'][1]['previousClicks'], 'Absent from a complete previous period means no clicks then.');
+        self::assertSame(['count' => 2, 'clicks' => 10, 'impressions' => 400, 'share' => 0.1], $split['other']);
+
+        $unknown = OverviewCalculations::breakdown($rows, null, 6);
+        self::assertNull($unknown['rows'][0]['previousClicks'], 'No comparison without a complete previous period.');
+        self::assertSame(0, $unknown['other']['count']);
+
+        $noClicks = OverviewCalculations::breakdown([new DimensionRow('MOBILE', new Metrics(0, 300, 9)), new DimensionRow('DESKTOP', new Metrics(0, 100, 7))], null, 6);
+        self::assertSame('impressions', $noClicks['metric']);
+        self::assertEqualsWithDelta(0.75, $noClicks['rows'][0]['share'], 1e-9);
+        self::assertSame(['metric' => 'impressions', 'total' => 0, 'rows' => [], 'other' => ['count' => 0, 'clicks' => 0, 'impressions' => 0, 'share' => 0.0]], OverviewCalculations::breakdown([], null, 6));
+    }
+
+    public function testCountryNamesComeFromSearchConsoleCodes(): void
+    {
+        self::assertSame('Germany', \SeoControlCenter\Domain\International\CountryCodes::name('deu'));
+        self::assertSame('United States', \SeoControlCenter\Domain\International\CountryCodes::name('USA'));
+        self::assertSame('Russia', \SeoControlCenter\Domain\International\CountryCodes::name('rus'));
+        self::assertSame('Unknown region', \SeoControlCenter\Domain\International\CountryCodes::name('zzz'));
+        self::assertSame('QQQ', \SeoControlCenter\Domain\International\CountryCodes::name('qqq'));
+    }
 }

@@ -58,6 +58,37 @@ final class OverviewCalculations
         return array_slice($actions, 0, 5);
     }
 
+    /**
+     * Shares of a low-cardinality breakdown (countries, devices): the first
+     * $top rows by clicks, the rest summed as "other". Shares use clicks, or
+     * impressions when the period has no clicks. A row's previous clicks are
+     * set only when the earlier period was imported completely.
+     *
+     * @param list<DimensionRow> $current all rows of the period
+     * @param list<DimensionRow>|null $previous all rows of the previous period, null when not comparable
+     * @return array{metric: 'clicks'|'impressions', total: int, rows: list<array{key: string, metrics: Metrics, share: float, previousClicks: ?int}>, other: array{count: int, clicks: int, impressions: int, share: float}}
+     */
+    public static function breakdown(array $current, ?array $previous, int $top): array
+    {
+        $clicks = array_sum(array_map(static fn(DimensionRow $r): int => $r->metrics->clicks, $current));
+        $metric = $clicks > 0 ? 'clicks' : 'impressions';
+        $value = static fn(DimensionRow $r): int => $metric === 'clicks' ? $r->metrics->clicks : $r->metrics->impressions;
+        $total = $metric === 'clicks' ? $clicks : array_sum(array_map($value, $current));
+        usort($current, static fn(DimensionRow $a, DimensionRow $b): int => [$value($b), $b->metrics->impressions, $a->key] <=> [$value($a), $a->metrics->impressions, $b->key]);
+        $before = $previous === null ? null : array_column(array_map(static fn(DimensionRow $r): array => [$r->key, $r->metrics->clicks], $previous), 1, 0);
+        $share = static fn(int $v): float => $total > 0 ? $v / $total : 0.0;
+        $rows = array_map(static fn(DimensionRow $r): array => ['key' => $r->key, 'metrics' => $r->metrics, 'share' => $share($value($r)), 'previousClicks' => $before === null ? null : (int) ($before[$r->key] ?? 0)], array_slice($current, 0, $top));
+        $rest = array_slice($current, $top);
+        $otherValue = array_sum(array_map($value, $rest));
+
+        return [
+            'metric' => $metric,
+            'total' => $total,
+            'rows' => $rows,
+            'other' => ['count' => count($rest), 'clicks' => array_sum(array_map(static fn(DimensionRow $r): int => $r->metrics->clicks, $rest)), 'impressions' => array_sum(array_map(static fn(DimensionRow $r): int => $r->metrics->impressions, $rest)), 'share' => $share($otherValue)],
+        ];
+    }
+
     private static function band(float $position): int
     {
         return match (true) {

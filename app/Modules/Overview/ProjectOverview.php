@@ -36,6 +36,10 @@ final readonly class ProjectOverview
     private const int COMPETITORS = 4;
     /** Bing keeps about six months; longer overview ranges show its six months. */
     private const int BING_MAX_DAYS = 182;
+    /** Countries listed in the audience card; the rest are summed. */
+    private const int COUNTRIES = 6;
+    /** Country and device rows read per period (Google reports about 250 countries). */
+    private const int BREAKDOWN_ROWS = 300;
     /** Rows per engine read before combining the top pages. */
     private const int MERGE_ROWS = 50;
 
@@ -128,6 +132,7 @@ final readonly class ProjectOverview
                 'combinedPrevious' => $bing !== null ? self::combine($previous, $bing['previous']) : $previous,
                 'clicks' => array_map(static fn(string $d): array => [$d, $byDate[$d] ?? 0.0], $range->eachDay()),
                 'pages' => array_slice($pages, 0, self::TOP_ROWS),
+                'audience' => $this->audience($project, $range),
             ];
         } elseif ($this->bing->hasData($project->id)) {
             $bingOnly = $this->bing->window($project, min(self::RANGES[$rangeKey], self::BING_MAX_DAYS));
@@ -169,6 +174,31 @@ final readonly class ProjectOverview
                 'competitors' => $competitors['rows'] !== [],
             ],
             'canImport' => $this->projects->can($user, Permission::IntegrationsManage, $project),
+        ];
+    }
+
+    /**
+     * Google's country and device split of the range. Changes are offered only
+     * when both periods were imported completely; missing days are never zeros.
+     *
+     * @return array{countries: array<string, mixed>, devices: array<string, mixed>, comparable: bool}
+     */
+    private function audience(Project $project, DateRange $range): array
+    {
+        $comparable = $this->reader->coveredDays($project->id, $range) === $range->days()
+            && $this->reader->coveredDays($project->id, $range->previous()) === $range->days();
+        $split = function (PerformanceDimension $dimension, int $top) use ($project, $range, $comparable): array {
+            return OverviewCalculations::breakdown(
+                $this->reader->top($project->id, $dimension, $range, self::BREAKDOWN_ROWS),
+                $comparable ? $this->reader->top($project->id, $dimension, $range->previous(), self::BREAKDOWN_ROWS) : null,
+                $top,
+            );
+        };
+
+        return [
+            'countries' => $split(PerformanceDimension::Country, self::COUNTRIES),
+            'devices' => $split(PerformanceDimension::Device, self::BREAKDOWN_ROWS),
+            'comparable' => $comparable,
         ];
     }
 

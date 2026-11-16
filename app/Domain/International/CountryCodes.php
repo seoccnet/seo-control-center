@@ -27,4 +27,26 @@ final class CountryCodes
 
         return $map[strtolower(trim($alpha3))] ?? null;
     }
+
+    /** The English name for an alpha-3 code, falling back to the upper-case code ("Unknown region" for "zzz"). */
+    public static function name(string $alpha3): string
+    {
+        static $names = null;
+        if ($names === null) {
+            $names = [];
+            foreach (\SeoControlCenter\Domain\Keywords\Markets::COUNTRIES as [$name, $two]) {
+                $names[strtolower($two)] = $name;
+            }
+        }
+        $two = self::alpha2($alpha3);
+        if ($two === null) {
+            return strtolower(trim($alpha3)) === 'zzz' ? 'Unknown region' : strtoupper(trim($alpha3));
+        }
+
+        return $names[$two] ?? match ($two) {
+            'ru' => 'Russia',
+            'by' => 'Belarus',
+            default => strtoupper(trim($alpha3)),
+        };
+    }
 }

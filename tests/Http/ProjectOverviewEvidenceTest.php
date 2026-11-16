@@ -85,6 +85,15 @@ final class ProjectOverviewEvidenceTest extends TestCase
             self::assertStringContainsString($text, $html);
         }
         self::assertStringContainsString('Google clicks', $html);
+        $audience = $data['search']['audience'];
+        self::assertTrue($audience['comparable']);
+        self::assertSame(['deu', 'usa', 'aut', 'che', 'gbr', 'nld'], array_column($audience['countries']['rows'], 'key'));
+        self::assertSame(2, $audience['countries']['other']['count']);
+        self::assertSame(28 * 60, $audience['countries']['rows'][0]['previousClicks']);
+        self::assertSame(['MOBILE', 'DESKTOP', 'TABLET'], array_column($audience['devices']['rows'], 'key'));
+        foreach (['Where your traffic comes from', 'Germany', 'United States', '2 other countries', 'Mobile', 'GA4 organic sessions', 'Connect Bing', 'Outlook &amp; audience', 'Do next', '+17 %'] as $text) {
+            self::assertStringContainsString($text, $html);
+        }
         self::assertStringNotContainsString('new query without baseline</td>', $html);
         $doc = HTMLDocument::createFromString($html, LIBXML_NOERROR);
         self::assertCount(1, $doc->querySelectorAll('[data-prognosis]'));

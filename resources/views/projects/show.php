@@ -31,26 +31,37 @@ $actions = $link !== null && $canImport ? '<form method="post" action="' . $view
 <?= $view->partial('partials/prognosis-chart', ['search' => $search, 'bing' => $bing, 'base' => $base, 'project' => $project, 'annotations' => $annotations ?? [], 'assetVersion' => $assetVersion ?? '0']) ?>
 <section class="card overview-start" aria-labelledby="overview-start-heading"><p class="integration-kicker">First evidence</p><h2 id="overview-start-heading">No imported results yet</h2><p class="muted">Connect a source, import performance, or run an audit. Comparisons and priorities appear when saved results support them.</p><div class="overview-start-actions"><a class="button button-small" href="<?= $view->e($base) ?>/search-console">Connect Search Console</a><a class="button button-ghost button-small" href="<?= $view->e($base) ?>/analytics">Connect GA4</a><a class="button button-ghost button-small" href="<?= $view->e($base) ?>/rankings">Set up tracking</a><a class="button button-ghost button-small" href="<?= $view->e($base) ?>/site-audit">Run site audit</a></div></section>
 <?php else: ?>
-<div class="overview-trend-row">
+<?php $hasGrowth = !$missing['risks'] || !$missing['demand'] || !$missing['visibility'] || $evidence['local'] !== null; ?>
+<nav class="overview-jump" aria-label="Overview sections"><a href="#overview-outlook-title">Outlook &amp; audience</a><a href="#overview-next-title">Do next</a><a href="#overview-why-title">Why it changed</a><?php if ($hasGrowth): ?><a href="#overview-growth-title">Growth &amp; risks</a><?php endif; ?></nav>
+<section class="overview-section" aria-labelledby="overview-outlook-title">
+<div class="overview-section-head"><h2 class="overview-section-title" id="overview-outlook-title">Outlook &amp; audience</h2><p class="overview-section-intro">Where Google clicks are heading, and which engines, countries and devices they come from.</p></div>
+<div class="overview-trend-row<?= $search !== null ? ' has-audience' : '' ?>">
 <?= $view->partial('partials/prognosis-chart', ['search' => $search, 'bing' => $bing, 'base' => $base, 'project' => $project, 'annotations' => $annotations ?? [], 'assetVersion' => $assetVersion ?? '0']) ?>
+<?php if ($search !== null): ?><?= $view->partial('partials/overview-audience', compact('search', 'evidence', 'base', 'rangeKey')) ?><?php endif; ?>
+</div>
+</section>
+<section class="overview-section" aria-labelledby="overview-next-title">
+<div class="overview-section-head"><h2 class="overview-section-title" id="overview-next-title">Do next</h2><p class="overview-section-intro">The few changes most likely to win clicks, ranked by importance.</p></div>
 <div class="overview-decision-grid overview-trend-context">
 <?= $view->partial('partials/overview-actions', compact('evidence', 'opportunities', 'openOpportunities', 'lastAnalyzedAt', 'base', 'rangeKey')) ?>
 </div>
-</div>
+</section>
 <section class="overview-section" aria-labelledby="overview-why-title">
-<h2 class="overview-section-title" id="overview-why-title">Why it changed</h2>
+<div class="overview-section-head"><h2 class="overview-section-title" id="overview-why-title">Why it changed</h2><p class="overview-section-intro">Queries and pages that gained or lost clicks against the previous period, next to what you changed and where tracked keywords rank.</p></div>
 <div class="overview-decision-grid overview-section-grid is-why">
-<div class="overview-evidence-stack"><?= $view->partial('partials/overview-movers', compact('evidence', 'base', 'rangeKey')) ?></div>
 <div class="overview-evidence-stack">
-<?= $view->partial('partials/overview-changes', compact('evidence', 'base')) ?>
+<?= $view->partial('partials/overview-movers', compact('evidence', 'base', 'rangeKey')) ?>
 <?php if (!$missing['landings']): ?><?= $view->partial('partials/overview-landings', compact('evidence', 'base')) ?><?php endif; ?>
 </div>
-<?php if (!$missing['rankings']): ?><div class="overview-evidence-stack"><?= $view->partial('partials/overview-rankings', compact('evidence', 'base')) ?></div><?php endif; ?>
+<div class="overview-evidence-stack">
+<?php if (!$missing['rankings']): ?><?= $view->partial('partials/overview-rankings', compact('evidence', 'base')) ?><?php endif; ?>
+<?= $view->partial('partials/overview-changes', compact('evidence', 'base')) ?>
+</div>
 </div>
 </section>
-<?php if (!$missing['risks'] || !$missing['demand'] || !$missing['visibility'] || $evidence['local'] !== null): ?>
+<?php if ($hasGrowth): ?>
 <section class="overview-section" aria-labelledby="overview-growth-title">
-<h2 class="overview-section-title" id="overview-growth-title">Growth &amp; risks</h2>
+<div class="overview-section-head"><h2 class="overview-section-title" id="overview-growth-title">Growth &amp; risks</h2><p class="overview-section-intro">Technical problems that can cost traffic, demand you do not rank for yet, and how you compare with competitors.</p></div>
 <div class="overview-decision-grid overview-section-grid is-growth">
 <?php if (!$missing['risks']): ?><div class="overview-evidence-stack"><?= $view->partial('partials/overview-risks', compact('evidence', 'project', 'base')) ?></div><?php endif; ?>
 <?php if (!$missing['demand']): ?><div class="overview-evidence-stack"><?= $view->partial('partials/overview-demand', compact('evidence', 'base')) ?></div><?php endif; ?>
@@ -68,7 +79,7 @@ $actions = $link !== null && $canImport ? '<form method="post" action="' . $view
 ], static fn(string $key): bool => $missing[$key], ARRAY_FILTER_USE_KEY); ?>
 <?php if ($setup !== []): ?>
 <section class="overview-setup" aria-labelledby="overview-setup-title">
-<h2 class="overview-section-title" id="overview-setup-title">Not set up yet</h2>
+<div class="overview-section-head"><h2 class="overview-section-title" id="overview-setup-title">Not set up yet</h2><p class="overview-section-intro">Each source adds a card above once it has saved data.</p></div>
 <ul class="overview-setup-list"><?php foreach ($setup as [$label, $reason, $href, $cta]): ?><li><strong><?= $view->e($label) ?></strong><span class="muted small"><?= $view->e($reason) ?></span><a class="small" href="<?= $view->e($base . $href) ?>"><?= $view->e($cta) ?> →</a></li><?php endforeach; ?></ul>
 </section>
 <?php endif; ?>

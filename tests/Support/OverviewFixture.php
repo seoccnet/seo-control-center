@@ -68,7 +68,7 @@ final class OverviewFixture
             if ($current) {
                 $queries[] = new DimensionRow('new query without baseline', new Metrics(100, 1000, 2.0));
             }
-            $performance->replaceDay($p->id, $date, ['query' => $queries, 'page' => [new DimensionRow($url . '/collections/indoor', new Metrics($current ? 65 : 40, 2500, 8.0)), new DimensionRow($url . '/guides/germination', new Metrics($current ? 15 : 30, 1400, 12.0))], 'country' => [], 'device' => []]);
+            $performance->replaceDay($p->id, $date, ['query' => $queries, 'page' => [new DimensionRow($url . '/collections/indoor', new Metrics($current ? 65 : 40, 2500, 8.0)), new DimensionRow($url . '/guides/germination', new Metrics($current ? 15 : 30, 1400, 12.0))], 'country' => [new DimensionRow('deu', new Metrics($current ? 70 : 60, 2500, 7.0)), new DimensionRow('usa', new Metrics($current ? 40 : 30, 1800, 8.0)), new DimensionRow('aut', new Metrics(15, 600, 6.5)), new DimensionRow('che', new Metrics($current ? 8 : 10, 400, 7.5)), new DimensionRow('gbr', new Metrics(5, 300, 9.0)), new DimensionRow('nld', new Metrics(4, 200, 9.5)), new DimensionRow('fra', new Metrics(2, 150, 11.0)), new DimensionRow('zzz', new Metrics(1, 50, 12.0))], 'device' => [new DimensionRow('MOBILE', new Metrics($current ? 90 : 70, 3800, 8.0)), new DimensionRow('DESKTOP', new Metrics(50, 2000, 6.5)), new DimensionRow('TABLET', new Metrics(5, 200, 9.0))]]);
             $gaRows[] = new LandingPageMetrics($date, $url . '/collections/indoor', 100, 8.0, 120.0);
             $gaRows[] = new LandingPageMetrics($date, $url . '/guides/germination', 30, 0.0, 0.0);
         }
