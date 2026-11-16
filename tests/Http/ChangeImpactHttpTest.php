@@ -6,6 +6,7 @@ namespace SeoControlCenter\Tests\Http;
 
 use PHPUnit\Framework\TestCase;
 use SeoControlCenter\Core\Support\Clock;
+use SeoControlCenter\Core\Support\FrozenClock;
 use SeoControlCenter\Domain\Analytics\Ga4Report;
 use SeoControlCenter\Domain\SearchConsole\Metrics;
 use SeoControlCenter\Domain\Shared\DateRange;
@@ -54,6 +55,22 @@ final class ChangeImpactHttpTest extends TestCase
         self::assertStringContainsString('&lt;script&gt;Title&lt;/script&gt;', $html);
         self::assertStringNotContainsString('<script>Title', $html);
         self::assertSame([], AccessibilityTest::problems($html, true));
+    }
+
+    public function testGoogleUpdatesInTheComparedPeriodsAreNamed(): void
+    {
+        $s = new Scenario(clock: new FrozenClock(new \DateTimeImmutable('2026-11-16 12:00:00 UTC')));
+        $repo = $s->container->make(AnnotationRepository::class);
+        $during = $repo->save($s->acmeProject, new AnnotationInput('2026-09-30', 'title', 'New titles', '', null), $s->owner->id, null);
+        $quiet = $repo->save($s->acmeProject, new AnnotationInput('2026-10-25', 'title', 'New intro', '', null), $s->owner->id, null);
+        $service = $s->container->make(ChangeImpactService::class);
+
+        self::assertSame(['September 2026 spam update'], array_column($service->compare($s->acmeProject, $during->publicId, 14)['google_updates'], 'name'));
+        self::assertSame([], $service->compare($s->acmeProject, $quiet->publicId, 14)['google_updates'], '2026-10-11 to 2026-11-08 had no update.');
+        self::assertSame(['September 2026 spam update', 'November 2026 core update'], array_column($service->compare($s->acmeProject, $quiet->publicId, 28)['google_updates'], 'name'));
+
+        $html = (string) $s->loggedIn($s->viewer)->get('/projects/' . $s->acmeProject->publicId . '/annotations/' . $during->publicId . '/impact?days=14')->getBody();
+        self::assertStringContainsString('September 2026 spam update: 2026-09-24 to 2026-10-08', $html);
     }
 
     public function testGa4CompleteZeroRowsAndQualityCurrencyGuards(): void

@@ -12,12 +12,14 @@
  * @var bool|null $wide  full-width card (drawn wider so labels keep their size)
  * @var bool|null $invert  positions: 1 at the top
  * @var string|null $suffix  appended to values in the read-out (" %")
+ * @var bool|null $googleUpdates  shade Google's ranking updates (default true; 1.5.0)
  */
 use SeoControlCenter\Core\View\LineChart;
 
 $chart = LineChart::build(array_map(static fn(array $point): array => [$point[0], (float) ($point[1] ?? 0)], $series), (bool) ($invert ?? false), ($wide ?? false) ? LineChart::WIDE : LineChart::WIDTH);
 $formatValue = static fn(?float $value): string => $value === null ? 'Unavailable' : rtrim(rtrim(number_format($value, 2, '.', ','), '0'), '.') . ($suffix ?? '');
 $values = array_values(array_filter(array_column($series, 1), static fn($value): bool => $value !== null));
+$updates = ($googleUpdates ?? true) && $series !== [] ? SeoControlCenter\Domain\Shared\GoogleUpdates::between($series[0][0], $series[count($series) - 1][0]) : [];
 $linePath = ''; $connected = false;
 foreach ($chart->points as $i => $point) {
     if ($series[$i][1] === null) { $connected = false; continue; }
@@ -47,6 +49,10 @@ foreach ($chart->points as $i => $point) {
             <?php foreach ($chart->xLabels as $i => $xl): ?>
                 <text class="tick" x="<?= $xl['x'] ?>" y="<?= LineChart::HEIGHT - 6 ?>" text-anchor="<?= $i === 0 ? 'start' : ($i === count($chart->xLabels) - 1 ? 'end' : 'middle') ?>"><?= $view->e($xl['label']) ?></text>
             <?php endforeach; ?>
+            <?php foreach ($updates as $update): ?>
+                <?php $x1 = LineChart::xForDate($series, max($update['start'], $series[0][0]), $chart->width); $x2 = LineChart::xForDate($series, min($update['end'] ?? $series[count($series) - 1][0], $series[count($series) - 1][0]), $chart->width); if ($x1 === null || $x2 === null) { continue; } ?>
+                <rect class="google-update" x="<?= $x1 ?>" y="<?= LineChart::TOP ?>" width="<?= max(2, $x2 - $x1) ?>" height="<?= LineChart::HEIGHT - LineChart::BOTTOM - LineChart::TOP ?>"><title><?= $view->e($update['name'] . ' · ' . $update['start'] . ' to ' . ($update['end'] ?? 'still rolling out')) ?></title></rect>
+            <?php endforeach; ?>
             <?php if (count($values) === count($series)): ?><path class="area" d="<?= $view->e($chart->areaPath) ?>"/><?php endif; ?>
             <path class="line" d="<?= $view->e($linePath) ?>"/>
             <?php foreach ($chart->points as $i => $point): ?><?php if ($series[$i][1] !== null && ($series[$i - 1][1] ?? null) === null && ($series[$i + 1][1] ?? null) === null): ?><circle class="recorded-point" cx="<?= $point['x'] ?>" cy="<?= $point['y'] ?>" r="3"/><?php endif; ?><?php endforeach; ?>
@@ -59,6 +65,7 @@ foreach ($chart->points as $i => $point) {
         </svg>
         <div class="chart-tooltip" role="status" hidden></div>
     </div>
+    <?php if ($updates !== []): ?><p class="muted small chart-updates">Shaded: Google ranking updates · <?= $view->e(implode(' · ', array_map(static fn(array $u): string => $u['name'] . ' (' . $u['start'] . ' to ' . ($u['end'] ?? 'still rolling out') . ')', $updates))) ?></p><?php endif; ?>
     <details class="chart-data"><summary>View underlying data · <?= count($series) ?> data points</summary>
         <div class="table-scroll"><table class="table table-dense"><thead><tr><th scope="col">Date</th><th scope="col"><?= $view->e($title) ?></th></tr></thead><tbody>
             <?php foreach ($series as [$date, $value]): ?><tr><td><?= $view->e($date) ?></td><td><?= $view->e($formatValue($value)) ?></td></tr><?php endforeach; ?>

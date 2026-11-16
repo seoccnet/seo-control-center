@@ -698,6 +698,7 @@ a.count { text-decoration: none; }
 .annotation-context { margin-top: var(--space-3); }
 .annotation-context summary { cursor: pointer; font-weight: 600; }
 .annotation-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--space-3); }
+.chart .google-update { fill: var(--muted); opacity: .12; }
 .chart .annotation-marker { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .7; pointer-events: none; }
 .comparison-strip { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; padding: 0; margin: var(--space-3) 0 0; }
 .comparison-strip li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1); min-width: 0; max-width: 100%; }

@@ -109,6 +109,8 @@ final class RankingsHttpTest extends TestCase
         self::assertStringContainsString('green shoes', $html);
         self::assertStringContainsString('&gt;100', $html);
         self::assertStringContainsString('data-suffix=" %"', $html, 'Visibility chart with two days of data.');
+        self::assertStringContainsString('<rect class="google-update"', $html, 'The September 2026 spam update overlaps the chart.');
+        self::assertStringContainsString('September 2026 spam update (2026-09-24 to 2026-10-08)', $html);
         self::assertStringNotContainsString('Tracking settings', $html, 'Viewers cannot change settings.');
     }
 
