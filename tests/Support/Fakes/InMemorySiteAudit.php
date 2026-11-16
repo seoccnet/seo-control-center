@@ -102,7 +102,7 @@ final class InMemorySiteAudit implements SiteAuditRepository, SiteAuditScheduler
         $now = $this->now();
         $this->audits[$id] = new SiteAudit($id, Uuid::v7($this->clock), $projectId, $workspaceId, 'queued', $trigger, $startUrl, $maxPages, 0, 1, null, 0, 0, 0, null, $now, null, null, $now);
         $pageId = $this->nextPageId++;
-        $this->pages[$id] = [$pageId => new AuditPage($pageId, $startUrl, 0, 'pending')];
+        $this->pages[$id] = [$pageId => new AuditPage($pageId, $startUrl, 0, 'pending', inSitemap: false)];
         $this->links[$id] = [];
 
         return $this->audits[$id];
@@ -163,14 +163,17 @@ final class InMemorySiteAudit implements SiteAuditRepository, SiteAuditScheduler
     {
         $added = 0;
         foreach ($urls as $url) {
+            $known = $this->pageByUrl($audit->id, $url);
+            if ($known !== null) {
+                $this->pages[$audit->id][$known->id] = new AuditPage(...[...get_object_vars($known), 'inSitemap' => true]);
+                continue;
+            }
             if (count($this->pages[$audit->id]) >= min($limit, $audit->maxPages)) {
-                break;
+                continue;
             }
-            if ($this->pageByUrl($audit->id, $url) === null) {
-                $id = $this->nextPageId++;
-                $this->pages[$audit->id][$id] = new AuditPage($id, $url, AuditPage::UNLINKED, 'pending');
-                $added++;
-            }
+            $id = $this->nextPageId++;
+            $this->pages[$audit->id][$id] = new AuditPage($id, $url, AuditPage::UNLINKED, 'pending', inSitemap: true);
+            $added++;
         }
         $this->audits[$audit->id] = $this->with($this->audits[$audit->id], pagesFound: count($this->pages[$audit->id]));
 
@@ -201,13 +204,13 @@ final class InMemorySiteAudit implements SiteAuditRepository, SiteAuditScheduler
             $target = $this->pageByUrl($audit->id, $url);
             if ($target === null && count($this->pages[$audit->id]) < $audit->maxPages) {
                 $id = $this->nextPageId++;
-                $target = $this->pages[$audit->id][$id] = new AuditPage($id, $url, $childDepth, 'pending');
+                $target = $this->pages[$audit->id][$id] = new AuditPage($id, $url, $childDepth, 'pending', inSitemap: false);
             }
             if ($target !== null) {
                 $this->links[$audit->id][$page->id . ':' . $target->id] = [$page->id, $target->id];
                 if ($target->depth > $childDepth) {
                     $t = $this->pages[$audit->id][$target->id];
-                    $this->pages[$audit->id][$target->id] = new AuditPage($t->id, $t->url, $childDepth, $t->state, $t->statusCode, $t->contentType, $t->redirectTo, $t->durationMs, $t->bytes, $t->truncated, $t->title, $t->description, $t->h1Count, $t->h1, $t->canonical, $t->noindex, $t->wordCount, $t->internalLinks, $t->externalLinks, $t->error);
+                    $this->pages[$audit->id][$target->id] = new AuditPage(...[...get_object_vars($t), 'depth' => $childDepth]);
                 }
             }
         }
@@ -229,18 +232,18 @@ final class InMemorySiteAudit implements SiteAuditRepository, SiteAuditScheduler
         return array_slice(array_values(array_map(static fn(array $r): array => ['id' => $r['id'], 'url' => $r['url']], array_filter($this->resources[$auditId] ?? [], static fn(array $r): bool => $r['state'] === 'pending'))), 0, 10);
     }
 
-    public function saveResource(int $auditId, int $id, string $state, ?int $status): void
+    public function saveResource(int $auditId, int $id, string $state, ?int $status, ?int $bytes = null, ?string $contentType = null): void
     {
         foreach ($this->resources[$auditId] ?? [] as $key => $r) {
             if ($r['id'] === $id) {
-                $this->resources[$auditId][$key] = [...$r, 'state' => $state, 'status' => $status];
+                $this->resources[$auditId][$key] = [...$r, 'state' => $state, 'status' => $status, 'bytes' => $bytes, 'type' => $contentType];
             }
         }
     }
 
     public function resourceIssues(int $auditId): array
     {
-        return \SeoControlCenter\Modules\SiteAudit\ResourceIssues::detect(array_values(array_map(fn(array $r): array => [...$r, 'state' => $this->resources[$auditId][$r['url']]['state'], 'status' => $this->resources[$auditId][$r['url']]['status']], $this->resourceRefs[$auditId] ?? [])));
+        return \SeoControlCenter\Modules\SiteAudit\ResourceIssues::detect(array_values(array_map(fn(array $r): array => [...$r, 'state' => $this->resources[$auditId][$r['url']]['state'], 'status' => $this->resources[$auditId][$r['url']]['status'], 'bytes' => $this->resources[$auditId][$r['url']]['bytes'] ?? null, 'type' => $this->resources[$auditId][$r['url']]['type'] ?? null], $this->resourceRefs[$auditId] ?? [])));
     }
 
     public function findPage(int $auditId, string $url): ?AuditPage

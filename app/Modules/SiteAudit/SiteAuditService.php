@@ -281,7 +281,7 @@ final readonly class SiteAuditService
                             continue;
                         }
                         $result = $this->crawler->resource($resource['url'], $robots);
-                        $this->repository->saveResource($auditId, $resource['id'], $result['state'], $result['status']);
+                        $this->repository->saveResource($auditId, $resource['id'], $result['state'], $result['status'], $result['bytes'] ?? null, $result['type'] ?? null);
                     }
                     continue;
                 }
@@ -353,7 +353,7 @@ final readonly class SiteAuditService
     private function complete(SiteAudit $audit): void
     {
         $found = $this->repository->byId($audit->id)->pagesFound ?? $audit->pagesFound;
-        $result = IssueDetector::detect($this->repository->allPages($audit->id), $this->repository->inboundCounts($audit->id), $found < $audit->maxPages, $this->repository->resourceIssues($audit->id));
+        $result = IssueDetector::detect($this->repository->allPages($audit->id), $this->repository->inboundCounts($audit->id), $found < $audit->maxPages, $this->repository->resourceIssues($audit->id), (int) floor($audit->maxPages * self::SITEMAP_SHARE));
         $this->repository->finish($audit->id, 'completed', $result['score'], $result['counts'], $result['issues'], null);
         $this->repository->prune($audit->projectId, self::KEEP_AUDITS);
         $this->links?->auditCompleted($audit);

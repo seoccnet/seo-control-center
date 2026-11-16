@@ -260,7 +260,7 @@ final class SiteCrawler
     }
 
     /** A bounded status probe; never follows redirects or crawls the target's links.
-     * @return array{state: string, status: ?int}
+     * @return array{state: string, status: ?int, bytes?: ?int, type?: ?string}
      */
     public function resource(string $url, ?RobotsTxt $cachedRobots = null): array
     {
@@ -278,7 +278,13 @@ final class SiteCrawler
         }
         try {
             $response = $this->http->send('GET', $url, ['Accept' => '*/*', 'Range' => 'bytes=0-1023'], null, [$host], 1024);
-            return ['state' => 'done', 'status' => $response->status];
+            // The full size: the total in Content-Range of a partial answer, or Content-Length of a full one (1.5.0).
+            $range = $response->header('content-range');
+            $length = $response->header('content-length');
+            $bytes = $range !== null && preg_match('#/(\d+)\s*$#', $range, $m) === 1 ? (int) $m[1] : ($response->status === 200 && $length !== null && ctype_digit(trim($length)) ? (int) trim($length) : null);
+            $type = $response->header('content-type');
+
+            return ['state' => 'done', 'status' => $response->status, 'bytes' => $bytes, 'type' => $type !== null ? strtolower(trim(explode(';', $type)[0])) : null];
         } catch (HttpClientException) {
             return ['state' => 'failed', 'status' => null];
         }

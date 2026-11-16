@@ -19,7 +19,7 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
     private const string AUDIT_COLUMNS = 'id, public_id, project_id, workspace_id, status, trigger_type, start_url, max_pages, pages_crawled,
         pages_found, health_score, errors, warnings, notices, error, created_at, started_at, finished_at, updated_at';
     private const string PAGE_COLUMNS = 'id, url, depth, state, status_code, content_type, redirect_to, duration_ms, bytes, truncated, title,
-        description, h1_count, h1, canonical, noindex, word_count, internal_links, external_links, error, schema_types, og_type, has_author, source_links, citation_signals, business_signals, hreflang_links, html_lang, schema_problems';
+        description, h1_count, h1, canonical, noindex, word_count, internal_links, external_links, error, schema_types, og_type, has_author, source_links, citation_signals, business_signals, hreflang_links, html_lang, schema_problems, in_sitemap, image_signals';
     private const int CHUNK = 200;
 
     public function __construct(
@@ -62,12 +62,12 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
         $publicId = Uuid::v7($this->clock);
         $this->db->transaction(function () use ($projectId, $workspaceId, $startUrl, $maxPages, $trigger, $userId, $now, $publicId): void {
             $this->db->execute(
-                'INSERT INTO site_audits (public_id, project_id, workspace_id, status, trigger_type, start_url, max_pages, pages_found, started_by, created_at, updated_at)
-                 VALUES (?, ?, ?, \'queued\', ?, ?, ?, 1, ?, ?, ?)',
+                'INSERT INTO site_audits (public_id, project_id, workspace_id, status, trigger_type, start_url, max_pages, pages_found, sitemap_urls, started_by, created_at, updated_at)
+                 VALUES (?, ?, ?, \'queued\', ?, ?, ?, 1, 0, ?, ?, ?)',
                 [$publicId, $projectId, $workspaceId, $trigger, $startUrl, $maxPages, $userId, $now, $now],
             );
             $this->db->execute(
-                'INSERT INTO site_audit_pages (audit_id, url, url_hash, depth, state) VALUES (?, ?, ?, 0, \'pending\')',
+                'INSERT INTO site_audit_pages (audit_id, url, url_hash, depth, state, in_sitemap) VALUES (?, ?, ?, 0, \'pending\', 0)',
                 [$this->db->lastInsertId(), $startUrl, sha1($startUrl)],
             );
         });
@@ -153,16 +153,19 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
             $room = min($limit, $audit->maxPages) - (int) $this->db->fetchValue('SELECT COUNT(*) FROM site_audit_pages WHERE audit_id = ?', [$audit->id]);
             $added = 0;
             foreach ($urls as $url) {
+                // A page already found (the start page, or one linked before) is marked as listed too (1.5.0).
+                $this->db->execute('UPDATE site_audit_pages SET in_sitemap = 1 WHERE audit_id = ? AND url_hash = ? AND url = ?', [$audit->id, sha1($url), $url]);
                 if ($room <= 0) {
-                    break;
+                    continue;
                 }
                 $inserted = $this->db->execute(
-                    'INSERT IGNORE INTO site_audit_pages (audit_id, url, url_hash, depth, state) VALUES (?, ?, ?, ?, \'pending\')',
+                    'INSERT IGNORE INTO site_audit_pages (audit_id, url, url_hash, depth, state, in_sitemap) VALUES (?, ?, ?, ?, \'pending\', 1)',
                     [$audit->id, $url, sha1($url), AuditPage::UNLINKED],
                 );
                 $room -= $inserted;
                 $added += $inserted;
             }
+            $this->db->execute('UPDATE site_audits SET sitemap_urls = (SELECT COUNT(*) FROM site_audit_pages WHERE audit_id = ? AND in_sitemap = 1) WHERE id = ? AND sitemap_urls IS NOT NULL', [$audit->id, $audit->id]);
             if ($added > 0) {
                 $this->db->execute(
                     'UPDATE site_audits SET pages_found = (SELECT COUNT(*) FROM site_audit_pages WHERE audit_id = ?), updated_at = ? WHERE id = ?',
@@ -186,7 +189,7 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
             $this->db->execute(
                 'UPDATE site_audit_pages SET state = ?, status_code = ?, content_type = ?, redirect_to = ?, duration_ms = ?, bytes = ?, truncated = ?,
                         title = ?, description = ?, h1_count = ?, h1 = ?, canonical = ?, noindex = ?, word_count = ?, internal_links = ?,
-                        external_links = ?, error = ?, schema_types = ?, og_type = ?, has_author = ?, source_links = ?, citation_signals = ?, business_signals = ?, hreflang_links = ?, html_lang = ?, schema_problems = ?, crawled_at = ?
+                        external_links = ?, error = ?, schema_types = ?, og_type = ?, has_author = ?, source_links = ?, citation_signals = ?, business_signals = ?, hreflang_links = ?, html_lang = ?, schema_problems = ?, image_signals = ?, crawled_at = ?
                  WHERE id = ? AND audit_id = ?',
                 [
                     $result->state, $result->statusCode, $result->contentType, $result->redirectTo !== null ? mb_substr($result->redirectTo, 0, 2048) : null,
@@ -200,6 +203,7 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
                     $html?->hreflang !== null ? self::jsonList($html->hreflang, 60000) : null,
                     $html?->htmlLang,
                     $html?->schemaProblems !== null ? self::jsonList($html->schemaProblems, 4000) : null,
+                    $html?->images !== null ? json_encode($html->images, JSON_THROW_ON_ERROR) : null,
                     $now, $page->id, $audit->id,
                 ],
             );
@@ -235,7 +239,7 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
                         continue;
                     }
                     $this->db->execute(
-                        'INSERT IGNORE INTO site_audit_pages (audit_id, url, url_hash, depth, state) VALUES (?, ?, ?, ?, \'pending\')',
+                        'INSERT IGNORE INTO site_audit_pages (audit_id, url, url_hash, depth, state, in_sitemap) VALUES (?, ?, ?, ?, \'pending\', 0)',
                         [$audit->id, $url, $hash, $childDepth],
                     );
                     $room--;
@@ -298,20 +302,20 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
         return array_map(static fn(array $r): array => ['id' => (int) $r['id'], 'url' => (string) $r['url']], $this->db->fetchAll('SELECT id, url FROM site_audit_resources WHERE audit_id = ? AND state = \'pending\' ORDER BY id LIMIT 10', [$auditId]));
     }
 
-    public function saveResource(int $auditId, int $id, string $state, ?int $status): void
+    public function saveResource(int $auditId, int $id, string $state, ?int $status, ?int $bytes = null, ?string $contentType = null): void
     {
-        $this->db->transaction(function () use ($auditId, $id, $state, $status): void {
+        $this->db->transaction(function () use ($auditId, $id, $state, $status, $bytes, $contentType): void {
             if (!in_array($this->db->fetchValue('SELECT status FROM site_audits WHERE id = ? FOR UPDATE', [$auditId]), SiteAudit::ACTIVE, true)) {
                 return;
             }
-            $this->db->execute('UPDATE site_audit_resources SET state = ?, status_code = ? WHERE id = ? AND audit_id = ?', [$state, $status, $id, $auditId]);
+            $this->db->execute('UPDATE site_audit_resources SET state = ?, status_code = ?, bytes = ?, content_type = ? WHERE id = ? AND audit_id = ?', [$state, $status, $bytes !== null ? min(4294967295, max(0, $bytes)) : null, $contentType !== null ? substr($contentType, 0, 100) : null, $id, $auditId]);
             $this->db->execute('UPDATE site_audits SET updated_at = ? WHERE id = ? AND status = \'running\'', [$this->now(), $auditId]);
         });
     }
 
     public function resourceIssues(int $auditId): array
     {
-        return \SeoControlCenter\Modules\SiteAudit\ResourceIssues::detect(array_map(static fn(array $r): array => ['pageId' => (int) $r['page_id'], 'url' => (string) $r['url'], 'kind' => (string) $r['kind'], 'state' => (string) $r['state'], 'status' => $r['status_code'] === null ? null : (int) $r['status_code']], $this->db->fetchAll('SELECT f.page_id, f.kind, r.url, r.state, r.status_code FROM site_audit_resource_refs f JOIN site_audit_resources r ON r.id = f.resource_id AND r.audit_id = f.audit_id WHERE f.audit_id = ? ORDER BY f.page_id, r.id', [$auditId])));
+        return \SeoControlCenter\Modules\SiteAudit\ResourceIssues::detect(array_map(static fn(array $r): array => ['pageId' => (int) $r['page_id'], 'url' => (string) $r['url'], 'kind' => (string) $r['kind'], 'state' => (string) $r['state'], 'status' => $r['status_code'] === null ? null : (int) $r['status_code'], 'bytes' => $r['bytes'] === null ? null : (int) $r['bytes'], 'type' => $r['content_type'] === null ? null : (string) $r['content_type']], $this->db->fetchAll('SELECT f.page_id, f.kind, r.url, r.state, r.status_code, r.bytes, r.content_type FROM site_audit_resource_refs f JOIN site_audit_resources r ON r.id = f.resource_id AND r.audit_id = f.audit_id WHERE f.audit_id = ? ORDER BY f.page_id, r.id', [$auditId])));
     }
 
     public function findPage(int $auditId, string $url): ?AuditPage
@@ -567,7 +571,20 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
             self::hreflang($row['hreflang_links'] ?? null),
             $str($row['html_lang'] ?? null),
             self::schemaProblems($row['schema_problems'] ?? null),
+            array_key_exists('in_sitemap', $row) && $row['in_sitemap'] !== null ? (bool) $row['in_sitemap'] : null,
+            self::images($row['image_signals'] ?? null),
         );
+    }
+
+    /** @return array{images: int, missing_dimensions: int, lazy_first: bool}|null */
+    private static function images(mixed $json): ?array
+    {
+        $data = is_string($json) ? json_decode($json, true) : null;
+        if (!is_array($data)) {
+            return null;
+        }
+
+        return ['images' => is_int($data['images'] ?? null) ? $data['images'] : 0, 'missing_dimensions' => is_int($data['missing_dimensions'] ?? null) ? $data['missing_dimensions'] : 0, 'lazy_first' => ($data['lazy_first'] ?? false) === true];
     }
 
     /**

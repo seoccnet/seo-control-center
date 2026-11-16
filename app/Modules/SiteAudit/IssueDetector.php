@@ -35,9 +35,10 @@ final class IssueDetector
      * @param array<int, int> $inbound page id => number of pages linking to it
      * @param bool $complete the crawl found every page it could (no page limit hit); only then is an unlinked page certainly not linked
      * @param list<array{pageId: int, type: IssueType, detail: ?string}> $resourceIssues
+     * @param int $sitemapLimit how many sitemap URLs the audit could take; with fewer listed, the sitemap was read in full (1.5.0); 0 = unknown
      * @return array{issues: list<array{pageId: int, type: IssueType, detail: ?string}>, score: ?int, counts: array{error: int, warning: int, notice: int}}
      */
-    public static function detect(array $pages, array $inbound, bool $complete = true, array $resourceIssues = []): array
+    public static function detect(array $pages, array $inbound, bool $complete = true, array $resourceIssues = [], int $sitemapLimit = 0): array
     {
         $byUrl = [];
         foreach ($pages as $page) {
@@ -101,6 +102,13 @@ final class IssueDetector
             }
             if (!$page->isHtml()) {
                 continue;
+            }
+            // Images in the HTML (1.5.0); null means read before 1.5.0.
+            if (($page->imageSignals['missing_dimensions'] ?? 0) > 0) {
+                $add($page, IssueType::ImageMissingDimensions, sprintf('%d of %d images have no width and height', $page->imageSignals['missing_dimensions'] ?? 0, $page->imageSignals['images'] ?? 0));
+            }
+            if (($page->imageSignals['lazy_first'] ?? false) === true) {
+                $add($page, IssueType::LazyMainImage, 'The first image in the content has loading="lazy"');
             }
             if ($page->noindex) {
                 $add($page, IssueType::Noindex);
@@ -186,6 +194,9 @@ final class IssueDetector
             }
         }
         foreach (self::hreflang($pages, $byUrl) as [$page, $type, $detail]) {
+            $add($page, $type, $detail);
+        }
+        foreach (self::sitemap($pages, $inbound, $sitemapLimit) as [$page, $type, $detail]) {
             $add($page, $type, $detail);
         }
         $business = self::missingBusinessDetails($pages);
@@ -311,6 +322,61 @@ final class IssueDetector
             if ($noReturn !== []) {
                 $issues[] = [$page, IssueType::HreflangNoReturn, 'Not linking back: ' . self::listed($noReturn)];
             }
+        }
+
+        return $issues;
+    }
+
+    /**
+     * The sitemap against the crawl (1.5.0). Listed pages that fail,
+     * redirect, are noindex, name another canonical or are blocked by
+     * robots.txt; and indexable, internally linked pages no sitemap lists.
+     * The second check needs the whole sitemap: with as many listed pages as
+     * the audit could take, it may have been cut off, so it is skipped.
+     * Audits before 1.5.0 (inSitemap null) and sites without a sitemap are
+     * not judged. Later pages of a paginated list and addresses with a query
+     * are often left out of sitemaps on purpose and are not reported.
+     *
+     * @param list<AuditPage> $pages
+     * @param array<int, int> $inbound
+     * @return list<array{AuditPage, IssueType, string}>
+     */
+    private static function sitemap(array $pages, array $inbound, int $sitemapLimit): array
+    {
+        $listed = array_values(array_filter($pages, static fn(AuditPage $p): bool => $p->inSitemap === true));
+        if ($listed === []) {
+            return [];
+        }
+        $issues = [];
+        foreach ($listed as $page) {
+            if ($page->state === 'blocked') {
+                $issues[] = [$page, IssueType::SitemapNotIndexable, 'Blocked by robots.txt'];
+                continue;
+            }
+            if ($page->state !== 'done') {
+                continue;
+            }
+            if ($page->statusCode === null || $page->statusCode === 0 || $page->statusCode >= 400) {
+                $issues[] = [$page, IssueType::SitemapBroken, $page->statusCode ? 'HTTP ' . $page->statusCode : ($page->error ?? 'No answer')];
+            } elseif ($page->isRedirect()) {
+                $issues[] = [$page, IssueType::SitemapRedirect, sprintf('%d → %s', $page->statusCode, $page->redirectTo !== null ? self::relative($page->redirectTo, $page->url) : 'no Location header')];
+            } elseif ($page->isHtml() && $page->noindex) {
+                $issues[] = [$page, IssueType::SitemapNotIndexable, 'noindex'];
+            } elseif ($page->isHtml() && $page->canonical !== null && $page->canonical !== $page->url) {
+                $issues[] = [$page, IssueType::SitemapNotIndexable, 'Canonical points to ' . self::relative($page->canonical, $page->url)];
+            }
+        }
+        if ($sitemapLimit < 1 || count($listed) >= $sitemapLimit) {
+            return $issues;
+        }
+        foreach ($pages as $page) {
+            if ($page->inSitemap !== false || $page->state !== 'done' || !$page->isHtml() || $page->noindex
+                || ($page->canonical !== null && $page->canonical !== $page->url) || str_contains($page->url, '?')
+                || (Pagination::pageNumber($page->url) ?? 1) > 1 || ($page->depth !== 0 && ($inbound[$page->id] ?? 0) === 0)) {
+                continue;
+            }
+            $count = $inbound[$page->id] ?? 0;
+            $issues[] = [$page, IssueType::MissingFromSitemap, $page->depth === 0 ? 'The start page' : sprintf('Linked from %d page%s', $count, $count === 1 ? '' : 's')];
         }
 
         return $issues;

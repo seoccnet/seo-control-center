@@ -33,7 +33,10 @@ final class SiteCrawlerTest extends TestCase
         self::assertSame(['image_alt', 'image', 'script', 'stylesheet', 'external'], array_column($result->resources, 'kind'));
         $this->http->on('GET', 'https://other.test/robots.txt', static fn(): HttpResponse => new HttpResponse(200, "User-agent: *\nDisallow: /private"));
         $this->http->on('GET', 'https://other.test/x', static fn(): HttpResponse => new HttpResponse(404, 'missing'));
-        self::assertSame(['state' => 'done', 'status' => 404], $this->crawler->resource('https://other.test/x'));
+        self::assertSame(['state' => 'done', 'status' => 404, 'bytes' => null, 'type' => null], $this->crawler->resource('https://other.test/x'));
+        // An image's full size comes from Content-Range of the 1 KB probe (1.5.0).
+        $this->http->on('GET', 'https://other.test/hero.jpg', static fn(): HttpResponse => new HttpResponse(206, 'x', headers: ['content-range' => 'bytes 0-1023/524288', 'content-type' => 'image/jpeg; charset=binary']));
+        self::assertSame(['state' => 'done', 'status' => 206, 'bytes' => 524288, 'type' => 'image/jpeg'], $this->crawler->resource('https://other.test/hero.jpg'));
         self::assertSame(['state' => 'skipped', 'status' => null], $this->crawler->resource('https://other.test/private'));
         self::assertSame(['state' => 'skipped', 'status' => null], $this->crawler->resource('http://other.test/x'));
         self::assertSame(['state' => 'skipped', 'status' => null], $this->crawler->resource('https://other.test:8080/x'));

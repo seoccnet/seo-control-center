@@ -71,6 +71,14 @@ final readonly class AuditPage
          * @var list<array{level: string, type: string, problem: string}>|null
          */
         public ?array $schemaProblems = null,
+        /** Listed in a sitemap (1.5.0); null for audits before sitemap membership was recorded. */
+        public ?bool $inSitemap = null,
+        /**
+         * Images in the page's HTML (1.5.0); null when not read.
+         *
+         * @var array{images: int, missing_dimensions: int, lazy_first: bool}|null
+         */
+        public ?array $imageSignals = null,
     ) {}
 
     public function isHtml(): bool
@@ -124,6 +132,8 @@ final readonly class AuditPage
             $result->page?->hreflang,
             $result->page?->htmlLang,
             $result->page?->schemaProblems,
+            $this->inSitemap,
+            $result->page !== null ? $result->page->images : null,
         );
     }
 

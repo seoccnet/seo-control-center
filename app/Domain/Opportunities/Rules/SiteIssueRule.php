@@ -20,7 +20,7 @@ use SeoControlCenter\Domain\Opportunities\ProjectSignals;
 final class SiteIssueRule implements OpportunityRule
 {
     /** Notices that are growth opportunities rather than errors: reported with a lower impact floor. */
-    public const array GROWTH_NOTICES = ['missing_structured_data', 'missing_author', 'deep_page', 'missing_sources', 'missing_content_markup', 'missing_questions', 'missing_spec_table', 'missing_business_details', 'incomplete_structured_data', 'structured_data_mismatch'];
+    public const array GROWTH_NOTICES = ['missing_structured_data', 'missing_author', 'deep_page', 'missing_sources', 'missing_content_markup', 'missing_questions', 'missing_spec_table', 'missing_business_details', 'incomplete_structured_data', 'structured_data_mismatch', 'missing_from_sitemap', 'legacy_image_format', 'image_missing_dimensions', 'lazy_main_image'];
 
     public function requires(?Opportunity $opportunity = null): array
     {

@@ -61,6 +61,8 @@ final readonly class HtmlPage
         public ?array $hreflang = null,
         public ?string $htmlLang = null,
         public ?array $schemaProblems = null,
+        /** @var array{images: int, missing_dimensions: int, lazy_first: bool}|null images in the HTML (1.5.0) */
+        public ?array $images = null,
     ) {}
 
     /**
@@ -153,6 +155,7 @@ final readonly class HtmlPage
             }
         }
         [$schemaTypes, $schemaAuthor, $schemaModified, $business, $jsonLd] = self::structuredData($document);
+        $images = self::images($document);
         $hreflang = self::hreflang($document, $base);
         $htmlLang = strtolower(trim((string) $document->documentElement?->getAttribute('lang')));
         $htmlLang = preg_match('/^[a-z0-9_-]{1,35}$/', $htmlLang) === 1 ? $htmlLang : null;
@@ -214,7 +217,40 @@ final readonly class HtmlPage
             $hreflang,
             $htmlLang,
             $schemaProblems,
+            $images,
         );
+    }
+
+    /**
+     * Images in the HTML (1.5.0): how many, how many lack a width or height
+     * attribute (the browser cannot reserve their space, so the layout
+     * shifts when they load), and whether the first image of the content
+     * (outside navigation, header, footer and asides; usually the largest
+     * element on first load) is lazy-loaded, which delays it. Tracking
+     * pixels (1×1) and data: images are ignored.
+     *
+     * @return array{images: int, missing_dimensions: int, lazy_first: bool}
+     */
+    private static function images(\Dom\HTMLDocument $document): array
+    {
+        $count = 0;
+        $missing = 0;
+        $lazyFirst = null;
+        foreach ($document->body?->querySelectorAll('img') ?? [] as $img) {
+            $src = trim((string) ($img->getAttribute('src') ?? $img->getAttribute('data-src')));
+            if ($src === '' || str_starts_with(strtolower($src), 'data:') || ($img->getAttribute('width') === '1' && $img->getAttribute('height') === '1')) {
+                continue;
+            }
+            ++$count;
+            if (trim((string) $img->getAttribute('width')) === '' || trim((string) $img->getAttribute('height')) === '') {
+                ++$missing;
+            }
+            if ($lazyFirst === null && self::place($img) === 'body') {
+                $lazyFirst = strtolower(trim((string) $img->getAttribute('loading'))) === 'lazy';
+            }
+        }
+
+        return ['images' => min(9999, $count), 'missing_dimensions' => min(9999, $missing), 'lazy_first' => $lazyFirst === true];
     }
 
     /**

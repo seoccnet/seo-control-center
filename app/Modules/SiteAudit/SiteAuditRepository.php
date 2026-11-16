@@ -79,7 +79,7 @@ interface SiteAuditRepository
     /** @return list<array{id: int, url: string}> */
     public function pendingResources(int $auditId): array;
 
-    public function saveResource(int $auditId, int $id, string $state, ?int $status): void;
+    public function saveResource(int $auditId, int $id, string $state, ?int $status, ?int $bytes = null, ?string $contentType = null): void;
 
     /** @return list<array{pageId: int, type: IssueType, detail: ?string}> */
     public function resourceIssues(int $auditId): array;

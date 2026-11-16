@@ -1020,6 +1020,14 @@ final class PlaybookLibrary
         'hreflang_lang_mismatch' => ['Align the page language', 'Make the html lang attribute and the page’s own hreflang code name the same language.'],
         'invalid_structured_data' => ['Fix structured data errors', 'Correct the JSON-LD so it parses, declares the schema.org @context and has the properties Google requires for its type, ideally in the template that generates it. Check a fixed page in the Rich Results Test, then re-run the audit.'],
         'incomplete_structured_data' => ['Complete structured data', 'Add the recommended properties the audit lists (image, author, dates, availability, telephone) from the same data the page shows.'],
+        'sitemap_broken' => ['Remove broken pages from the sitemap', 'Make the sitemap list only pages that answer 200: remove deleted pages, or restore or redirect them. If the sitemap is generated, fix the source (deleted products or posts still published) rather than single entries.'],
+        'sitemap_redirect' => ['List final addresses in the sitemap', 'Replace redirecting addresses in the sitemap with their targets, and update internal links to the same targets.'],
+        'sitemap_not_indexable' => ['Keep non-indexable pages out of the sitemap', 'Remove noindex pages, pages whose canonical points elsewhere and robots-blocked pages from the sitemap, or remove the noindex if they should rank.'],
+        'missing_from_sitemap' => ['Add indexable pages to the sitemap', 'Check the sitemap settings of your CMS or SEO plugin so every indexable page type (products, categories, posts, landing pages) is included, and resubmit the sitemap in Search Console.'],
+        'large_image' => ['Shrink large images', 'Resize images to the largest size they are displayed at, compress them (quality 75-85 is usually invisible), and serve responsive sizes with srcset.'],
+        'legacy_image_format' => ['Serve images as WebP or AVIF', 'Turn on WebP or AVIF conversion in your shop system, CDN or image plugin, keeping JPEG or PNG as a fallback for old browsers.'],
+        'image_missing_dimensions' => ['Give images a width and height', 'Add width and height attributes to images (the template usually knows them), so the browser reserves space and the layout does not jump.'],
+        'lazy_main_image' => ['Load the main image right away', 'Remove loading="lazy" from the first, largest image of each template, add fetchpriority="high", and keep lazy loading for images below the fold.'],
         'structured_data_mismatch' => ['Match structured data to the page', 'Generate product names and prices in the markup from the same data the page shows, and make sure the visible page states them; update both together when prices change.'],
     ];
 

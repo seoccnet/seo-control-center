@@ -57,6 +57,16 @@ enum IssueType: string
     case InvalidStructuredData = 'invalid_structured_data';
     case IncompleteStructuredData = 'incomplete_structured_data';
     case StructuredDataMismatch = 'structured_data_mismatch';
+    // Sitemap audit (1.5.0).
+    case SitemapBroken = 'sitemap_broken';
+    case SitemapRedirect = 'sitemap_redirect';
+    case SitemapNotIndexable = 'sitemap_not_indexable';
+    case MissingFromSitemap = 'missing_from_sitemap';
+    // Image SEO (1.5.0).
+    case LargeImage = 'large_image';
+    case LegacyImageFormat = 'legacy_image_format';
+    case ImageMissingDimensions = 'image_missing_dimensions';
+    case LazyMainImage = 'lazy_main_image';
 
     public function severity(): string
     {
@@ -66,7 +76,7 @@ enum IssueType: string
             self::DuplicateDescription, self::MissingH1, self::SlowPage, self::LargePage,
             self::BrokenAsset, self::BrokenExternalLink, self::MixedContent, self::FetchRefused,
             self::HreflangInvalidCode, self::HreflangConflict, self::HreflangNoReturn, self::HreflangBadTarget,
-            self::InvalidStructuredData => 'warning',
+            self::InvalidStructuredData, self::SitemapBroken, self::SitemapRedirect, self::SitemapNotIndexable, self::LargeImage => 'warning',
             default => 'notice',
         };
     }
@@ -97,6 +107,14 @@ enum IssueType: string
             self::InvalidStructuredData => 'Structured data with errors',
             self::IncompleteStructuredData => 'Structured data missing recommended fields',
             self::StructuredDataMismatch => 'Structured data not matching the page',
+            self::SitemapBroken => 'Broken page in the sitemap',
+            self::SitemapRedirect => 'Redirect in the sitemap',
+            self::SitemapNotIndexable => 'Non-indexable page in the sitemap',
+            self::MissingFromSitemap => 'Indexable page missing from the sitemap',
+            self::LargeImage => 'Large image file',
+            self::LegacyImageFormat => 'Image could use a modern format',
+            self::ImageMissingDimensions => 'Images without width and height',
+            self::LazyMainImage => 'Main image is lazy-loaded',
             self::BrokenPage => 'Broken page (4xx)',
             self::FetchRefused => 'Access denied or rate limited',
             self::ServerError => 'Server error (5xx)',
@@ -149,6 +167,14 @@ enum IssueType: string
             self::InvalidStructuredData => 'The page’s JSON-LD has errors that stop rich results: it does not parse, lacks a schema.org @context, or misses a property Google requires for its type (such as a product’s offers or price, or a breadcrumb item’s position). Fix it and test the page in Google’s Rich Results Test. Microdata is not validated.',
             self::IncompleteStructuredData => 'The page’s JSON-LD is valid but misses properties Google recommends, such as an article’s image, author and datePublished or a product’s image and availability. Adding them makes rich results more likely and more complete.',
             self::StructuredDataMismatch => 'The structured data names a product or price that the page’s HTML does not show. Google can withhold rich results or act against markup that does not match the visible page. Check the page: names and prices that JavaScript writes in after loading are not seen by this check.',
+            self::SitemapBroken => 'The sitemap lists an address that returns an error or does not answer. Search engines keep requesting it and trust the sitemap less. Remove it from the sitemap, or restore or redirect the page.',
+            self::SitemapRedirect => 'The sitemap lists an address that redirects. A sitemap should list final addresses only; list the redirect target instead.',
+            self::SitemapNotIndexable => 'The sitemap lists a page that asks not to be indexed (noindex), names another canonical address, or is blocked by robots.txt. That sends mixed signals: list only pages you want in search results.',
+            self::MissingFromSitemap => 'The page is indexable and linked on the site, but no sitemap lists it. Search engines may find it later or less often. Add it to the sitemap, usually by checking the settings of your SEO plugin or shop system. Only reported when the audit read the whole sitemap.',
+            self::LargeImage => 'An image file is larger than 300 KB. Large images slow pages down, especially on mobile, and can delay the largest content element (LCP). Resize it to the size it is shown at and compress it. Sizes come from a sample of each page\'s first images.',
+            self::LegacyImageFormat => 'A JPEG, PNG or GIF image over 100 KB. WebP or AVIF usually make the same image 25-50% smaller. Most shop systems and image plugins can convert and serve them automatically.',
+            self::ImageMissingDimensions => 'Images without width and height attributes. The browser cannot reserve their space, so the layout jumps when they load, which hurts Cumulative Layout Shift (CLS). Add width and height (CSS can still scale the image).',
+            self::LazyMainImage => 'The first image in the page\'s content has loading="lazy". It is usually the largest element on first load, so lazy-loading it delays Largest Contentful Paint (LCP). Load it normally (and consider fetchpriority="high"); keep lazy loading for images further down.',
             self::BrokenPage => 'Links on your site lead to a page that does not exist. Fix or remove the links, or redirect the address to the right page.',
             self::FetchRefused => 'The server refused the crawler with HTTP 401, 403 or 429. Check access rules or rate limits; this is not proof that the page is missing.',
             self::ServerError => 'The server failed to deliver the page. Search engines drop pages that keep failing; check the server or application logs.',
