@@ -39,11 +39,11 @@ final readonly class PdoRankingRepository implements RankingRepository
 
     public function settings(int $projectId): RankingSettings
     {
-        $row = $this->db->fetchOne('SELECT enabled, device, frequency FROM project_ranking_settings WHERE project_id = ?', [$projectId]);
+        $row = $this->db->fetchOne('SELECT enabled, device, frequency, both_devices FROM project_ranking_settings WHERE project_id = ?', [$projectId]);
 
         return $row === null
             ? RankingSettings::default()
-            : new RankingSettings((bool) $row['enabled'], SerpDevice::from((string) $row['device']), (string) $row['frequency']);
+            : new RankingSettings((bool) $row['enabled'], SerpDevice::from((string) $row['device']), (string) $row['frequency'], (bool) $row['both_devices']);
     }
 
     public function positionBuckets(int $projectId, int $workspaceId, SerpDevice $device, string $date, ?string $cohortDate = null): array
@@ -64,11 +64,11 @@ final readonly class PdoRankingRepository implements RankingRepository
     public function saveSettings(int $projectId, RankingSettings $settings, int $userId): void
     {
         $this->db->execute(
-            'INSERT INTO project_ranking_settings (project_id, enabled, device, frequency, updated_by, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?)
+            'INSERT INTO project_ranking_settings (project_id, enabled, device, frequency, both_devices, updated_by, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE enabled = VALUES(enabled), device = VALUES(device), frequency = VALUES(frequency),
-                 updated_by = VALUES(updated_by), updated_at = VALUES(updated_at)',
-            [$projectId, $settings->enabled ? 1 : 0, $settings->device->value, $settings->frequency, $userId, $this->now()],
+                 both_devices = VALUES(both_devices), updated_by = VALUES(updated_by), updated_at = VALUES(updated_at)',
+            [$projectId, $settings->enabled ? 1 : 0, $settings->device->value, $settings->frequency, $settings->bothDevices ? 1 : 0, $userId, $this->now()],
         );
     }
 

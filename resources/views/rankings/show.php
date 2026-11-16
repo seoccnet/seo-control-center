@@ -39,14 +39,15 @@ $moveText = static fn(int $change): string => sprintf('%+d', $change);
 $featureLabels = ['featured_snippet' => 'Featured snippet', 'people_also_ask' => 'People also ask', 'local_pack' => 'Local pack', 'images' => 'Images', 'video' => 'Videos', 'top_stories' => 'Top stories', 'ai_overview' => 'AI overview', 'shopping' => 'Shopping'];
 ?>
 <?php
+$deviceLabel = $settings->device->value . ($settings->bothDevices ? ' + ' . $settings->otherDevice()->value : '');
 if (!$settings->enabled) {
-    [$meta, $metaStatus] = ['Google ' . $settings->device->value . ' · tracking is off', 'warn'];
+    [$meta, $metaStatus] = ['Google ' . $deviceLabel . ' · tracking is off', 'warn'];
 } elseif ($sync !== null && $sync->status === 'error') {
-    [$meta, $metaStatus] = ['Google ' . $settings->device->value . ' · last check failed', 'error'];
+    [$meta, $metaStatus] = ['Google ' . $deviceLabel . ' · last check failed', 'error'];
 } elseif ($sync !== null && in_array($sync->status, ['pending', 'running'], true)) {
-    [$meta, $metaStatus] = ['Google ' . $settings->device->value . ' · check in progress', 'ok'];
+    [$meta, $metaStatus] = ['Google ' . $deviceLabel . ' · check in progress', 'ok'];
 } else {
-    [$meta, $metaStatus] = ['Google ' . $settings->device->value . ' · ' . $settings->frequency . ($sync?->lastCheckedOn !== null ? ' · last check ' . $sync->lastCheckedOn . ' (UTC)' : ''), 'ok'];
+    [$meta, $metaStatus] = ['Google ' . $deviceLabel . ' · ' . $settings->frequency . ($sync?->lastCheckedOn !== null ? ' · last check ' . $sync->lastCheckedOn . ' (UTC)' : ''), 'ok'];
 }
 $actions = null;
 if ($canManage && $settings->enabled && $providerAvailable && $keywordCount > 0) {
@@ -92,6 +93,9 @@ if ($canManage && $settings->enabled && $providerAvailable && $keywordCount > 0)
                         <option value="weekly"<?= $settings->frequency === 'weekly' ? ' selected' : '' ?>>Weekly</option>
                     </select>
                 </div>
+            </div>
+            <div class="field">
+                <label><input type="checkbox" name="both_devices" value="1"<?= $settings->bothDevices ? ' checked' : '' ?>> Also check the other device, to compare mobile and desktop rankings (doubles the cost)</label>
             </div>
             <p class="muted small">
                 Each check requests the top 100 Google results for every keyword (<?= $view->e(number_format($keywordCount)) ?> keyword<?= $keywordCount === 1 ? '' : 's' ?>),
@@ -174,7 +178,7 @@ if ($canManage && $settings->enabled && $providerAvailable && $keywordCount > 0)
     <section class="card">
         <div class="card-header">
             <h2>Keywords</h2>
-            <?php if ($latest !== null): ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/export' . ($filter !== null ? '?filter=' . $filter->value : '')) ?>"><?= $view->icon('download') ?>Export CSV</a><?php endif; ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/answers') ?>">Snippets &amp; questions</a><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/import') ?>">Import history</a>
+            <?php if ($latest !== null): ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/export' . ($filter !== null ? '?filter=' . $filter->value : '')) ?>"><?= $view->icon('download') ?>Export CSV</a><?php endif; ?><?php if ($settings->bothDevices): ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/devices') ?>">Mobile vs desktop</a><?php endif; ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/answers') ?>">Snippets &amp; questions</a><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/import') ?>">Import history</a>
         </div>
         <?php if ($latest !== null): ?>
         <nav class="filter-row" aria-label="Filter by position">

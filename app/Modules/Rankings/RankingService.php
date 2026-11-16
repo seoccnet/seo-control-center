@@ -49,6 +49,7 @@ final readonly class RankingService
     public const int MOVERS = 10;
     public const int HISTORY_DAYS = 365;
     public const int ANSWER_LIMIT = 500;
+    public const int DEVICE_GAP = 5;
     private const int SEARCH_CONSOLE_DAYS = 28;
 
     public function __construct(
@@ -131,7 +132,7 @@ final readonly class RankingService
             'keywordCount' => $total,
             'canManage' => $this->projects->can($user, Permission::AnalysisExecute, $project),
             'providerAvailable' => $this->serp->isAvailable($project->workspaceId),
-            'costPerCheck' => $total * $this->serp->estimatedCost(RankingSettings::DEPTH),
+            'costPerCheck' => $total * $this->serp->estimatedCost(RankingSettings::DEPTH) * count($settings->devices()),
             'latest' => $latest,
             'compare' => $compare,
             'chart' => $chart,
@@ -141,6 +142,47 @@ final readonly class RankingService
             'filter' => $filter,
             'page' => $page,
             'pages' => $pages,
+        ];
+    }
+
+    /**
+     * Mobile against desktop (1.6.0), from each keyword's latest check on
+     * both devices: keywords whose positions differ by GAP or more, or rank
+     * on one device only, the largest gaps first.
+     *
+     * @return array{settings: RankingSettings, primary: ?RankingDay, other: ?RankingDay, rows: list<array{keyword: RankedKeyword, primary: ?int, other: ?int, gap: ?int}>, compared: int}
+     */
+    public function devices(Project $project): array
+    {
+        $settings = $this->rankings->settings($project->id);
+        $other = $settings->otherDevice();
+        $limit = max(1, $this->keywords->count($project->id));
+        $otherRows = [];
+        foreach ($this->rankings->keywords($project->id, $project->workspaceId, $other, $limit, 0) as $row) {
+            $otherRows[$row->publicId] = $row;
+        }
+        $rows = [];
+        $compared = 0;
+        foreach ($this->rankings->keywords($project->id, $project->workspaceId, $settings->device, $limit, 0) as $row) {
+            $twin = $otherRows[$row->publicId] ?? null;
+            if ($row->checkedOn === null || $twin?->checkedOn === null) {
+                continue;
+            }
+            $compared++;
+            $gap = $row->position !== null && $twin->position !== null ? $twin->position - $row->position : null;
+            if ($row->position === $twin->position || ($gap !== null && abs($gap) < self::DEVICE_GAP)) {
+                continue;
+            }
+            $rows[] = ['keyword' => $row, 'primary' => $row->position, 'other' => $twin->position, 'gap' => $gap];
+        }
+        usort($rows, static fn(array $a, array $b): int => [$b['gap'] === null ? 1000 : abs($b['gap']), $a['keyword']->keyword] <=> [$a['gap'] === null ? 1000 : abs($a['gap']), $b['keyword']->keyword]);
+
+        return [
+            'settings' => $settings,
+            'primary' => $this->rankings->latestDay($project->id, $settings->device),
+            'other' => $this->rankings->latestDay($project->id, $other),
+            'rows' => $rows,
+            'compared' => $compared,
         ];
     }
 
@@ -218,16 +260,17 @@ final readonly class RankingService
         }
 
         $before = $this->rankings->settings($project->id);
-        $settings = new RankingSettings($enabled, $device, $frequency);
+        $settings = new RankingSettings($enabled, $device, $frequency, ($input['both_devices'] ?? null) === '1');
         $this->rankings->saveSettings($project->id, $settings, $user->id);
         $this->audit->record(new AuditEvent('rankings.settings_updated', ActorType::User, actorUserId: $user->id, actorLabel: $user->email, workspaceId: $project->workspaceId, targetType: 'project', targetId: $project->publicId, metadata: [
             'enabled' => $enabled,
             'device' => $device->value,
             'frequency' => $frequency,
+            'both_devices' => $settings->bothDevices,
         ]), $client);
 
         // Start right away when tracking was just switched on or moved to another device.
-        if ($enabled && (!$before->enabled || $before->device !== $device)) {
+        if ($enabled && (!$before->enabled || $before->device !== $device || (!$before->bothDevices && $settings->bothDevices))) {
             $this->queue($project);
         }
 

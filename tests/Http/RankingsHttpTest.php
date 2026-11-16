@@ -114,6 +114,38 @@ final class RankingsHttpTest extends TestCase
         self::assertStringNotContainsString('Tracking settings', $html, 'Viewers cannot change settings.');
     }
 
+    public function testBothDevicesSettingAndComparison(): void
+    {
+        $this->connectDataForSeo();
+        $project = $this->s->acmeProject->id;
+        $this->keywords->add($project, ['red shoes', 'blue shoes', 'green shoes', 'pink shoes'], KeywordLocale::default(), $this->s->owner->id);
+        $owner = $this->s->loggedIn($this->s->owner);
+        self::assertStringContainsString('estimated at up to $0.08 per check', (string) $owner->get($this->url())->getBody());
+        $owner->post($this->url() . '/settings', ['enabled' => '1', 'device' => 'desktop', 'frequency' => 'daily']);
+        self::assertCount(1, $this->rankings->requests);
+        $owner->get($this->url());
+        $owner->post($this->url() . '/settings', ['enabled' => '1', 'device' => 'desktop', 'frequency' => 'daily', 'both_devices' => '1']);
+        self::assertTrue($this->rankings->settings($project)->bothDevices);
+        self::assertCount(2, $this->rankings->requests, 'Adding the second device checks right away.');
+        $html = (string) $owner->get($this->url())->getBody();
+        self::assertStringContainsString('estimated at up to $0.16 per check', $html);
+        self::assertStringContainsString('Google desktop + mobile', $html);
+
+        $ids = array_column($this->keywords->keywords[$project], 'id');
+        foreach ([[SerpDevice::Desktop, [3, 4, 8, null]], [SerpDevice::Mobile, [12, 5, null, null]]] as [$device, $positions]) {
+            foreach ($positions as $i => $position) {
+                $this->rankings->storeSnapshot(new RankSnapshot($ids[$i], $project, $device, '2026-09-26', $position, $position, null, [], []));
+            }
+            $this->rankings->aggregate($project, $this->s->acme->id, $device, '2026-09-26');
+        }
+
+        $page = (string) $this->s->loggedIn($this->s->viewer)->get($this->url() . '/devices')->getBody();
+        self::assertStringContainsString('2 of 4 keywords checked on both devices.', $page);
+        self::assertMatchesRegularExpression('#green shoes</a></th>\s*<td>8</td>\s*<td>&gt;100</td>\s*<td>Only desktop</td>.*red shoes</a></th>\s*<td>3</td>\s*<td>12</td>\s*<td>9 places lower</td>#s', $page);
+        self::assertStringNotContainsString('blue shoes</a>', $page, 'One place apart is no gap.');
+        self::assertStringNotContainsString('pink shoes</a>', $page);
+    }
+
     public function testSnippetsAndQuestionsPage(): void
     {
         $project = $this->s->acmeProject->id;

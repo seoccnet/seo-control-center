@@ -53,26 +53,34 @@ final readonly class RankChecker
 
         $this->rankings->setSyncState($projectId, RankingSyncState::RUNNING);
         try {
-            while (true) {
-                $batch = $this->rankings->unchecked($projectId, $settings->device, $date, self::BATCH);
-                if ($batch === []) {
-                    $this->aggregate($projectId, $workspaceId, $settings->device, $date);
-                    $this->rankings->setSyncState($projectId, RankingSyncState::OK, checkedOn: $date);
-
-                    return true;
-                }
-                foreach ($batch as $keyword) {
-                    if (!$continue()) {
-                        $this->aggregate($projectId, $workspaceId, $settings->device, $date);
-
-                        return false;
+            // The primary device first; the other one only when both are tracked (1.6.0). Competitors,
+            // results-page changes and AI Overviews follow the primary device only.
+            foreach ($settings->devices() as $device) {
+                $primary = $device === $settings->device;
+                while (true) {
+                    $batch = $this->rankings->unchecked($projectId, $device, $date, self::BATCH);
+                    if ($batch === []) {
+                        $this->aggregate($projectId, $workspaceId, $device, $date, $primary);
+                        break;
                     }
-                    $serp = $this->serp->organic($workspaceId, $projectId, $keyword['keyword'], $keyword['locale'], $settings->device, RankingSettings::DEPTH);
-                    $this->rankings->storeSnapshot(RankSnapshot::fromSerp($keyword['id'], $projectId, $domain, $date, $serp));
-                    $this->observer?->observe($projectId, $keyword['id'], $date, $serp);
+                    foreach ($batch as $keyword) {
+                        if (!$continue()) {
+                            $this->aggregate($projectId, $workspaceId, $device, $date, $primary);
+
+                            return false;
+                        }
+                        $serp = $this->serp->organic($workspaceId, $projectId, $keyword['keyword'], $keyword['locale'], $device, RankingSettings::DEPTH);
+                        $this->rankings->storeSnapshot(RankSnapshot::fromSerp($keyword['id'], $projectId, $domain, $date, $serp));
+                        if ($primary) {
+                            $this->observer?->observe($projectId, $keyword['id'], $date, $serp);
+                        }
+                    }
+                    $this->logger->info('Rankings checked', ['project_id' => $projectId, 'date' => $date, 'device' => $device->value, 'keywords' => count($batch)]);
                 }
-                $this->logger->info('Rankings checked', ['project_id' => $projectId, 'date' => $date, 'keywords' => count($batch)]);
             }
+            $this->rankings->setSyncState($projectId, RankingSyncState::OK, checkedOn: $date);
+
+            return true;
         } catch (BudgetExceededException $e) {
             $this->aggregate($projectId, $workspaceId, $settings->device, $date);
             $this->rankings->setSyncState($projectId, RankingSyncState::ERROR, 'Stopped: ' . $e->getMessage());
@@ -87,9 +95,11 @@ final readonly class RankChecker
         }
     }
 
-    private function aggregate(int $projectId, int $workspaceId, SerpDevice $device, string $date): void
+    private function aggregate(int $projectId, int $workspaceId, SerpDevice $device, string $date, bool $notify = true): void
     {
         $this->rankings->aggregate($projectId, $workspaceId, $device, $date);
-        $this->observer?->dayChecked($projectId, $workspaceId, $device, $date);
+        if ($notify) {
+            $this->observer?->dayChecked($projectId, $workspaceId, $device, $date);
+        }
     }
 }

@@ -105,6 +105,7 @@ final class RankingsModule implements Module, ProvidesJobs
         $routes->post($path . '/check', RankingsController::class, 'check');
         $routes->get($path . '/export', RankingsController::class, 'export', 'projects.rankings.export');
         $routes->get($path . '/answers', RankingsController::class, 'answers', 'projects.rankings.answers');
+        $routes->get($path . '/devices', RankingsController::class, 'devices', 'projects.rankings.devices');
         $routes->get($path . '/import', Controllers\RankingImportController::class, 'show', 'projects.rankings.import');
         $routes->post($path . '/import', Controllers\RankingImportController::class, 'import', 'projects.rankings.import.save');
         $routes->get($path . '/{keyword:' . Uuid::ROUTE_PATTERN . '}', RankingsController::class, 'keyword', 'projects.rankings.keyword');

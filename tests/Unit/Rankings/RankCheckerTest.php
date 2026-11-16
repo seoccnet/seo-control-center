@@ -73,6 +73,28 @@ final class RankCheckerTest extends TestCase
         });
     }
 
+    public function testBothDevicesAreCheckedPrimaryFirst(): void
+    {
+        $this->rankings->saveSettings(self::PROJECT, new RankingSettings(true, SerpDevice::Mobile, RankingSettings::DAILY, true), 1);
+        $this->keywords->add(self::PROJECT, ['red shoes', 'blue shoes'], KeywordLocale::default(), 1);
+        $calls = 0;
+
+        // Stopped after three requests: the mobile day is complete, desktop has one keyword left.
+        self::assertFalse($this->checker->run(self::PROJECT, self::WORKSPACE, self::TODAY, static function () use (&$calls): bool {
+            return ++$calls <= 3;
+        }));
+        self::assertSame(['mobile', 'mobile', 'desktop'], array_map(static fn(array $r): string => json_decode((string) $r['body'], true)[0]['device'], $this->http->requests));
+        self::assertNotSame(RankingSyncState::OK, $this->rankings->syncState(self::PROJECT)?->status, 'The day is not done until both devices are.');
+
+        self::assertTrue($this->checker->run(self::PROJECT, self::WORKSPACE, self::TODAY, static fn(): bool => true));
+        self::assertCount(4, $this->http->requests);
+        self::assertSame(2, $this->rankings->latestDay(self::PROJECT, SerpDevice::Mobile)?->keywords);
+        self::assertSame(2, $this->rankings->latestDay(self::PROJECT, SerpDevice::Desktop)?->keywords);
+        self::assertSame(RankingSyncState::OK, $this->rankings->syncState(self::PROJECT)?->status);
+        self::assertSame([SerpDevice::Mobile, SerpDevice::Desktop], (new RankingSettings(true, SerpDevice::Mobile, RankingSettings::DAILY, true))->devices());
+        self::assertSame([SerpDevice::Desktop], RankingSettings::default()->devices());
+    }
+
     public function testChecksEachKeywordOncePerDayAndAggregates(): void
     {
         $this->keywords->add(self::PROJECT, ['red shoes', 'buy red running shoes', 'unknown x y z'], KeywordLocale::default(), 1);
