@@ -26,12 +26,13 @@ Both exports include Google clicks/impressions, Bing clicks and the search perio
 
 ## Reading the project Overview
 
-The Overview reads from top to bottom.
+The Overview reads from top to bottom. Each section starts with one line on what it shows, and the links under the KPI row jump between sections.
 
 1. **KPI row:** Google/Bing clicks, impressions, CTR and average position, with a sparkline of the period. When GA4 data is imported, organic sessions, key events and purchase revenue sit in the same row.
-2. **Trends & outlook** sits beside **Where to act next**. Where to act next ranks queries by their estimated click gap: the clicks they would gain at the CTR of observed queries in the same position band. It also lists saved findings with their evidence.
-3. **Why it changed:** **What moved** separates gaining and losing queries and pages. Beside it are **Recent SEO changes**, the ranking buckets and landing-page outcomes. Ranking changes use keywords checked on both dates.
-4. **Growth & risks:** audit issues, backlinks, indexing and Core Web Vitals; researched demand; competitor and AI visibility; and local coverage.
+2. **Outlook & audience:** the **Performance prognosis** on the left. On the right, **Where your traffic comes from** shows Google and Bing clicks as shares, GA4 organic sessions and key events, Google's top six countries and the device split. Countries and devices are Google only, because Bing and the GA4 import do not provide them. Below it, **AI visibility** has three tabs: **AI Overviews** (how many AI Overviews cite your site, and the most cited domains), **AI visits** (GA4 sessions from ChatGPT, Perplexity, Gemini and other assistants) and **Mentions** (your domain in the latest assistant-mention sample). Changes are shown only when both periods were imported completely. On narrower screens the right column moves below the prognosis.
+3. **Do next:** **Where to act next** ranks queries by their estimated click gap: the clicks they would gain at the CTR of observed queries in the same position band. It also lists saved findings with their evidence.
+4. **Why it changed:** **What moved** separates gaining and losing queries and pages, with landing-page outcomes below it. Beside them are the ranking buckets and **Recent SEO changes**. Ranking changes use keywords checked on both dates.
+5. **Growth & risks:** audit issues, backlinks, indexing and Core Web Vitals; researched demand; competitor and AI visibility; and local coverage.
 
 Each card leads with its result and shows its observation dates. Open **About this data** at the bottom of a card for its sample, method and limits. Printed pages always show these notes. Sources without saved data appear in one **Not set up yet** strip, with a link to set them up. Opening Overview does not run an import or paid lookup.
 

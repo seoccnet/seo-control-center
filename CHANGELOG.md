@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — Clearer project overview
+## [1.4.0] — 2026-11-16 — Clearer overview: audience, countries, devices and AI visibility
 
 - **Prognosis and audience side by side.** On wide screens the performance prognosis sits on the left and a new **Where your traffic comes from** card on the right: Google and Bing clicks as a share bar, GA4 organic sessions and key events, Google's top six countries (with names, share and change against the previous period) and the mobile/desktop/tablet split with CTR and position. Changes appear only when both periods were imported completely. Countries and devices are Google only, because Bing and the GA4 import do not provide them. Saved imports only; no provider call.
 - **AI visibility card** under the audience card, with three tabs. *AI Overviews*: the share of AI Overviews citing the site (change in points against the check a week earlier), how many tracked keywords show one or cite you, and the three most cited domains. *AI visits*: GA4 sessions from ChatGPT, Perplexity, Gemini and other assistants, summed per assistant, with key events and change against the previous period. *Mentions*: the latest saved assistant-mention sample for your domain per platform. Without any AI evidence the card links to the setup steps.
