@@ -44,6 +44,7 @@ DISABLED_FEATURES        comma-separated Feature values to turn off, for example
 SOURCE_CODE_URL          the sidebar source link (AGPL-3.0 section 13); set it when you run a changed version
 UPDATE_PUBLIC_KEY        base64 Ed25519 key that release packages must be signed with (default: the vendor key in config/update.php)
 UPDATE_MAX_UPLOAD_MB     default 64; the page also respects upload_max_filesize and post_max_size
+UPDATE_CHECK_REPOSITORY  default seoccnet/seo-control-center; owner/name read by the optional update check (off until an admin turns it on, ADR-053)
 
 CRON_INTERVAL_MINUTES    default 1; set to 5 on hosts that run cron at most every 5 minutes (common on shared hosting)
 QUEUE_CRON_MAX_SECONDS   default 50 (1-minute cron) or up to 240 for longer intervals

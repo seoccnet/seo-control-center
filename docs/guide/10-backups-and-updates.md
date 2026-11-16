@@ -13,6 +13,8 @@
 
 ## Updates
 
+**Finding out about new versions** (1.3.0): SEOcc does not look for new versions by itself. Under *System → Updates*, an administrator can turn on the update check: once a day it asks GitHub for the project's latest release, and administrators then see a notice in the top bar when a newer version is out. The request carries no installation ID, version, domain or other data about your installation; GitHub only sees your server's IP address, as with any download. Nothing is downloaded or installed automatically. Turn it off again on the same page. Forks set `UPDATE_CHECK_REPOSITORY` to their own `owner/name`.
+
 Updates are signed packages (`scc-<version>.zip`). Your installation only accepts packages signed with the project's release key, and only if every file is intact.
 
 1. Download the **update package** from the [project's releases](https://github.com/seoccnet/seo-control-center/releases). (The install package, `scc-<version>-install.zip`, is only for new installations.)

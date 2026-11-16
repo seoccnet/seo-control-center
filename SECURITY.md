@@ -8,6 +8,10 @@ Paid data and client websites are out of scope for testing: use your own install
 
 # Security Requirements
 
+## Optional update check (Unreleased, ADR-053)
+
+Off by default; only users with `system.update` can turn it on or off (audited as `system.update_check_*`) or run it now (rate-limited). The request goes only to `api.github.com` over HTTPS with a fixed user agent and no installation ID, version, domain or other installation data. The response is untrusted: only a semantic version tag, a name (200 characters) and a release link starting with `https://github.com/` are kept, rendered escaped and opened with `rel="noopener noreferrer"`. Nothing is downloaded or executed; installation still requires a manually uploaded package with a valid signature.
+
 ## Report client links (Unreleased)
 
 `/share/{token}` is the only unauthenticated page with project data. The token is 32 bytes from `random_bytes`, base64url-encoded (43 characters) and checked against a route pattern before any lookup; only its SHA-256 is stored (as for sessions, ADR-019), so a database copy yields no working links. Unknown, malformed, expired and revoked tokens and links of deleted projects or workspaces all answer the same 404. The page renders only the project report (the sections the project chose), its branding stylesheet, logo and PDF, with no links into the app and no session-dependent content; responses carry `Cache-Control: no-store, private`, `X-Robots-Tag: noindex, nofollow` and `Referrer-Policy: no-referrer` so the token does not leak through caches, search engines or outbound links. Requests are rate-limited to 60 per minute per client address. Creating and revoking need *Edit projects* on the project (404 for foreign projects and links) and are audited (`project.report_link_*`); at most 20 links per project are active.

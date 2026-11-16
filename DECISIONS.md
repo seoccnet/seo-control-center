@@ -1061,3 +1061,17 @@ Opportunity snooze expiration occurs during the existing local analysis schedule
 - Installations no longer need or contact a vendor server. They also stop learning about new versions by themselves until a check against GitHub Releases is built.
 - Anyone can run a competing hosted service, but must publish their changes and may not use the names.
 - A plain install relies on the root `.htaccess` for private files, so the guide has people confirm that `version.json` answers 403.
+
+## ADR-053 — Optional update check against GitHub Releases (2026-11-16)
+
+**Context.** ADR-052 removed the daily update check together with the license server, so installations no longer learn about new versions. Releases are now published on GitHub Releases, a public service and not a vendor server.
+
+**Decision (owner, 2026-11-16).**
+- An administrator can turn on an update check under *System → Updates*. It is **off by default** on new and existing installations.
+- When on, a daily job (and *Check now*, six times an hour at most) asks GitHub's public API for the latest release of `UPDATE_CHECK_REPOSITORY` (default `seoccnet/seo-control-center`). Forks point it at their own repository.
+- The request carries **no installation ID, version, domain or other data** about the installation: a fixed, generic user agent and no query. GitHub sees the server's IP address, as with any download.
+- The result is stored in `system_state` and shown on *System → Updates* and, for users with `system.update`, as a top-bar notice when a newer version exists.
+- **Nothing is downloaded or installed automatically.** Updates stay a manual upload of a signed package (ADR-052).
+- Turning the check on or off is audited (`system.update_check_*`).
+
+**Consequences.** An installation contacts a third party only after an administrator opts in, and only GitHub. ADR-052's "no phone-home" stays the default.

@@ -116,7 +116,21 @@ final class SystemModule implements Module, ProvidesJobs
             (string) $c->get('app.version'),
             $c->make(Config::class)->string('update.public_key'),
             max(1, $c->make(Config::class)->int('update.max_upload_mb', 64)),
+            $c->make(UpdateCheck::class),
         ));
+        // Optional update check against GitHub Releases (ADR-053).
+        $container->singleton(UpdateCheckStore::class, static fn(Container $c): UpdateCheckStore => new UpdateCheckStore($c->make(SystemState::class)));
+        $container->singleton(UpdateCheck::class, static fn(Container $c): UpdateCheck => new UpdateCheck(
+            $c->make(UpdateCheckStore::class),
+            $c->make(\SeoControlCenter\Core\Http\Client\HttpClient::class),
+            $c->make(Authorizer::class),
+            $c->make(\SeoControlCenter\Core\RateLimit\RateLimiter::class),
+            $c->make(AuditLogger::class),
+            $c->make(Clock::class),
+            $c->make(Config::class)->string('update.check_repository'),
+            (string) $c->get('app.version'),
+        ));
+        $container->make(\SeoControlCenter\Core\View\LayoutWidgets::class)->add(\SeoControlCenter\Core\View\LayoutWidgets::TOPBAR, static fn(): UpdateCheckWidget => new UpdateCheckWidget($container->make(UpdateCheck::class), $container->make(Authorizer::class)));
         $container->singleton(SystemHealthController::class, static fn(Container $c): SystemHealthController => new SystemHealthController(
             $c->make(SystemHealth::class),
             $c->make(Migrator::class),
@@ -144,6 +158,7 @@ final class SystemModule implements Module, ProvidesJobs
         $routes->post('/system/updates/upload', UpdatesController::class, 'upload');
         $routes->post('/system/updates/install', UpdatesController::class, 'install');
         $routes->post('/system/updates/discard', UpdatesController::class, 'discard');
+        $routes->post('/system/updates/check', UpdatesController::class, 'updateCheck', 'system.updates.check');
         $routes->get('/system/support-bundle', MaintenanceController::class, 'supportBundle', 'system.support_bundle');
     }
 
@@ -154,6 +169,7 @@ final class SystemModule implements Module, ProvidesJobs
 
     public function registerJobs(JobRegistry $jobs, Container $container): void
     {
+        $jobs->register(Jobs\UpdateCheckJob::TYPE, static fn(): Jobs\UpdateCheckJob => new Jobs\UpdateCheckJob($container->make(UpdateCheck::class)));
         $jobs->register(SystemCleanupJob::TYPE, static fn(): SystemCleanupJob => new SystemCleanupJob(
             $container->make(Connection::class),
             $container->make(SessionConfig::class),
@@ -169,5 +185,6 @@ final class SystemModule implements Module, ProvidesJobs
     public function registerSchedule(Scheduler $scheduler): void
     {
         $scheduler->add(new ScheduledTask('system.cleanup', '7 * * * *', SystemCleanupJob::TYPE, 'cleanup'));
+        $scheduler->add(new ScheduledTask(Jobs\UpdateCheckJob::TYPE, '41 5 * * *', Jobs\UpdateCheckJob::TYPE, 'default'));
     }
 }

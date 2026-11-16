@@ -8,6 +8,7 @@
  * @var list<array<string, mixed>> $history
  * @var int $uploadLimitMb
  * @var bool $keyConfigured
+ * @var array{enabled: bool, repository: string, checkedAt: ?string, latest: ?array{version: string, name: string, url: string, publishedAt: ?string}, newer: bool, error: ?string}|null $updateCheck
  */
 $view->extend('layouts/app', ['title' => 'Updates']);
 ?>
@@ -15,6 +16,29 @@ $view->extend('layouts/app', ['title' => 'Updates']);
     <h1>Updates</h1>
     <a class="button button-ghost" href="/system/backups">Backups</a>
 </div>
+
+<?php if (($updateCheck ?? null) !== null): ?>
+<section class="card" id="update-check" aria-labelledby="update-check-heading">
+    <h2 id="update-check-heading">New versions</h2>
+    <?php if (!$updateCheck['enabled']): ?>
+        <p>SEOcc does not look for new versions by itself. Turn the check on to ask GitHub once a day for the latest release of <code><?= $view->e($updateCheck['repository']) ?></code>; administrators then see a notice in the top bar when one is out.</p>
+        <p class="muted small">The request goes to GitHub's public API and carries no installation ID, version, domain or other data about this installation; GitHub sees your server's IP address, as with any download. Nothing is downloaded or installed automatically.</p>
+        <form method="post" action="/system/updates/check"><?= $view->csrfField() ?><input type="hidden" name="action" value="enable"><button class="button button-small">Turn the update check on</button></form>
+    <?php else: ?>
+        <?php if ($updateCheck['newer'] && $updateCheck['latest'] !== null): ?>
+            <p class="notice notice-success"><strong>SEOcc <?= $view->e($updateCheck['latest']['version']) ?> is available.</strong> <a href="<?= $view->e($updateCheck['latest']['url']) ?>" rel="noopener noreferrer" target="_blank">Read the release notes and download it</a>, then upload the update package below.</p>
+        <?php elseif ($updateCheck['latest'] !== null): ?>
+            <p>You have the latest release (<?= $view->e($updateCheck['latest']['version']) ?>).</p>
+        <?php endif; ?>
+        <?php if ($updateCheck['error'] !== null): ?><p class="notice notice-error"><?= $view->e($updateCheck['error']) ?></p><?php endif; ?>
+        <p class="muted small">Checked <?= $view->e($updateCheck['checkedAt'] ?? 'not yet') ?> UTC against <code><?= $view->e($updateCheck['repository']) ?></code>, once a day. The request carries no data about this installation.</p>
+        <div class="inline-form">
+            <form method="post" action="/system/updates/check"><?= $view->csrfField() ?><input type="hidden" name="action" value="check"><button class="button button-small">Check now</button></form>
+            <form method="post" action="/system/updates/check"><?= $view->csrfField() ?><input type="hidden" name="action" value="disable"><button class="button button-small button-ghost">Turn the update check off</button></form>
+        </div>
+    <?php endif; ?>
+</section>
+<?php endif; ?>
 
 <section class="card">
     <h2>Installed version</h2>

@@ -42,6 +42,7 @@ final readonly class UpdatesController
         private string $currentVersion,
         private string $publicKey,
         private int $maxUploadMb,
+        private ?\SeoControlCenter\Modules\System\UpdateCheck $updateCheck = null,
     ) {}
 
     public function index(ServerRequestInterface $request): ResponseInterface
@@ -65,6 +66,7 @@ final readonly class UpdatesController
             'history' => $this->history(),
             'uploadLimitMb' => $this->uploadLimitMb(),
             'keyConfigured' => $this->publicKey !== '',
+            'updateCheck' => $this->updateCheck?->status(),
         ], $request))->withHeader('Cache-Control', 'no-store');
     }
 
@@ -151,6 +153,36 @@ final readonly class UpdatesController
         }
 
         return $this->responses->redirect('/system/updates');
+    }
+
+    /** Turns the optional GitHub update check on or off, or runs it now (ADR-053). */
+    public function updateCheck(ServerRequestInterface $request): ResponseInterface
+    {
+        $user = $this->authorize($request);
+        if ($this->updateCheck === null) {
+            return $this->responses->redirect('/system/updates');
+        }
+        $action = ((array) $request->getParsedBody())['action'] ?? null;
+        $session = WebContext::session($request);
+        try {
+            match ($action) {
+                'enable' => $this->updateCheck->setEnabled($user, true, ClientInfo::fromRequest($request)),
+                'disable' => $this->updateCheck->setEnabled($user, false, ClientInfo::fromRequest($request)),
+                default => $this->updateCheck->checkNow($user),
+            };
+            $session->flash('status', match ($action) {
+                'enable' => 'Update check turned on and run.',
+                'disable' => 'Update check turned off. SEOcc no longer contacts GitHub.',
+                default => 'Checked GitHub for a new release.',
+            });
+        } catch (\SeoControlCenter\Core\Http\Exception\HttpException $e) {
+            if (!in_array($e->statusCode(), [422, 429], true)) {
+                throw $e;
+            }
+            $session->flash('error', $e->getMessage());
+        }
+
+        return $this->responses->redirect('/system/updates#update-check');
     }
 
     public function discard(ServerRequestInterface $request): ResponseInterface

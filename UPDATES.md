@@ -84,6 +84,8 @@ Packages never contain `.env`, `storage/`, tests or documentation.
 
 Official packages are attached to [GitHub Releases](https://github.com/seoccnet/seo-control-center/releases), signed with the project's release key.
 
+**Update check (ADR-053, 1.3.0).** Off by default. When an administrator turns it on under *System → Updates*, a daily job (and *Check now*, six times an hour at most) reads `https://api.github.com/repos/<UPDATE_CHECK_REPOSITORY>/releases/latest` through `HttpClient` (host allowlist `api.github.com`, 256 KB cap) with a fixed user agent and no query or body. The tag, name, release link (kept only when it points to `github.com`) and date are stored in `system_state` under `update_check`; users with `system.update` see a top-bar notice when the tag is newer than the installed version. It never downloads or installs anything.
+
 If you maintain a fork, create your own key with `php bin/console release:keygen`, build with `release:build`, and set `UPDATE_PUBLIC_KEY` on your installations. Official packages then no longer verify there, which is intended.
 
 ### Verification

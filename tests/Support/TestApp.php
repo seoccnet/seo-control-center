@@ -401,6 +401,7 @@ final class TestApp
         $container->instance(\SeoControlCenter\Modules\SiteMigration\SiteMigrationRepository::class, $siteMigrations);
         $container->instance(\SeoControlCenter\Modules\SiteMigration\SiteMigrationScheduler::class, $siteMigrations);
         $container->instance(\SeoControlCenter\Modules\SiteMigration\UrlProbe::class, $siteMigrations);
+        $container->instance(\SeoControlCenter\Modules\System\UpdateCheckStore::class, new Fakes\InMemoryUpdateCheckStore());
         $shareLinks = new Fakes\InMemoryShareLinks($container->make(Clock::class), $directory);
         $container->instance(Fakes\InMemoryShareLinks::class, $shareLinks);
         $container->instance(\SeoControlCenter\Modules\Reports\ShareLinkRepository::class, $shareLinks);
