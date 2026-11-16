@@ -65,6 +65,16 @@ final readonly class RankingsController
         ], $request))->withHeader('Cache-Control', 'no-store');
     }
 
+    public function answers(ServerRequestInterface $request): ResponseInterface
+    {
+        $project = $this->load($request);
+
+        return $this->responses->html($this->views->render('rankings/answers', [
+            'project' => $project,
+            ...$this->rankings->answers($project),
+        ], $request))->withHeader('Cache-Control', 'no-store');
+    }
+
     public function settings(ServerRequestInterface $request): ResponseInterface
     {
         $project = $this->load($request);

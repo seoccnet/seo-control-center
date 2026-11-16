@@ -15,6 +15,7 @@ use SeoControlCenter\Domain\Rankings\RankingRepository;
 use SeoControlCenter\Domain\Rankings\RankingSettings;
 use SeoControlCenter\Domain\Rankings\RankingSyncState;
 use SeoControlCenter\Domain\Rankings\RankSnapshot;
+use SeoControlCenter\Domain\Rankings\SerpAnswers;
 use SeoControlCenter\Domain\Rankings\SerpDevice;
 
 /**
@@ -241,6 +242,26 @@ final class InMemoryRankings implements RankingRepository, RankCheckScheduler
         }
 
         return $rows;
+    }
+
+    public function answers(int $projectId, int $workspaceId, SerpDevice $device, int $limit): array
+    {
+        $result = [];
+        foreach ($this->keywords->keywords[$projectId] ?? [] as $row) {
+            $latest = null;
+            foreach ($this->snapshots as $s) {
+                if ($s->projectKeywordId === $row['id'] && $s->device === $device && ($latest === null || $s->checkedOn > $latest->checkedOn)) {
+                    $latest = $s;
+                }
+            }
+            $hasSnippet = $latest !== null && ($latest->snippetDomain !== null || in_array('featured_snippet', $latest->features, true));
+            if ($latest === null || (!$hasSnippet && $latest->questions === [])) {
+                continue;
+            }
+            $result[] = new SerpAnswers($row['public_id'], $row['keyword'], $row['locale'], $latest->checkedOn, $latest->position, $latest->url, $hasSnippet, $latest->snippetDomain, $latest->questions, null);
+        }
+
+        return array_slice($result, 0, $limit);
     }
 
     public function checkDays(int $projectId, SerpDevice $device, string $since): array

@@ -16,6 +16,7 @@ use SeoControlCenter\Domain\Rankings\RankingRepository;
 use SeoControlCenter\Domain\Rankings\RankingSettings;
 use SeoControlCenter\Domain\Rankings\RankingSyncState;
 use SeoControlCenter\Domain\Rankings\RankSnapshot;
+use SeoControlCenter\Domain\Rankings\SerpAnswers;
 use SeoControlCenter\Domain\Rankings\SerpDevice;
 
 final readonly class PdoRankingRepository implements RankingRepository
@@ -147,10 +148,11 @@ final readonly class PdoRankingRepository implements RankingRepository
     public function storeSnapshot(RankSnapshot $snapshot): void
     {
         $this->db->execute(
-            'INSERT INTO ranking_snapshots (project_keyword_id, project_id, device, checked_on, position, absolute_position, url, serp_features, top_results, checked_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            'INSERT INTO ranking_snapshots (project_keyword_id, project_id, device, checked_on, position, absolute_position, url, serp_features, top_results, checked_at, snippet_domain, paa_questions)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE position = VALUES(position), absolute_position = VALUES(absolute_position), url = VALUES(url),
-                 serp_features = VALUES(serp_features), top_results = VALUES(top_results), checked_at = VALUES(checked_at), source = NULL',
+                 serp_features = VALUES(serp_features), top_results = VALUES(top_results), checked_at = VALUES(checked_at), source = NULL,
+                 snippet_domain = VALUES(snippet_domain), paa_questions = VALUES(paa_questions)',
             [
                 $snapshot->projectKeywordId,
                 $snapshot->projectId,
@@ -162,6 +164,8 @@ final readonly class PdoRankingRepository implements RankingRepository
                 $snapshot->features !== [] ? substr(implode(',', $snapshot->features), 0, 500) : null,
                 $snapshot->top !== [] ? json_encode($snapshot->top, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null,
                 $this->now(),
+                $snapshot->snippetDomain !== null ? mb_substr($snapshot->snippetDomain, 0, 253) : null,
+                $snapshot->questions !== [] ? json_encode(array_slice($snapshot->questions, 0, 8), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : null,
             ],
         );
     }
@@ -351,6 +355,58 @@ final readonly class PdoRankingRepository implements RankingRepository
             'current' => $check($r['checked_on'], $r['position'], $r['url'], $r['serp_features'], $r['top_results']),
             'previous' => $r['p_on'] !== null ? $check($r['p_on'], $r['p_position'], $r['p_url'], $r['p_features'], $r['p_top']) : null,
         ], $rows);
+    }
+
+    public function answers(int $projectId, int $workspaceId, SerpDevice $device, int $limit): array
+    {
+        $rows = $this->db->fetchAll(
+            sprintf(
+                'WITH latest AS (
+                    SELECT project_keyword_id, checked_on, position, url, serp_features, snippet_domain, paa_questions,
+                           ROW_NUMBER() OVER (PARTITION BY project_keyword_id ORDER BY checked_on DESC) AS rn
+                    FROM ranking_snapshots
+                    WHERE project_id = ? AND device = ? AND checked_on >= ?
+                 )
+                 SELECT pk.public_id, pk.keyword, pk.location_code, pk.language_code,
+                        l.checked_on, l.position, l.url, l.serp_features, l.snippet_domain, l.paa_questions, km.search_volume
+                 FROM latest l
+                 JOIN project_keywords pk ON pk.id = l.project_keyword_id AND pk.project_id = ?
+                 LEFT JOIN keyword_metrics km
+                     ON km.workspace_id = ? AND km.keyword_hash = pk.keyword_hash
+                    AND km.location_code = pk.location_code AND km.language_code = pk.language_code
+                 WHERE l.rn = 1
+                   AND (l.snippet_domain IS NOT NULL OR l.paa_questions IS NOT NULL OR FIND_IN_SET(\'featured_snippet\', l.serp_features) > 0)
+                 ORDER BY km.search_volume IS NULL, km.search_volume DESC, pk.keyword, pk.id
+                 LIMIT %d',
+                max(1, $limit),
+            ),
+            [$projectId, $device->value, $this->historySince(), $projectId, $workspaceId],
+        );
+
+        $result = [];
+        foreach ($rows as $row) {
+            try {
+                $locale = new KeywordLocale((int) $row['location_code'], (string) $row['language_code']);
+            } catch (\InvalidArgumentException) {
+                continue;
+            }
+            $questions = $row['paa_questions'] !== null ? json_decode((string) $row['paa_questions'], true) : [];
+            $features = $row['serp_features'] !== null ? explode(',', (string) $row['serp_features']) : [];
+            $result[] = new SerpAnswers(
+                (string) $row['public_id'],
+                (string) $row['keyword'],
+                $locale,
+                (string) $row['checked_on'],
+                $row['position'] !== null ? (int) $row['position'] : null,
+                $row['url'] !== null ? (string) $row['url'] : null,
+                $row['snippet_domain'] !== null || in_array('featured_snippet', $features, true),
+                $row['snippet_domain'] !== null ? (string) $row['snippet_domain'] : null,
+                is_array($questions) ? array_values(array_filter($questions, 'is_string')) : [],
+                $row['search_volume'] !== null ? (int) $row['search_volume'] : null,
+            );
+        }
+
+        return $result;
     }
 
     public function checkDays(int $projectId, SerpDevice $device, string $since): array

@@ -16,6 +16,8 @@ final readonly class SerpSnapshot
     /**
      * @param list<SerpResult> $organic ordered by position
      * @param list<string> $features distinct non-organic element types
+     * @param ?string $snippetDomain the site holding the featured snippet (1.5.0); null when there is none or it is unknown
+     * @param list<string> $questions the "People also ask" questions shown (1.5.0), at most MAX_QUESTIONS
      */
     public function __construct(
         public string $keyword,
@@ -26,7 +28,11 @@ final readonly class SerpSnapshot
         public array $organic,
         public array $features,
         public ?AiOverview $aiOverview = null,
+        public ?string $snippetDomain = null,
+        public array $questions = [],
     ) {}
+
+    public const int MAX_QUESTIONS = 8;
 
     /**
      * Best organic position of a domain (exact host or its subdomains), or null.

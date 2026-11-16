@@ -111,6 +111,16 @@ interface RankingRepository
      */
     public function checkDays(int $projectId, SerpDevice $device, string $since): array;
 
+    /**
+     * Featured snippets and "People also ask" questions from each tracked
+     * keyword's latest check in the last year (1.5.0), keywords with the
+     * highest search volume first. Keywords whose latest result page had
+     * neither are left out.
+     *
+     * @return list<SerpAnswers>
+     */
+    public function answers(int $projectId, int $workspaceId, SerpDevice $device, int $limit): array;
+
     public function syncState(int $projectId): ?RankingSyncState;
 
     public function setSyncState(int $projectId, string $status, ?string $error = null, ?string $checkedOn = null): void;

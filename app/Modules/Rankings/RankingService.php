@@ -28,6 +28,7 @@ use SeoControlCenter\Domain\Rankings\RankingMove;
 use SeoControlCenter\Domain\Rankings\RankingRepository;
 use SeoControlCenter\Domain\Rankings\RankingSettings;
 use SeoControlCenter\Domain\Rankings\RankingSyncState;
+use SeoControlCenter\Domain\Rankings\SerpAnswers;
 use SeoControlCenter\Domain\Rankings\SerpDevice;
 use SeoControlCenter\Domain\Rankings\SerpProvider;
 use SeoControlCenter\Domain\SearchConsole\Metrics;
@@ -47,6 +48,7 @@ final readonly class RankingService
     public const int COMPARE_DAYS = 7;
     public const int MOVERS = 10;
     public const int HISTORY_DAYS = 365;
+    public const int ANSWER_LIMIT = 500;
     private const int SEARCH_CONSOLE_DAYS = 28;
 
     public function __construct(
@@ -139,6 +141,32 @@ final readonly class RankingService
             'filter' => $filter,
             'page' => $page,
             'pages' => $pages,
+        ];
+    }
+
+    /**
+     * Featured snippets and "People also ask" questions of the tracked
+     * keywords (1.5.0), from stored checks only. Snippets another site
+     * holds while the project ranks on page one come first.
+     *
+     * @return array{settings: RankingSettings, domain: string, snippets: list<SerpAnswers>, questions: list<SerpAnswers>, opportunities: int, held: int}
+     */
+    public function answers(Project $project): array
+    {
+        $settings = $this->rankings->settings($project->id);
+        $domain = $this->rankings->projectDomain($project->id, $project->workspaceId) ?? $project->primaryDomain;
+        $all = $this->rankings->answers($project->id, $project->workspaceId, $settings->device, self::ANSWER_LIMIT);
+        $snippets = array_values(array_filter($all, static fn(SerpAnswers $a): bool => $a->hasSnippet));
+        $rank = static fn(SerpAnswers $a): int => $a->isSnippetOpportunity($domain) ? 0 : ($a->holdsSnippet($domain) ? 1 : 2);
+        usort($snippets, static fn(SerpAnswers $a, SerpAnswers $b): int => [$rank($a), $a->position ?? PHP_INT_MAX] <=> [$rank($b), $b->position ?? PHP_INT_MAX]);
+
+        return [
+            'settings' => $settings,
+            'domain' => $domain,
+            'snippets' => $snippets,
+            'questions' => array_values(array_filter($all, static fn(SerpAnswers $a): bool => $a->questions !== [])),
+            'opportunities' => count(array_filter($snippets, static fn(SerpAnswers $a): bool => $a->isSnippetOpportunity($domain))),
+            'held' => count(array_filter($snippets, static fn(SerpAnswers $a): bool => $a->holdsSnippet($domain))),
         ];
     }
 

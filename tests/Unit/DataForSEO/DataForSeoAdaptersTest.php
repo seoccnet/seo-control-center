@@ -9,7 +9,9 @@ use Psr\Log\NullLogger;
 use SeoControlCenter\Core\Support\FrozenClock;
 use SeoControlCenter\Domain\Integrations\IntegrationException;
 use SeoControlCenter\Domain\Keywords\KeywordLocale;
+use SeoControlCenter\Domain\Rankings\RankSnapshot;
 use SeoControlCenter\Domain\Rankings\SerpDevice;
+use SeoControlCenter\Domain\Rankings\SerpSnapshot;
 use SeoControlCenter\Modules\DataForSEO\Adapters\DataForSeoKeywordMetrics;
 use SeoControlCenter\Modules\DataForSEO\Adapters\DataForSeoSerp;
 use SeoControlCenter\Modules\DataForSEO\Api\DataForSeoClient;
@@ -386,6 +388,30 @@ final class DataForSeoAdaptersTest extends TestCase
     private static function envelope(float|int $cost, array $tasks): array
     {
         return ['status_code' => 20000, 'status_message' => 'Ok.', 'cost' => $cost, 'tasks' => $tasks];
+    }
+
+    public function testFeaturedSnippetHolderAndPeopleAlsoAskQuestionsAreKept(): void
+    {
+        $paa = array_map(static fn(int $i): array => ['type' => 'people_also_ask_element', 'title' => 'Question  ' . $i . '?'], range(1, 9));
+        $paa[] = ['type' => 'people_also_ask_element', 'title' => 'Question 1?'];
+        $paa[] = ['type' => 'people_also_ask_element'];
+        $items = [
+            ['type' => 'featured_snippet', 'rank_group' => 1, 'domain' => 'google.com', 'url' => 'https://google.com/goto?url=x', 'breadcrumb' => 'https://www.rival.test › guide'],
+            ['type' => 'people_also_ask', 'items' => $paa],
+            ['type' => 'organic', 'rank_group' => 1, 'url' => 'https://shop.acme.test/spades'],
+        ];
+        $this->http->json('POST', 'https://api.dataforseo.com' . DataForSeoSerp::PATH, self::envelope(0.002, [['status_code' => 20000, 'result' => [['items' => $items]]]]));
+
+        $snapshot = (new DataForSeoSerp($this->client, $this->store, $this->clock))->organic(self::WORKSPACE, null, 'spades', KeywordLocale::default(), SerpDevice::Desktop);
+
+        self::assertSame('www.rival.test', $snapshot->snippetDomain, 'A Google redirect is traced to the site, as for organic results.');
+        self::assertSame(['featured_snippet', 'people_also_ask'], $snapshot->features);
+        self::assertCount(SerpSnapshot::MAX_QUESTIONS, $snapshot->questions);
+        self::assertSame('Question 1?', $snapshot->questions[0], 'Whitespace is collapsed.');
+
+        $rank = RankSnapshot::fromSerp(7, 3, 'acme.test', '2026-11-16', $snapshot);
+        self::assertSame('www.rival.test', $rank->snippetDomain);
+        self::assertSame($snapshot->questions, $rank->questions);
     }
 
     public function testOrganicAndAiOverviewAttributionUsesUrlHosts(): void

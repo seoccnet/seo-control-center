@@ -112,6 +112,32 @@ final class RankingsHttpTest extends TestCase
         self::assertStringNotContainsString('Tracking settings', $html, 'Viewers cannot change settings.');
     }
 
+    public function testSnippetsAndQuestionsPage(): void
+    {
+        $project = $this->s->acmeProject->id;
+        $this->keywords->add($project, ['red shoes', 'blue shoes', 'green shoes', 'pink shoes'], KeywordLocale::default(), $this->s->owner->id);
+        $ids = array_column($this->keywords->keywords[$project], 'id');
+        $snap = fn(int $i, string $day, ?int $position, array $features, ?string $holder, array $questions = []): RankSnapshot
+            => new RankSnapshot($ids[$i], $project, SerpDevice::Desktop, $day, $position, $position, $position !== null ? 'https://shop.acme.test/p' . $i : null, array_values(array_map('strval', $features)), [], $holder, array_values(array_map('strval', $questions)));
+        // An older check with a snippet does not count once the latest one has none.
+        $this->rankings->storeSnapshot($snap(0, '2026-09-19', 9, ['featured_snippet'], 'rival.test'));
+        $this->rankings->storeSnapshot($snap(0, '2026-09-26', 4, ['featured_snippet', 'people_also_ask'], 'www.rival.test', ['How do red shoes fit?']));
+        $this->rankings->storeSnapshot($snap(1, '2026-09-26', 1, ['featured_snippet'], 'www.shop.acme.test'));
+        $this->rankings->storeSnapshot($snap(2, '2026-09-19', 30, ['featured_snippet'], 'rival.test'));
+        $this->rankings->storeSnapshot($snap(2, '2026-09-26', 30, [], null));
+        $this->rankings->storeSnapshot($snap(3, '2026-09-26', 25, ['featured_snippet'], null));
+
+        $html = (string) $this->s->loggedIn($this->s->viewer)->get($this->url() . '/answers')->getBody();
+
+        self::assertStringContainsString('1 within reach', $html);
+        self::assertStringContainsString('1 held by shop.acme.test', $html, 'The www host of the project domain holds it.');
+        self::assertMatchesRegularExpression('#red shoes</a> <span class="badge badge-warning">Within reach.*blue shoes</a> <span class="badge badge-ok">Yours.*pink shoes#s', $html);
+        self::assertStringContainsString('Not recorded (check before 1.5.0)', $html);
+        self::assertStringNotContainsString('green shoes', $html);
+        self::assertStringContainsString('How do red shoes fit?', $html);
+        self::assertStringContainsString('/rankings/answers', (string) $this->s->loggedIn($this->s->viewer)->get($this->url())->getBody());
+    }
+
     public function testViewersCannotSpendAndOtherTenantsGetNotFound(): void
     {
         $this->connectDataForSeo();

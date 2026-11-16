@@ -70,12 +70,26 @@ final readonly class DataForSeoSerp implements SerpProvider
         $organic = [];
         $features = [];
         $aiOverview = null;
+        $snippetDomain = null;
+        $questions = [];
         foreach (DataForSeoErrors::items($task) as $item) {
             if (!is_string($item['type'] ?? null) || trim($item['type']) === '') {
                 throw new IntegrationException('DataForSEO returned an invalid SERP row. Previous rankings were retained.', false);
             }
             if ($item['type'] === 'ai_overview') {
                 $aiOverview ??= self::aiOverview($item);
+            }
+            // Who holds the featured snippet, and which questions Google suggests (1.5.0).
+            if ($item['type'] === 'featured_snippet' && $snippetDomain === null && is_string($item['url'] ?? null)) {
+                $snippetDomain = self::target($item)['host'] ?? null;
+            }
+            if ($item['type'] === 'people_also_ask') {
+                foreach (is_array($item['items'] ?? null) ? $item['items'] : [] as $question) {
+                    $title = is_array($question) && is_string($question['title'] ?? null) ? trim((string) preg_replace('/\s+/u', ' ', $question['title'])) : '';
+                    if ($title !== '' && count($questions) < SerpSnapshot::MAX_QUESTIONS && !in_array($title, $questions, true)) {
+                        $questions[] = mb_substr($title, 0, 300);
+                    }
+                }
             }
             if ($item['type'] !== 'organic') {
                 $features[$item['type']] = true;
@@ -112,6 +126,8 @@ final readonly class DataForSeoSerp implements SerpProvider
             $organic,
             array_map('strval', array_keys($features)),
             $aiOverview,
+            $snippetDomain,
+            $questions,
         );
     }
 
