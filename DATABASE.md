@@ -1,5 +1,11 @@
 # Database Design
 
+## Sitemap, image, snippet and link reclamation data (Unreleased, migrations 2026_11_16_000500–000700)
+
+- `site_audits.sitemap_urls` (INT UNSIGNED, NULL) counts the sitemap URLs seeded into the audit (NULL for audits before it was recorded). `site_audit_pages.in_sitemap` (TINYINT(1), NULL) is 1 for sitemap pages, 0 for pages found only through links, NULL for older audits. `site_audit_pages.image_signals` (VARCHAR(500) JSON, NULL): `images`, `missing_dimensions`, `lazy_first`. `site_audit_resources.bytes` (INT UNSIGNED, NULL, from Content-Range or Content-Length) and `content_type` (ASCII VARCHAR(100), NULL).
+- `ranking_snapshots.snippet_domain` (VARCHAR(253), NULL): the host holding the featured snippet, traced like organic results. `ranking_snapshots.paa_questions` (TEXT JSON list, NULL): up to eight “People also ask” questions. A same-day re-check replaces both.
+- `backlink_target_checks` — per project and SHA-256 of the linked URL (PK): `url` (2,048), `status`, `location`, `final_status` (the answer of the one redirect followed), `error` (255), `checked_at`. `backlink_target_runs` — one row per project: `workspace_id`, `state` (queued, running, done, failed), `error`, `queued_at`, `finished_at`; state changes after queueing require the workspace to match. Both cascade on project deletion. Forward-only.
+
 ## Imported ranking history (Unreleased, migration 2026_11_16_000400)
 
 `ranking_snapshots.source` (ASCII VARCHAR(10), NULL) is `import` for positions brought in from another tool and NULL for SEOcc's own checks. Imports use `INSERT IGNORE`, so a day already checked (or imported) keeps its row; `storeSnapshot` sets `source = NULL` when a check replaces an imported day. `ranking_daily` rows of imported days are rebuilt with the existing `aggregate`. Forward-only.

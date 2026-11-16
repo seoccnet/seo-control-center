@@ -61,6 +61,32 @@ The JSON-LD on indexable pages is checked against what Google documents for its 
 
 Each issue lists up to three problems with the type they belong to. Microdata is recognised for the *No structured data* check but not validated. Pages crawled before 1.2.0 were not validated; the next audit checks them.
 
+### Sitemap
+
+The audit starts from your sitemap and records which pages it lists (1.5.0):
+
+- **Sitemap page is broken** (warning): it answers 4xx or 5xx, or not at all.
+- **Sitemap page redirects** (warning): list the final address instead.
+- **Sitemap page cannot be indexed** (warning): noindex, a canonical pointing elsewhere, or blocked by robots.txt. A sitemap should only list pages you want in search results.
+- **Page missing from the sitemap** (growth notice): an indexable page that other pages link to, but the sitemap does not list. Addresses with parameters, later pages of a paginated list, noindex pages and pages nothing links to are not reported. When the sitemap lists more pages than the audit's page limit allows, this check is skipped, because the rest of the sitemap was not read.
+
+Audits before 1.5.0 and sites without a sitemap are not judged.
+
+### Images
+
+From the images sampled on each page and the page's HTML (1.5.0):
+
+- **Large image** (warning): larger than 300 KB.
+- **Image in an older format** (growth notice): JPEG, PNG, GIF or BMP over 100 KB; WebP or AVIF are usually much smaller.
+- **Images without width and height** (growth notice): the browser cannot reserve space, so the layout shifts while they load (CLS).
+- **First image loads lazily** (growth notice): the first image in the main content has `loading="lazy"`; it is often the largest element, and lazy loading delays it (LCP).
+
+Sizes come from the same small range request that checks the image; nothing more is downloaded. Inline `data:` images and 1×1 tracking pixels are ignored.
+
+### Structured data generator
+
+**Structured data generator** (link at the top of the site audit, 1.5.0) writes JSON-LD for Organization, LocalBusiness, WebSite, Article, Product, FAQ and breadcrumbs. Choose a page from the last audit: SEOcc suggests a type (Organization for the home page, Product or Article by the page's markup and Open Graph type, breadcrumbs otherwise) and fills in what the crawl read, such as the title, headline, description, the business name and phone and a breadcrumb trail from the address. Check every value, fill in the rest, and **Generate JSON-LD**. Required fields that are still empty are listed. Paste the result into the page's HTML; the next audit validates it. Nothing is stored.
+
 Title, description, heading and text checks apply only to pages that are meant to be indexed. The pages of a paginated listing (`?page=2`, `?page=3`, …) usually share a title, so they count as one page for duplicate titles and descriptions. Pages with *noindex*, or with a canonical tag pointing to another address, are listed once as such and not checked further.
 
 ## Reading the results

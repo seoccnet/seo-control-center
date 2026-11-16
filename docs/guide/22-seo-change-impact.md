@@ -12,6 +12,8 @@ Both periods need all dates and measured metrics. Completed page imports do not 
 
 **Improved**, **Declined**, **Mixed**, **Unchanged** or **Insufficient data** summarizes Google clicks/impressions direction only. This is not a statistical significance test; even a one-click difference can change the label. Review scale and context. GA4 does not determine this status.
 
+When one of Google's confirmed ranking updates overlaps the compared periods, the report names it (1.5.0). A core or spam update can move rankings across the whole site, so read a change during one with extra care. The same updates are shaded on the line charts.
+
 ## GA4 outcomes
 
 Exact-page changes show Organic Search landing-page sessions, conversions and purchase revenue. Both periods require all imported dates matching current currency/timezone, without limited or thresholded reports. Successful complete GA4 imports without this URL are measured zeros. Property changes clear history; incompatible currency/timezone history prevents comparison. Currency, timezone, coverage and fetch time appear in the report.

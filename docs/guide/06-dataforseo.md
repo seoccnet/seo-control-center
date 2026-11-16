@@ -63,6 +63,19 @@ What the Rankings page shows:
 
 Since November 2026 Google hides the page address of many results behind a redirect link, and DataForSEO passes that link on. SEOcc then takes the site from the result's breadcrumb or website name (1.3.1): positions and domains stay exact, but the ranking URL shown is the site's address rather than the exact page.
 
+### Featured snippets and “People also ask”
+
+*Rankings → Snippets & questions* (1.5.0) lists, from each keyword's latest check:
+
+- **Featured snippets**, with the site holding each one. **Within reach** marks snippets another site holds while you already rank in the top 10: the page that ranks is the one most likely to win it. Answer the search in the first paragraph under a matching heading, in 40–60 words, or as a short list or table when the snippet shows one. **Yours** marks the ones you hold.
+- **“People also ask” questions** Google shows for your keywords (up to eight per keyword). Answering them on the ranking page, each under its own heading, can win these boxes too.
+
+It costs nothing extra: the details come with every rank check. Checks before 1.5.0 recorded that a snippet was shown, but not who held it.
+
+### Google updates on the charts
+
+Line charts shade Google's confirmed ranking updates (1.5.0) and name them under the chart, so a drop during a core update is not mistaken for the effect of your own change. The list comes from the Google Search Status Dashboard and ships with each SEOcc release; an update announced later appears after the next update of SEOcc.
+
 ### Import keywords and ranking history
 
 Switching from another tool? *Rankings → Import history* (1.3.0) reads a CSV or TSV export from Ahrefs, Semrush, Moz, Search Console or a spreadsheet, so your history starts before SEOcc's first check. It needs *Edit projects*, costs nothing and starts no lookup.
@@ -130,5 +143,9 @@ Google ranks local businesses by distance, so your position changes across a cit
 - **New and lost referring domains** of the last 30 days.
 - **Link gap:** domains that link to your competitors but not to you, those linking to several competitors first. These are good candidates for outreach. It needs competitors (*Competitors*).
 - **Anchor texts:** the link texts other sites use most when they link to you.
+
+### Links to missing pages
+
+Pages that were deleted or moved without a redirect lose the links pointing to them. *Backlinks → Links to missing pages* (1.5.0) finds them: after **Live links by page** is fetched, SEOcc requests every linked page of your site once in the background (no DataForSEO cost, robots.txt respected, one redirect followed). Pages answering *Not found*, *Gone* or a server error, or redirecting to such a page, are listed with the number of linking sites, the strongest links and a **suggested redirect**: the live page with the same address, page name or the most words in common, or the closest parent folder. Add a 301 redirect from the missing page to that target, or restore the page. Check that the target covers the same topic; sending everything to the home page counts as a soft 404. Up to 500 linked pages are checked, the most linked first; **Check the linked pages again** repeats the check after you add redirects.
 
 Each lookup costs about $0.024 plus a small amount per returned row (a full referring domain list about $0.04) from the workspace budget. The Backlinks API must be activated in your DataForSEO dashboard; if it is not, the lookup shows DataForSEO's error message.
