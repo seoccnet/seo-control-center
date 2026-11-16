@@ -48,7 +48,8 @@ final readonly class BacklinksController
         $project = $this->load($request);
         $kind = WebContext::body($request)['kind'] ?? '';
         try {
-            $this->service->request(WebContext::user($request), $project, is_string($kind) ? $kind : '', ClientInfo::fromRequest($request), \SeoControlCenter\Modules\Shared\Http\RepeatConfirmation::requested($request));
+            $brand = WebContext::body($request)['brand'] ?? null;
+            $this->service->request(WebContext::user($request), $project, is_string($kind) ? $kind : '', ClientInfo::fromRequest($request), \SeoControlCenter\Modules\Shared\Http\RepeatConfirmation::requested($request), is_string($brand) ? $brand : null);
             WebContext::session($request)->flash('status', 'Lookup queued. The result appears here after the next cron run; this page updates itself.');
         } catch (\SeoControlCenter\Modules\Research\RepeatedLookup $e) {
             \SeoControlCenter\Modules\Shared\Http\RepeatConfirmation::flash($request, $e->getMessage());

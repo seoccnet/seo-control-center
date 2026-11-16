@@ -243,4 +243,6 @@ $delta = static function (?int $now, ?int $before) use ($view): string {
     <?php endif; ?>
 </section>
 
+<?= $view->partial('backlinks/mentions', compact('project', 'results', 'canFetch', 'costs', 'status')) ?>
+
 </div>

@@ -10,6 +10,7 @@ use SeoControlCenter\Core\Support\FrozenClock;
 use SeoControlCenter\Domain\Backlinks\AnchorText;
 use SeoControlCenter\Domain\Backlinks\BacklinkProfile;
 use SeoControlCenter\Domain\Backlinks\ReferringDomain;
+use SeoControlCenter\Domain\Backlinks\WebMention;
 use SeoControlCenter\Domain\Competitors\Competitor;
 use SeoControlCenter\Domain\Integrations\IntegrationException;
 use SeoControlCenter\Modules\Backlinks\BacklinksService;
@@ -72,10 +73,10 @@ final class BacklinksPageHttpTest extends TestCase
 
         foreach (BacklinksService::KINDS as $kind) {
             $owner->get($this->url());
-            self::assertSame(303, $owner->post($this->url() . '/fetch', ['kind' => $kind])->getStatusCode(), $kind);
+            self::assertSame(303, $owner->post($this->url() . '/fetch', ['kind' => $kind, 'brand' => 'Acme Shoes'])->getStatusCode(), $kind);
             $this->service()->run($this->s->acmeProject->id, $this->s->acme->id, $kind, false);
         }
-        self::assertCount(8, $this->history->queued);
+        self::assertCount(count(BacklinksService::KINDS), $this->history->queued);
         self::assertSame([['shop.acme.test']], $this->provider->calls[0]['args']);
         self::assertSame([['rival.test']], $this->provider->calls[1]['args']);
         self::assertSame(['shop.acme.test', '2026-09-03', false], $this->provider->calls[3]['args'], 'new: the last 30 days');
@@ -224,6 +225,37 @@ final class BacklinksPageHttpTest extends TestCase
         $this->service()->run($project->id, $project->workspaceId, 'bl_profiles', false);
         self::assertCount(2, $this->provider->calls);
         self::assertSame('new-site.test', $this->provider->calls[0]['args'][0][0]);
+    }
+
+    public function testUnlinkedBrandMentions(): void
+    {
+        $owner = $this->s->loggedIn($this->s->owner);
+        $html = (string) $owner->get($this->url())->getBody();
+        self::assertStringContainsString('Unlinked brand mentions', $html);
+        self::assertStringContainsString('value="' . $this->s->acmeProject->name . '"', $html, 'The project name is the default brand.');
+
+        self::assertSame(422, $owner->post($this->url() . '/fetch', ['kind' => 'bl_mentions', 'brand' => 'ab'])->getStatusCode());
+        $owner->get($this->url());
+        self::assertSame(303, $owner->post($this->url() . '/fetch', ['kind' => 'bl_mentions', 'brand' => '  Acme   Shoes '])->getStatusCode());
+        self::assertSame('Acme Shoes', $this->research->find($this->s->acmeProject->id, 'bl_mentions')?->params['brand']);
+        $this->provider->mentions = [
+            new WebMention('https://blog.test/review', 'blog.test', 'Acme review', 'Acme Shoes are great', 40, '2026-09-30', 'blogs'),
+            new WebMention('https://news.test/list', 'news.test', null, null, 70, null, null),
+        ];
+        $this->service()->run($this->s->acmeProject->id, $this->s->acme->id, 'bl_mentions', false);
+        self::assertSame(['mentions', ['Acme Shoes', 'shop.acme.test']], [$this->provider->calls[0]['call'], $this->provider->calls[0]['args']]);
+
+        $page = (string) $this->s->loggedIn($this->s->viewer)->get($this->url())->getBody();
+        self::assertStringContainsString('Fetch the referring domains above to see which of these sites already link to you.', $page);
+        self::assertStringContainsString('Acme review', $page);
+
+        $owner->get($this->url());
+        $owner->post($this->url() . '/fetch', ['kind' => 'bl_domains']);
+        $this->service()->run($this->s->acmeProject->id, $this->s->acme->id, 'bl_domains', false);
+        $page = (string) $this->s->loggedIn($this->s->viewer)->get($this->url())->getBody();
+        self::assertStringContainsString('1 of 2 sites mention “Acme Shoes” without linking to you', $page, 'blog.test is a referring domain.');
+        self::assertMatchesRegularExpression('#news.test</td>.*<strong>No</strong>#s', $page);
+        self::assertStringNotContainsString('Find mentions', $page, 'Viewers cannot start paid lookups.');
     }
 
     public function testForeignJobPayloadCannotSpendForAnotherWorkspace(): void

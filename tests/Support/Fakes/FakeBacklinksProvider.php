@@ -40,6 +40,16 @@ final class FakeBacklinksProvider implements BacklinksProvider
     /** @var list<\SeoControlCenter\Domain\Backlinks\PageBacklink> */
     public array $lostLinks = [];
 
+    /** @var list<\SeoControlCenter\Domain\Backlinks\WebMention> */
+    public array $mentions = [];
+
+    public function mentions(int $workspaceId, ?int $projectId, string $brand, string $exclude, int $limit): array
+    {
+        $this->call('mentions', [$brand, $exclude]);
+
+        return $this->mentions;
+    }
+
     public function pageLinks(int $workspaceId, ?int $projectId, string $domain, int $limit, ?string $since = null, bool $lost = false): array
     {
         $this->call('pageLinks', [$domain, $since, $lost]);

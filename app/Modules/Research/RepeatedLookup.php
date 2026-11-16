@@ -24,7 +24,7 @@ final class RepeatedLookup extends HttpException
         'competitors' => 'Finding competitors', 'overview' => 'The competitor overview', 'llm' => 'The AI mentions check', 'llm_prompts' => 'The AI prompts lookup',
         'llm_answers' => 'Sampling these AI answers', 'serp_strength' => 'The competitor strength check',
         'bl_profiles' => 'The backlink profiles lookup', 'bl_domains' => 'The referring domains lookup', 'bl_new' => 'The new backlinks lookup', 'bl_lost' => 'The lost backlinks lookup',
-        'bl_anchors' => 'The anchor texts lookup', 'bl_gap' => 'The link gap lookup', 'bl_links' => 'The backlinks lookup', 'bl_lost_links' => 'The lost links lookup',
+        'bl_anchors' => 'The anchor texts lookup', 'bl_gap' => 'The link gap lookup', 'bl_links' => 'The backlinks lookup', 'bl_lost_links' => 'The lost links lookup', 'bl_mentions' => 'The brand mentions lookup',
     ];
 
     public function __construct(public readonly string $ranOn, string $message)

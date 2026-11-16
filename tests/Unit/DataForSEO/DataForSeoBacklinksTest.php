@@ -185,6 +185,30 @@ final class DataForSeoBacklinksTest extends TestCase
         self::assertSame('', $anchors[1]->anchor);
     }
 
+    public function testBrandMentionsFromTheContentIndex(): void
+    {
+        $this->http->json('POST', self::API . DataForSeoBacklinks::CONTENT_SEARCH, ['status_code' => 20000, 'cost' => 0.0276, 'tasks' => [[
+            'id' => 'mentions', 'status_code' => 20000, 'result' => [['total_count' => 4, 'items' => [
+                ['type' => 'content_analysis_search', 'url' => 'https://news.blog.test/review', 'domain' => 'news.blog.test', 'main_domain' => 'Blog.Test', 'domain_rank' => '61', 'page_types' => ['blogs'],
+                    'content_info' => ['title' => 'Acme Shoes review', 'snippet' => "<b>Acme Shoes</b>  are\ngreat", 'date_published' => '2026-10-02 09:00:00 +00:00']],
+                ['url' => 'https://www.shop.acme.test/about', 'domain' => 'www.shop.acme.test', 'main_domain' => 'acme.test'],
+                ['url' => 'https://blog.shop.acme.test/', 'domain' => 'blog.shop.acme.test'],
+                ['url' => 'javascript:alert(1)', 'domain' => 'evil.test'],
+            ]]],
+        ]]]);
+
+        $mentions = $this->backlinks->mentions(self::WORKSPACE, 5, ' Acme "Shoes" ', 'shop.acme.test', 100);
+
+        self::assertCount(1, $mentions, 'Pages on the own site and its subdomains, and invalid URLs, are left out.');
+        self::assertSame(['https://news.blog.test/review', 'blog.test', 'Acme Shoes review', 'Acme Shoes are great', 61, '2026-10-02', 'blogs'], array_values($mentions[0]->toArray()));
+        self::assertTrue($mentions[0]->linksFrom(['www.blog.test']));
+        self::assertFalse($mentions[0]->linksFrom(['other.test']));
+        $body = json_decode((string) $this->http->requests[0]['body'], true)[0];
+        self::assertSame('"acme shoes"', $body['keyword']);
+        self::assertSame(['one_per_domain', ['main_domain', '<>', 'shop.acme.test'], 100], [$body['search_mode'], $body['filters'], $body['limit']]);
+        self::assertEqualsWithDelta(0.0276, $this->store->usage[1]['estimated'], 0.000001);
+    }
+
     public function testPageLinksNormalizeTargetsAndReserveTheirBoundedCost(): void
     {
         $this->http->json('POST', self::API . DataForSeoBacklinks::LINKS, ['status_code' => 20000, 'cost' => 0.03, 'tasks' => [[

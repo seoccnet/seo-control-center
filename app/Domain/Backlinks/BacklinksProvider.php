@@ -54,6 +54,14 @@ interface BacklinksProvider
      */
     public function anchors(int $workspaceId, ?int $projectId, string $domain, int $limit): array;
 
+    /**
+     * Web pages that name $brand (1.6.0), strongest sites first, one page per
+     * site, leaving out $exclude (the project's own domain).
+     *
+     * @return list<WebMention>
+     */
+    public function mentions(int $workspaceId, ?int $projectId, string $brand, string $exclude, int $limit): array;
+
     /** @return list<PageBacklink> Actual links, with exact source and target URLs. */
     public function pageLinks(int $workspaceId, ?int $projectId, string $domain, int $limit, ?string $since = null, bool $lost = false): array;
 

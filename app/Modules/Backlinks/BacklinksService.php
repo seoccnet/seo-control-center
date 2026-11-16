@@ -40,8 +40,9 @@ use SeoControlCenter\Modules\Research\ResearchResult;
  */
 final readonly class BacklinksService
 {
-    public const array KINDS = ['bl_profiles', 'bl_domains', 'bl_new', 'bl_lost', 'bl_anchors', 'bl_gap', 'bl_links', 'bl_lost_links'];
-    public const array LIMITS = ['bl_domains' => 500, 'bl_new' => 200, 'bl_lost' => 200, 'bl_anchors' => 100, 'bl_gap' => 300, 'bl_links' => 1000, 'bl_lost_links' => 1000];
+    public const array KINDS = ['bl_profiles', 'bl_domains', 'bl_new', 'bl_lost', 'bl_anchors', 'bl_gap', 'bl_links', 'bl_lost_links', 'bl_mentions'];
+    public const array LIMITS = ['bl_domains' => 500, 'bl_new' => 200, 'bl_lost' => 200, 'bl_anchors' => 100, 'bl_gap' => 300, 'bl_links' => 1000, 'bl_lost_links' => 1000, 'bl_mentions' => 100];
+    public const int BRAND_MAX = 80;
     public const int RECENT_DAYS = 30;
     private const int MONTH_DAYS = 30;
 
@@ -103,7 +104,8 @@ final readonly class BacklinksService
         ];
     }
 
-    public function request(User $user, Project $project, string $kind, ClientInfo $client, bool $runAgain = false): void
+    /** @param ?string $brand the name to search for (bl_mentions only) */
+    public function request(User $user, Project $project, string $kind, ClientInfo $client, bool $runAgain = false, ?string $brand = null): void
     {
         if (!in_array($kind, self::KINDS, true)) {
             throw new HttpException(400, 'Unknown lookup.');
@@ -116,6 +118,13 @@ final readonly class BacklinksService
             throw new HttpException(409, 'Connect DataForSEO under Integrations first.');
         }
         $params = $this->params($project);
+        if ($kind === 'bl_mentions') {
+            $brand = trim((string) preg_replace('/\s+/u', ' ', (string) $brand));
+            if (mb_strlen($brand) < 3 || mb_strlen($brand) > self::BRAND_MAX) {
+                throw new HttpException(422, 'Enter the brand name to search for (3 to ' . self::BRAND_MAX . ' characters).');
+            }
+            $params['brand'] = $brand;
+        }
         if ($kind === 'bl_gap' && $params['competitors'] === []) {
             throw new HttpException(409, 'Add competitors first.');
         }
@@ -216,6 +225,7 @@ final readonly class BacklinksService
                 'bl_new' => $domainRows($this->provider->referringDomains($workspaceId, $projectId, $domain, self::LIMITS['bl_new'], $since)),
                 'bl_lost' => $domainRows($this->provider->referringDomains($workspaceId, $projectId, $domain, self::LIMITS['bl_lost'], $since, true)),
                 'bl_anchors' => array_map(static fn(AnchorText $a): array => $a->toArray(), $this->provider->anchors($workspaceId, $projectId, $domain, self::LIMITS['bl_anchors'])),
+                'bl_mentions' => array_map(static fn(\SeoControlCenter\Domain\Backlinks\WebMention $m): array => $m->toArray(), $this->provider->mentions($workspaceId, $projectId, is_string($result->params['brand'] ?? null) ? $result->params['brand'] : '', $domain, self::LIMITS['bl_mentions'])),
                 'bl_links', 'bl_lost_links' => array_map(static fn(\SeoControlCenter\Domain\Backlinks\PageBacklink $l): array => $l->toArray(), $this->provider->pageLinks($workspaceId, $projectId, $domain, self::LIMITS[$kind], $kind === 'bl_lost_links' ? $since : null, $kind === 'bl_lost_links')),
                 default => $domainRows($this->provider->linkGap($workspaceId, $projectId, $domain, $competitors, self::LIMITS['bl_gap'])),
             };

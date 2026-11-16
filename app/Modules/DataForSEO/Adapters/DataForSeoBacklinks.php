@@ -9,6 +9,7 @@ use SeoControlCenter\Domain\Backlinks\BacklinkProfile;
 use SeoControlCenter\Domain\Backlinks\BacklinksProvider;
 use SeoControlCenter\Domain\Backlinks\PageBacklink;
 use SeoControlCenter\Domain\Backlinks\ReferringDomain;
+use SeoControlCenter\Domain\Backlinks\WebMention;
 use SeoControlCenter\Domain\Integrations\IntegrationException;
 use SeoControlCenter\Modules\DataForSEO\Api\DataForSeoClient;
 use SeoControlCenter\Modules\DataForSEO\Api\DataForSeoErrors;
@@ -27,6 +28,7 @@ final readonly class DataForSeoBacklinks implements BacklinksProvider
     public const string ANCHORS = '/v3/backlinks/anchors/live';
     public const string LINKS = '/v3/backlinks/backlinks/live';
     public const string INTERSECTION = '/v3/backlinks/domain_intersection/live';
+    public const string CONTENT_SEARCH = '/v3/content_analysis/search/live';
     public const float COST_PER_REQUEST = 0.024;
     public const float COST_PER_ROW = 0.000036;
     private const int MAX_LIMIT = 1000;
@@ -178,6 +180,44 @@ final readonly class DataForSeoBacklinks implements BacklinksProvider
         }
 
         return $domains;
+    }
+
+    public function mentions(int $workspaceId, ?int $projectId, string $brand, string $exclude, int $limit): array
+    {
+        $limit = self::limit($limit);
+        $task = $this->task($workspaceId, $projectId, 'content_analysis_search', self::CONTENT_SEARCH, [
+            // An exact phrase: the brand's words in this order.
+            'keyword' => '"' . str_replace('"', '', mb_strtolower(trim($brand))) . '"',
+            'search_mode' => 'one_per_domain',
+            'filters' => ['main_domain', '<>', $exclude],
+            'order_by' => ['domain_rank,desc'],
+            'rank_scale' => 'one_hundred',
+            'limit' => $limit,
+        ], $this->estimatedCost(1, $limit));
+
+        $mentions = [];
+        foreach (self::items($task) as $item) {
+            $content = is_array($item['content_info'] ?? null) ? $item['content_info'] : [];
+            $domain = is_string($item['main_domain'] ?? null) && $item['main_domain'] !== '' ? $item['main_domain'] : ($item['domain'] ?? null);
+            $types = is_array($item['page_types'] ?? null) ? array_values(array_filter($item['page_types'], 'is_string')) : [];
+            $title = $content['title'] ?? $content['main_title'] ?? null;
+            $mention = WebMention::fromArray([
+                'url' => $item['url'] ?? null,
+                'domain' => is_string($domain) ? strtolower($domain) : null,
+                'title' => is_string($title) ? trim($title) : null,
+                'snippet' => is_string($content['snippet'] ?? null) ? trim((string) preg_replace('/\s+/u', ' ', strip_tags($content['snippet']))) : null,
+                // Shown only, never summed: documented as a string or a number, so read leniently.
+                'domain_rank' => is_int($item['domain_rank'] ?? null) ? $item['domain_rank'] : (is_string($item['domain_rank'] ?? null) && ctype_digit($item['domain_rank']) ? (int) $item['domain_rank'] : null),
+                'published' => self::date($content['date_published'] ?? null),
+                'page_type' => $types[0] ?? null,
+            ]);
+            // The own site, and its subdomains, are not a mention to win a link from.
+            if ($mention !== null && !$mention->sameSite($exclude)) {
+                $mentions[] = $mention;
+            }
+        }
+
+        return $mentions;
     }
 
     public function anchors(int $workspaceId, ?int $projectId, string $domain, int $limit): array
