@@ -94,6 +94,12 @@ The plugin serves the key URL without writing a website file. It requires a publ
 
 WordPress queues notifications for public content changes, permalink changes and removal of previously public content through WP-Cron, with at most three retries for temporary failures. Draft/private/password-protected content, revisions, autosaves and attachments are excluded. Activation does not submit existing content. The last notification result appears in WordPress; these direct submissions are separate from SEOcc's submission history and sitemap jobs. Enabling both may duplicate notifications. Disabling notifications or deactivating the plugin cancels pending plugin work.
 
+## Google updates and new queries
+
+**Performance → Google updates** (1.6.0) lists every confirmed Google ranking update within your imported data. For each, it compares the four weeks before the rollout with the four weeks after it, leaving out the rollout itself, when rankings swing. Open one to see the pages and queries that gained and lost most clicks. A change around an update is a correlation, not proof: compare it with the same weeks a year earlier and your change timeline. Updates still rolling out, or without four complete weeks on both sides, have no comparison yet.
+
+**Performance → New queries** (1.6.0) lists searches your site started to appear for: impressions in the latest 7, 28 or 90 days and none in the period before. *First time* means none in the year before either; *back after a break* means the query was seen earlier. Tick queries and **Track selected as keywords** to rank-track them in your usual market.
+
 ## Good to know
 
 - **Totals versus rows:** the query and page tables leave out anonymised queries, as Search Console does, so they add up to less than the totals.

@@ -87,6 +87,10 @@ Sizes come from the same small range request that checks the image; nothing more
 
 **Structured data generator** (link at the top of the site audit, 1.5.0) writes JSON-LD for Organization, LocalBusiness, WebSite, Article, Product, FAQ and breadcrumbs. Choose a page from the last audit: SEOcc suggests a type (Organization for the home page, Product or Article by the page's markup and Open Graph type, breadcrumbs otherwise) and fills in what the crawl read, such as the title, headline, description, the business name and phone and a breadcrumb trail from the address. Check every value, fill in the rest, and **Generate JSON-LD**. Required fields that are still empty are listed. Paste the result into the page's HTML; the next audit validates it. Nothing is stored.
 
+### Snippet preview
+
+**Snippet preview** (link at the top of the site audit, 1.6.0) shows each indexable page of the last audit as a Google result, with the title and description cut where Google cuts them. Google measures pixels, not characters: about 600 px for a title (20 px Arial) and 920 px for a description (14 px). Sixty narrow letters can fit where forty capitals do not. The widest titles come first; **Only pages Google cuts** narrows the list, and **Edit in preview** opens a page's wording in the form at the top to try alternatives. Google sometimes rewrites titles and descriptions anyway; this shows what you control.
+
 Title, description, heading and text checks apply only to pages that are meant to be indexed. The pages of a paginated listing (`?page=2`, `?page=3`, …) usually share a title, so they count as one page for duplicate titles and descriptions. Pages with *noindex*, or with a canonical tag pointing to another address, are listed once as such and not checked further.
 
 ## Reading the results

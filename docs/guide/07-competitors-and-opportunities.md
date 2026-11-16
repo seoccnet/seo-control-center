@@ -17,6 +17,10 @@ Click a competitor to see the keyword-by-keyword comparison.
 
 Competitor data comes from your rank checks at no extra cost, so history starts when you add a competitor.
 
+### What competitors publish
+
+**Competitors → New pages** (1.6.0) watches your competitors' sitemaps. Switch it on (editors); from then on SEOcc reads each competitor's sitemap once a day, only the sitemap and no pages, at no cost. The first read records what each one has today; from the next day the page lists the pages that appeared or disappeared in the last 30 days, with the tracked keywords each address matches. **Only pages matching my keywords** narrows it to those. A page counts as removed when the sitemap stops listing it; sitemaps over 10,000 pages, or that suddenly list less than half as many, report no removals. Competitors without a readable sitemap show the reason.
+
 ## AI visibility
 
 For many searches, Google shows an AI-written answer (an **AI Overview**) above the results and lists the sites it used as sources. **Project → AI visibility** shows, from your rank checks:

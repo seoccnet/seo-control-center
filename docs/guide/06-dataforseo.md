@@ -72,6 +72,10 @@ Since November 2026 Google hides the page address of many results behind a redir
 
 It costs nothing extra: the details come with every rank check. Checks before 1.5.0 recorded that a snippet was shown, but not who held it.
 
+### Mobile and desktop
+
+Tick **Also check the other device** in the tracking settings (1.6.0) to check every keyword on both. The device you choose stays the primary one for the dashboard, competitors and alerts. **Rankings → Mobile vs desktop** lists keywords ranking 5 or more places apart, or on one device only. Large mobile gaps usually point at the mobile page: layout, speed, pop-ups or content hidden on small screens. Checking both devices doubles the cost of each check.
+
 ### Google updates on the charts
 
 Line charts shade Google's confirmed ranking updates (1.5.0) and name them under the chart, so a drop during a core update is not mistaken for the effect of your own change. The list comes from the Google Search Status Dashboard and ships with each SEOcc release; an update announced later appears after the next update of SEOcc.
@@ -143,6 +147,10 @@ Google ranks local businesses by distance, so your position changes across a cit
 - **New and lost referring domains** of the last 30 days.
 - **Link gap:** domains that link to your competitors but not to you, those linking to several competitors first. These are good candidates for outreach. It needs competitors (*Competitors*).
 - **Anchor texts:** the link texts other sites use most when they link to you.
+
+### Unlinked brand mentions
+
+**Unlinked brand mentions** (1.6.0) on the Backlinks page searches DataForSEO's content index for up to 100 sites that name your brand, one page per site, strongest first (about $0.03 per lookup). Enter the name as people write it. With the referring domains fetched, each site shows whether it already links to you; the ones marked **No** are the easiest links to ask for: thank them for the mention and ask them to link it. Read the page first, as namesakes match too.
 
 ### Links to missing pages
 

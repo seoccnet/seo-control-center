@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+- **Google update impact** (*Performance → Google updates*). For every confirmed Google ranking update within your imported Search Console data: clicks, impressions and position in the four weeks before the rollout against the four weeks after it, with the rollout itself left out. Open an update to see the pages and queries that gained and lost most (among the 500 with the most clicks in each period). Updates still rolling out, without four weeks of data afterwards, or with missing days are marked as such. Stored data only.
+- **Mobile and desktop together.** *Rankings → Tracking settings* can also check the other device. The primary device still drives the dashboard, competitors, results-page changes and alerts; *Rankings → Mobile vs desktop* lists keywords ranking 5 or more places apart, or on one device only. It doubles the cost per check, which the estimate shows.
+- **What competitors publish** (*Competitors → New pages*). Opt-in per project: once a day SEOcc reads each competitor's sitemap (only the sitemap, no pages) and lists the pages that appeared or disappeared in the last 30 days, with the tracked keywords each address matches. The first read is the baseline. Capped sitemaps (10,000 pages) and reads that lose more than half the pages report no removals.
+- **Snippet preview** (*Site audit → Snippet preview*). Titles and descriptions measured in pixels the way Google cuts them (Arial; about 600 px for titles, 920 px for descriptions), shown as a search result with the cut text, widest titles first, plus a form to try new wording. Nothing is stored.
+- **New queries** (*Performance → New queries*). Search Console queries with impressions in the latest 7, 28 or 90 days and none in the period before, marked *first time* or *back after a break* against the year before, with a form to track them as keywords.
+- **Unlinked brand mentions** (*Backlinks*). A paid lookup (about $0.03) of up to 100 sites that name your brand, one page per site, from DataForSEO Content Analysis. Sites not among your stored referring domains are marked as not linking yet: the easiest links to ask for.
+- **Migrations:** `2026_11_16_000800` adds `project_ranking_settings.both_devices`; `2026_11_16_000900` creates `competitor_watch`, `competitor_sitemaps` and `competitor_pages`; `2026_11_16_001000` adds the `bl_mentions` lookup kind. No dependency added.
+
 ## [1.5.0] — 2026-11-16 — Snippets, Google updates, link reclamation, sitemap and image checks, schema generator
 
 - **Sitemap audit.** The site audit compares the sitemap with the crawl: sitemap pages that fail (4xx/5xx), redirect, or cannot be indexed (noindex, canonical elsewhere, blocked by robots.txt) are warnings; indexable pages that other pages link to but the sitemap leaves out are a growth notice. Query URLs, later pages of a paginated list, noindex pages and pages nothing links to are not called missing, and a sitemap that may have been cut off at the page limit is not used to call pages missing.
