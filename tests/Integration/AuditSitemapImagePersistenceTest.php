@@ -29,7 +29,7 @@ final class AuditSitemapImagePersistenceTest extends FullStackTestCase
         $start = $audits->findPage($audit->id, 'https://sitemap.test/') ?? self::fail('Start page lost.');
         self::assertTrue($start->inSitemap);
         $html = HtmlPage::parse('<main><img src="/hero.jpg" loading="lazy"><a href="/c">C</a></main>', 'https://sitemap.test/');
-        $audits->savePage($audit, $start, new PageResult('done', 200, 'text/html', page: $html, discovered: ['https://sitemap.test/c']));
+        $audits->savePage($audit, $start, new PageResult('done', 200, 'text/html', page: $html, discovered: ['https://sitemap.test/c'], resources: [['url' => 'https://sitemap.test/hero.jpg', 'kind' => 'image']]));
 
         $saved = $audits->findPage($audit->id, 'https://sitemap.test/') ?? self::fail('Start page lost.');
         self::assertSame(['images' => 1, 'missing_dimensions' => 1, 'lazy_first' => true], $saved->imageSignals);

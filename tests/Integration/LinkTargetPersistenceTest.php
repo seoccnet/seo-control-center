@@ -27,7 +27,7 @@ final class LinkTargetPersistenceTest extends FullStackTestCase
         self::assertSame(255, mb_strlen((string) $run['error']));
         self::assertNotNull($run['finished_at']);
         $repo->setState($project, $ws, LinkTargetRepository::QUEUED);
-        self::assertNull($repo->run($project)['finished_at'] ?? 'set');
+        self::assertNull(($repo->run($project) ?? self::fail('Run lost.'))['finished_at'], 'Queueing again starts a new run.');
 
         $long = 'https://acme.test/' . str_repeat('ü', 1500);
         $repo->save($project, 'https://acme.test/old', 301, 'https://acme.test/gone', 404, null);
