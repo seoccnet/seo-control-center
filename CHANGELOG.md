@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.5.0] — 2026-11-16 — Snippets, Google updates, link reclamation, sitemap and image checks, schema generator
 
 - **Sitemap audit.** The site audit compares the sitemap with the crawl: sitemap pages that fail (4xx/5xx), redirect, or cannot be indexed (noindex, canonical elsewhere, blocked by robots.txt) are warnings; indexable pages that other pages link to but the sitemap leaves out are a growth notice. Query URLs, later pages of a paginated list, noindex pages and pages nothing links to are not called missing, and a sitemap that may have been cut off at the page limit is not used to call pages missing.
 - **Image SEO.** Sampled images larger than 300 KB (warning), JPEG/PNG/GIF/BMP images over 100 KB that WebP or AVIF would shrink, images without `width` and `height` (layout shift) and a lazy-loaded first image in the main content (slower LCP) are reported, with size and type per image. Sizes come from the existing 1 KB range requests, so nothing more is downloaded.
