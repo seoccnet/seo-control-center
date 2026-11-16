@@ -61,7 +61,7 @@ $statusText = ['rolling_out' => 'Still rolling out', 'waiting' => 'Waiting for f
 <?php if (is_array($selected)): ?>
 <section class="card" aria-labelledby="update-detail-heading">
     <h2 id="update-detail-heading"><?= $view->e((string) $selected['name']) ?></h2>
-    <p class="muted"><?= $view->e($selected['beforeRange']->fromString() . ' to ' . $selected['beforeRange']->toString()) ?> against <?= $view->e($selected['afterRange']->toString() === '' ? '' : $selected['afterRange']->fromString() . ' to ' . $selected['afterRange']->toString()) ?>. Rows with fewer than 3 clicks in both periods are left out.</p>
+    <p class="muted"><?= $view->e($selected['beforeRange']->fromString() . ' to ' . $selected['beforeRange']->toString()) ?> against <?= $view->e($selected['afterRange']->toString() === '' ? '' : $selected['afterRange']->fromString() . ' to ' . $selected['afterRange']->toString()) ?>. Among the 500 pages and queries with the most clicks in each period; rows with fewer than 3 clicks in both periods are left out.</p>
     <?php foreach (['pages' => 'Pages', 'queries' => 'Queries'] as $key => $label): ?>
     <div class="brief-section-grid">
         <?php foreach (['winners' => 'gained most', 'losers' => 'lost most'] as $side => $title): $rows = $selected[$key][$side]; ?>
