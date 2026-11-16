@@ -56,6 +56,7 @@ final readonly class AlertDetector
         private \SeoControlCenter\Modules\Indexing\IndexingService $inspections,
         private ?\SeoControlCenter\Modules\PageMonitoring\PageChangeReader $pageMonitoring = null,
         private ?\SeoControlCenter\Domain\SerpHistory\SerpEventRepository $serpEvents = null,
+        private ?\SeoControlCenter\Modules\SiteHealth\SiteHealthRepository $siteHealth = null,
     ) {}
 
     /**
@@ -85,6 +86,15 @@ final readonly class AlertDetector
                 $lines[] = $field . ': ' . mb_substr(\SeoControlCenter\Modules\PageMonitoring\PageSnapshot::display($values['before']), 0, 120) . ' → ' . mb_substr(\SeoControlCenter\Modules\PageMonitoring\PageSnapshot::display($values['after']), 0, 120);
             }
             $events[] = ['type' => AlertType::PageChange, 'fingerprint' => 'page-change:' . $projectId . ':' . (string) $change['public_id'], 'title' => $name . ': important page SEO settings changed', 'lines' => $lines, 'url' => $base . '/page-monitoring?change=' . (string) $change['public_id'] . '#change-' . (string) $change['public_id']];
+        }
+        // Site health (1.3.0): each recorded event once.
+        foreach ($this->siteHealth?->events($projectId, $this->clock->now()->modify('-2 days')->format('Y-m-d H:i:s'), 50) ?? [] as $health) {
+            $type = match ($health['kind']) {
+                \SeoControlCenter\Domain\SiteHealth\HealthRules::DOWN, \SeoControlCenter\Domain\SiteHealth\HealthRules::RECOVERED => AlertType::SiteDown,
+                \SeoControlCenter\Domain\SiteHealth\HealthRules::SSL, \SeoControlCenter\Domain\SiteHealth\HealthRules::DOMAIN => AlertType::Expiry,
+                default => AlertType::CrawlFiles,
+            };
+            $events[] = ['type' => $type, 'fingerprint' => 'site-health:' . $projectId . ':' . $health['id'], 'title' => $name . ': ' . $health['title'], 'lines' => array_values(array_filter(preg_split('/\R/', $health['detail']) ?: [], static fn(string $l): bool => $l !== '')), 'url' => $base . '/site-health#event-' . $health['id']];
         }
         return $events;
     }

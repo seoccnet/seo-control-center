@@ -276,7 +276,7 @@ final class McpEndpointTest extends TestCase
         $token = $this->token($this->s->owner, ['projects:read']);
         $call = fn(string $name, array $args = []): array => $this->rpcResult($this->rpc($token, 'tools/call', ['name' => $name, 'arguments' => $args]));
         $list = $call('guide_list')['structuredContent'];
-        self::assertSame(29, $list['total']);
+        self::assertSame(30, $list['total']);
         $search = $call('guide_search', ['query' => 'Ask AI', 'limit' => 2])['structuredContent'];
         self::assertNotEmpty($search['chapters']);
         self::assertLessThanOrEqual(2, count($search['chapters']));

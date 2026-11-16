@@ -398,6 +398,11 @@ final class TestApp
         $container->instance(\SeoControlCenter\Modules\SiteMigration\SiteMigrationRepository::class, $siteMigrations);
         $container->instance(\SeoControlCenter\Modules\SiteMigration\SiteMigrationScheduler::class, $siteMigrations);
         $container->instance(\SeoControlCenter\Modules\SiteMigration\UrlProbe::class, $siteMigrations);
+        $siteHealth = new Fakes\InMemorySiteHealth($container->make(Clock::class));
+        $container->instance(Fakes\InMemorySiteHealth::class, $siteHealth);
+        foreach ([\SeoControlCenter\Modules\SiteHealth\SiteHealthRepository::class, \SeoControlCenter\Modules\SiteHealth\SiteHealthScheduler::class, \SeoControlCenter\Modules\SiteHealth\SiteProbe::class, \SeoControlCenter\Modules\SiteHealth\CertificateProbe::class, \SeoControlCenter\Modules\SiteHealth\DomainExpiryLookup::class] as $contract) {
+            $container->instance($contract, $siteHealth);
+        }
         $botLogs = new Fakes\InMemoryBotLogs($container->make(Clock::class));
         $container->instance(Fakes\InMemoryBotLogs::class, $botLogs);
         $container->instance(\SeoControlCenter\Modules\BotLogs\BotLogRepository::class, $botLogs);

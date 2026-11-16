@@ -8,6 +8,10 @@ Paid data and client websites are out of scope for testing: use your own install
 
 # Security Requirements
 
+## Site health (Unreleased)
+
+Health checks contact only the project's own primary domain (HTTPS through `HttpClient`, so public addresses only, pinned, no redirects followed), IANA's RDAP bootstrap file at `data.iana.org` and the RDAP server it names for the domain's ending (HTTPS, exact host allowlist, 512 KB cap). The certificate probe resolves the host, refuses non-public addresses, connects to the first resolved address with SNI and full peer verification, reads the presented certificate and sends nothing after the handshake. No installation, user or project data is sent anywhere. Switching monitoring off or on needs *Edit projects* and is audited (`project.site_health_*`); *Check now* is rate-limited to three runs per project and hour. robots.txt text is stored to show changes and always rendered escaped.
+
 ## Site migrations and bot logs (Unreleased)
 
 Site migration plans and bot logs are project data: routes resolve the project through `ProjectService` (404 for foreign or invisible projects) and the plan or log by public UUID within that project. Creating, importing, choosing targets and deleting need *Edit projects*; redirect tests need *Run analyses* and the Site audit feature. All changes are CSRF-protected and audited (`project.site_migration_*`, `project.bot_log_*`). Forms identify addresses by a SHA-1 of the URL, never an internal ID.

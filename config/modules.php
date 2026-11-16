@@ -36,6 +36,7 @@ return [
     SeoControlCenter\Modules\Pages\PagesModule::class,
     SeoControlCenter\Modules\SiteMigration\SiteMigrationModule::class,
     SeoControlCenter\Modules\BotLogs\BotLogsModule::class,
+    SeoControlCenter\Modules\SiteHealth\SiteHealthModule::class,
     SeoControlCenter\Modules\ContentInventory\ContentInventoryModule::class,
     SeoControlCenter\Modules\ContentBriefs\ContentBriefsModule::class,
     SeoControlCenter\Modules\DataQuality\DataQualityModule::class,

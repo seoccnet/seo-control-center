@@ -18,6 +18,7 @@ $tabs = [
     'analytics' => ['Analytics', $base . '/analytics'],
     'pages' => ['Pages', $base . '/pages'],
     'inventory' => ['Content inventory', $base . '/inventory'],
+    'site-health' => ['Site health', $base . '/site-health'],
     'indexing' => ['Google indexing', $base . '/indexing'],
     'page-monitoring' => ['Page monitoring', $base . '/page-monitoring'],
     'site-migration' => ['Site migration', $base . '/site-migration'],
@@ -44,7 +45,7 @@ $initial = mb_strtoupper(mb_substr($project->name, 0, 1)) ?: '?';
 $tabGroups = [
     'Research' => ['pages', 'inventory', 'keywords', 'rankings', 'competitors', 'article-ideas', 'topic-plans'],
     'Improve' => ['content-briefs', 'site-audit', 'lab-tests', 'page-monitoring', 'site-migration', 'bot-logs', 'backlinks'],
-    'Visibility' => ['indexing', 'ai-visibility', 'local'],
+    'Visibility' => ['site-health', 'indexing', 'ai-visibility', 'local'],
     'Manage' => ['annotations', 'change-bundles', 'data-quality', 'reports', 'settings'],
 ];
 $groupIcons = ['Research' => 'search', 'Improve' => 'pulse', 'Visibility' => 'eye', 'Manage' => 'settings'];

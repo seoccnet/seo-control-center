@@ -4,6 +4,10 @@ Forecast review is documented in [docs/forecast-review.md](docs/forecast-review.
 
 Project Overview's persisted evidence dashboard is documented in [docs/overview-dashboard.md](docs/overview-dashboard.md). `OverviewEvidence` receives repository/read services through an explicit factory after project authorization. `OverviewCalculations` contains pure comparison/scoring operations; views contain no SQL. Completed audit reads do not change audit lifecycle state, and the page performs no provider calls. Source coverage and bounded samples govern comparison eligibility.
 
+## Site health (Unreleased)
+
+SiteHealthModule keeps one state row per project and an event log. A dispatcher every 15 minutes queues uptime checks that are due and daily checks once a day (idempotency key per project, kind and time slot). `SiteHealthService::check` runs one check through `SiteProbe` (HttpClient and the audit's sitemap reader), `CertificateProbe` (TLS handshake) and `DomainExpiryLookup` (RDAP); `Domain\SiteHealth\HealthRules` (pure) turns old and new observations into events with dedupe keys. `AlertDetector` reads the events of the last two days and sends them as three alert types through the existing hourly scan; no new delivery path.
+
 ## Hreflang, structured data, site migrations and bot logs (Unreleased)
 
 `HtmlPage` reads hreflang alternates, the html lang attribute and JSON-LD problems (`Crawler\StructuredDataCheck`, pure); `IssueDetector` compares hreflang sets across the fetched pages (`Crawler\Hreflang` validates codes). New issue types flow through the existing issue storage, opportunity rule and playbooks.

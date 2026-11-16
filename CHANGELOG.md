@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+- **Site health monitoring** (*Visibility → Site health*), free and on for every project: the home page is checked every 15 minutes (two failures in a row count as down, the next answer as back up); the TLS certificate, robots.txt and sitemaps daily; the domain registration weekly over RDAP. Warnings: certificates 14 and 3 days before expiry or when they cannot be verified, domains 30 and 7 days before, robots.txt changes (with the lines added and removed, and a clear title when it blocks the whole site), and sitemaps losing at least 10% of their pages. Each event is recorded once, listed under History and sent through three new alert types that can be muted like the others. Editors can turn monitoring off per project and run the checks now. Requests go only to the project's own domain, IANA's RDAP list and the domain's registry, public addresses only.
+- **Migration:** `2026_11_16_000200` creates `site_health_state` and `site_health_events`. No dependency added; the certificate check uses PHP's openssl extension when it is available.
+
 ## [1.2.1] — 2026-11-16 — Verified crawlers, countries next to hreflang, MCP for migrations and logs
 
 - **Verified Googlebot and Bingbot in bot logs.** While a log is read, each Googlebot and Bingbot request is checked against the IP ranges Google and Bing publish (`googlebot.json`, `special-crawlers.json`, `bingbot.json`, fetched at most daily and cached; a copy up to 30 days old is used when they cannot be read). The crawler table gets a **Verified** column with the share that really came from them. The address is checked and dropped; no IP is stored. A crawler counts as verified only when every part of the log could be checked; otherwise, and for logs read before, it shows “–”.

@@ -16,6 +16,7 @@ It brings together:
 - **Local SEO**: Google Maps positions, a ranking grid across your city, and your Business Profile;
 - **Site audit**: broken links, redirects, on-page problems, hreflang and structured data errors on your own site;
 - **Site migration**: redirect plans for a domain move or restructure, redirect tests and post-launch results;
+- **Site health**: uptime, TLS certificate and domain expiry, robots.txt and sitemap changes, with alerts;
 - **Bot logs**: what Googlebot, Bingbot and AI crawlers request, from your server's access log;
 - **Opportunities**: concrete, prioritised to-dos found in all of this data;
 - **Reports** by e-mail, weekly or monthly;
@@ -55,6 +56,7 @@ It brings together:
 28. [Investigations](28-investigations.md)
 29. [Site migration](29-site-migration.md)
 30. [Bot logs](30-bot-logs.md)
+31. [Site health](31-site-health.md)
 
 ## Getting help
 

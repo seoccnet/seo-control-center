@@ -703,3 +703,4 @@ main.content .brief-list > .brief-list-item:hover { background: color-mix(in srg
 /* Site migration and bot logs (1.2.0): two forms side by side, stacked on narrow screens. */
 .migration-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1.25rem; }
 .migration-columns fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: .25rem; }
+.health-detail { white-space: pre-line; }

@@ -89,6 +89,7 @@ final class AlertsModule implements Module, ProvidesJobs
             $c->make(\SeoControlCenter\Modules\Indexing\IndexingService::class),
             $c->make(\SeoControlCenter\Modules\PageMonitoring\PageChangeReader::class),
             $c->has(\SeoControlCenter\Domain\SerpHistory\SerpEventRepository::class) ? $c->make(\SeoControlCenter\Domain\SerpHistory\SerpEventRepository::class) : null,
+            $c->has(\SeoControlCenter\Modules\SiteHealth\SiteHealthRepository::class) ? $c->make(\SeoControlCenter\Modules\SiteHealth\SiteHealthRepository::class) : null,
         ));
         $container->singleton(AlertService::class, static fn(Container $c): AlertService => new AlertService(
             $c->make(AlertRepository::class),

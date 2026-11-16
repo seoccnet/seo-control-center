@@ -10,6 +10,8 @@ After a rank check, it reports **results-page changes** that matter: an AI Overv
 
 It also reports changes in Google's indexing verdict or selected canonical after two successful [URL inspections](23-google-indexing.md). Initial results and failed checks do not create change alerts. Google returns its stored index evidence; a change is a reason to investigate, not a confirmed technical cause. The indexing/canonical alert type can be muted like other project alerts.
 
+[Site health](31-site-health.md) adds three alert types (1.3.0): **the site is down or back up**, **certificate or domain about to expire**, and **robots.txt or sitemap changed**. Each can be muted like the others. Because alerts are sent by the hourly scan, an outage alert arrives within about an hour of the second failed check.
+
 Alerts do not start paid lookups. They depend on current imported data, completed audits and stored backlink results. Each event is sent once. You receive project alerts only for projects you can see; budget alerts require integration-management permission.
 
 ## Your Monday digest

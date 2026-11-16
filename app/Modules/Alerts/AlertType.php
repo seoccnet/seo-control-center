@@ -17,10 +17,16 @@ enum AlertType: string
     case IndexingChange = 'indexing_change';
     case PageChange = 'page_change';
     case SerpChange = 'serp_change';
+    case SiteDown = 'site_down';
+    case Expiry = 'expiry';
+    case CrawlFiles = 'crawl_files';
 
     public function label(): string
     {
         return match ($this) {
+            self::SiteDown => 'The site is down or back up',
+            self::Expiry => 'Certificate or domain about to expire',
+            self::CrawlFiles => 'robots.txt or sitemap changed',
             self::RankingDrop => 'Keywords dropping below your cutoff',
             self::TrafficDrop => 'A sharp drop in clicks',
             self::AuditErrors => 'New site audit errors',
@@ -35,6 +41,9 @@ enum AlertType: string
     public function description(): string
     {
         return match ($this) {
+            self::SiteDown => 'When two checks in a row, 15 minutes apart, get no answer or a server error from the home page, and again when it answers.',
+            self::Expiry => 'When the TLS certificate expires within 14 or 3 days or has a problem, or the domain registration expires within 30 or 7 days.',
+            self::CrawlFiles => 'When robots.txt changes (and says so when it now blocks the whole site), or the sitemap loses at least 10% of its pages.',
             self::RankingDrop => 'After a rank check, when keywords leave the project’s configured top-position group (default: top 10).',
             self::TrafficDrop => 'When seven-day Search Console clicks fall beyond the project’s threshold (default: 30%, with at least 100 previous clicks).',
             self::AuditErrors => 'When a site audit finds more errors than the previous one, such as broken pages or server errors.',
