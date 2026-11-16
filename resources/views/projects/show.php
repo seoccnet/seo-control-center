@@ -34,10 +34,10 @@ $actions = $link !== null && $canImport ? '<form method="post" action="' . $view
 <?php $hasGrowth = !$missing['risks'] || !$missing['demand'] || !$missing['visibility'] || $evidence['local'] !== null; ?>
 <nav class="overview-jump" aria-label="Overview sections"><a href="#overview-outlook-title">Outlook &amp; audience</a><a href="#overview-next-title">Do next</a><a href="#overview-why-title">Why it changed</a><?php if ($hasGrowth): ?><a href="#overview-growth-title">Growth &amp; risks</a><?php endif; ?></nav>
 <section class="overview-section" aria-labelledby="overview-outlook-title">
-<div class="overview-section-head"><h2 class="overview-section-title" id="overview-outlook-title">Outlook &amp; audience</h2><p class="overview-section-intro">Where Google clicks are heading, and which engines, countries and devices they come from.</p></div>
+<div class="overview-section-head"><h2 class="overview-section-title" id="overview-outlook-title">Outlook &amp; audience</h2><p class="overview-section-intro">Where Google clicks are heading, which engines, countries and devices they come from, and how AI search sees the site.</p></div>
 <div class="overview-trend-row<?= $search !== null ? ' has-audience' : '' ?>">
 <?= $view->partial('partials/prognosis-chart', ['search' => $search, 'bing' => $bing, 'base' => $base, 'project' => $project, 'annotations' => $annotations ?? [], 'assetVersion' => $assetVersion ?? '0']) ?>
-<?php if ($search !== null): ?><?= $view->partial('partials/overview-audience', compact('search', 'evidence', 'base', 'rangeKey')) ?><?php endif; ?>
+<?php if ($search !== null): ?><div class="overview-side-stack"><?= $view->partial('partials/overview-audience', compact('search', 'evidence', 'base', 'rangeKey')) ?><?= $view->partial('partials/overview-ai', compact('evidence', 'project', 'base')) ?></div><?php endif; ?>
 </div>
 </section>
 <section class="overview-section" aria-labelledby="overview-next-title">

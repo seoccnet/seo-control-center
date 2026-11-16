@@ -719,9 +719,23 @@ main.content .brief-list > .brief-list-item:hover { background: color-mix(in srg
 /* Prognosis on the left, audience on the right; each keeps its own height. */
 @media (min-width: 75rem) {
     .overview-trend-row.has-audience { grid-template-columns: minmax(0, 1.75fr) minmax(20rem, 1fr); }
-    .overview-trend-row.has-audience > .overview-audience { position: sticky; top: 72px; }
 }
-.overview-trend-row > .overview-audience { margin: 0; min-width: 0; }
+.overview-side-stack { display: grid; gap: 1.25rem; align-content: start; min-width: 0; }
+.overview-side-stack > .card { margin: 0; min-width: 0; }
+.overview-ai { --tone-ai: var(--tone-violet); --tone-own: var(--tone-green); }
+.overview-audience rect.tone-ai { fill: var(--tone-ai); }
+.overview-audience rect.tone-own { fill: var(--tone-own); }
+.overview-audience rect.tone-slate { fill: var(--tone-slate); }
+.overview-ai-headline { display: flex; align-items: baseline; flex-wrap: wrap; gap: .25rem .6rem; margin: 0 0 .7rem; font-size: .875rem; color: var(--muted); }
+.overview-ai-headline > strong { color: var(--text); font-size: 1.5rem; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.overview-ai .is-own .overview-country-name { font-weight: 600; }
+.overview-ai-setup { display: grid; gap: .4rem; margin: .5rem 0 0; padding-left: 1.1rem; font-size: .875rem; }
+.overview-ai-tabs { padding-top: .85rem; margin-top: .85rem; border-top: 1px solid var(--border); }
+.overview-ai-segments { width: 100%; margin-bottom: .85rem; padding: .2rem; }
+.overview-ai-segments button { flex: 1 1 0; min-height: 30px !important; padding: .2rem .5rem !important; font-size: .8125rem !important; }
+.overview-ai-panel > .overview-subheading { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; margin: 0 0 .6rem; font-size: .875rem; }
+.overview-ai-panel > .overview-subheading .muted { font-weight: 400; }
+.overview-ai-panel > .overview-ai-subheading { margin-top: 1rem; }
 .overview-audience { --tone-google: var(--tone-blue); --tone-bing: var(--tone-teal); --tone-ga: var(--tone-amber); }
 .overview-audience .card-header { align-items: start; gap: .8rem; }
 .overview-audience > p.muted { margin: 0 0 .25rem; }

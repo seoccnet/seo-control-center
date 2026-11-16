@@ -51,6 +51,7 @@ final class OverviewModule implements Module
             $c->make(\SeoControlCenter\Modules\Annotations\ChangeImpactService::class),
             $c->make(\SeoControlCenter\Modules\Local\LocalRepository::class),
             $c->make(\SeoControlCenter\Core\Support\Clock::class),
+            $c->make(\SeoControlCenter\Modules\Analytics\AiReferralRepository::class),
         ));
         $container->singleton(ProjectOverview::class, static fn(Container $c): ProjectOverview => new ProjectOverview(
             $c->make(ProjectService::class),

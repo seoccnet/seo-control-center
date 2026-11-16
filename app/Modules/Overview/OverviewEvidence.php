@@ -46,6 +46,7 @@ final readonly class OverviewEvidence
         private ChangeImpactService $changes,
         private LocalRepository $local,
         private Clock $clock,
+        private \SeoControlCenter\Modules\Analytics\AiReferralRepository $referrals,
     ) {}
 
     public function fallbackRange(Project $project, int $days): DateRange
@@ -112,6 +113,8 @@ final readonly class OverviewEvidence
             'ranking' => ['date' => $latest?->date, 'previousDate' => $previous?->date, 'device' => $settings->device->value, 'counts' => $buckets, 'matched' => $matched, 'prior' => $prior, 'sample' => array_sum($buckets), 'common' => array_sum($matched), 'unrepresented' => max(0, $this->keywords->count($project->id) - array_sum($buckets))],
             'demand' => $this->demand($project),
             'ai' => ['date' => $aiDate, 'previousDate' => $aiPrevious, 'current' => $aiDate === null ? null : $this->ai->summary($project->id, $settings->device, $aiDate), 'previous' => $aiPrevious === null ? null : $this->ai->summary($project->id, $settings->device, $aiPrevious), 'device' => $settings->device->value],
+            'aiDomains' => $aiDate === null ? [] : $this->ai->topDomains($project->id, $settings->device, 5),
+            'aiReferrals' => ['current' => OverviewCalculations::assistants($this->referrals->bySource($project->id, $range)), 'previous' => OverviewCalculations::assistants($this->referrals->bySource($project->id, $range->previous())), 'imported' => $this->referrals->lastImport($project->id)],
             'mentions' => $this->mentions->history($project->id, 4), 'backlinks' => $this->backlinks->history($project->id, 2),
             'brand' => ['settings' => $brandSettings, 'history' => array_slice($brandHistory, 0, 3)],
             'lost' => $this->research->find($project->id, 'bl_lost'), 'new' => $this->research->find($project->id, 'bl_new'),

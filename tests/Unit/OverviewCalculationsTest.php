@@ -90,6 +90,18 @@ final class OverviewCalculationsTest extends TestCase
         self::assertSame(['metric' => 'impressions', 'total' => 0, 'rows' => [], 'other' => ['count' => 0, 'clicks' => 0, 'impressions' => 0, 'share' => 0.0]], OverviewCalculations::breakdown([], null, 6));
     }
 
+    public function testAssistantSessionsAreSummedPerAssistantName(): void
+    {
+        $rows = OverviewCalculations::assistants([
+            ['source' => 'perplexity.ai', 'sessions' => 8, 'key_events' => 1.0, 'revenue' => 0.0],
+            ['source' => 'chatgpt.com', 'sessions' => 5, 'key_events' => 0.5, 'revenue' => 0.0],
+            ['source' => 'chat.openai.com', 'sessions' => 4, 'key_events' => 0.0, 'revenue' => 0.0],
+            ['source' => 'unknown.example', 'sessions' => 1, 'key_events' => 0.0, 'revenue' => 0.0],
+        ]);
+        self::assertSame([['assistant' => 'ChatGPT', 'sessions' => 9, 'keyEvents' => 0.5], ['assistant' => 'Perplexity', 'sessions' => 8, 'keyEvents' => 1.0], ['assistant' => 'unknown.example', 'sessions' => 1, 'keyEvents' => 0.0]], $rows);
+        self::assertSame([], OverviewCalculations::assistants([]));
+    }
+
     public function testCountryNamesComeFromSearchConsoleCodes(): void
     {
         self::assertSame('Germany', \SeoControlCenter\Domain\International\CountryCodes::name('deu'));

@@ -89,6 +89,28 @@ final class OverviewCalculations
         ];
     }
 
+    /**
+     * GA4 sessions per AI assistant, most first. Session sources of one
+     * assistant (chatgpt.com, chat.openai.com) are summed under its name.
+     *
+     * @param list<array{source: string, sessions: int, key_events: float, revenue: float}> $rows
+     * @return list<array{assistant: string, sessions: int, keyEvents: float}>
+     */
+    public static function assistants(array $rows): array
+    {
+        $byName = [];
+        foreach ($rows as $row) {
+            $name = \SeoControlCenter\Domain\Analytics\AiReferralSources::assistant($row['source']) ?? $row['source'];
+            $byName[$name] ??= ['assistant' => $name, 'sessions' => 0, 'keyEvents' => 0.0];
+            $byName[$name]['sessions'] += $row['sessions'];
+            $byName[$name]['keyEvents'] += $row['key_events'];
+        }
+        $list = array_values($byName);
+        usort($list, static fn(array $a, array $b): int => [$b['sessions'], $a['assistant']] <=> [$a['sessions'], $b['assistant']]);
+
+        return $list;
+    }
+
     private static function band(float $position): int
     {
         return match (true) {
