@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.3.0] — 2026-11-16 — Site health, client links, ranking import and update check
 
 - **Optional update check** (ADR-053): under *System → Updates* an administrator can let SEOcc ask GitHub once a day for the latest release; administrators then see a top-bar notice when a newer version is out. Off by default; the request carries no data about the installation, and nothing is downloaded or installed automatically. `UPDATE_CHECK_REPOSITORY` points forks at their own repository. No migration.
 - **Import keywords and ranking history** (*Rankings → Import history*): CSV and TSV exports from Ahrefs, Semrush, Moz, Search Console or a spreadsheet. Columns are found by name; one row per keyword and date, one column per date (Semrush Position Tracking) and plain keyword lists are read, in UTF-8, UTF-16 or Windows-1252, separated by commas, semicolons or tabs. New keywords are tracked in the chosen market up to the project's limit; positions are stored for days SEOcc has not checked, marked as imported, and the daily totals of those days are rebuilt. A later SEOcc check replaces an imported day. No paid lookup is started. Imports are audited (`rankings.history_imported`).
