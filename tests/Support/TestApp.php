@@ -192,6 +192,9 @@ final class TestApp
         $container->instance(InMemoryRankings::class, $rankings);
         $container->instance(RankingRepository::class, $rankings);
         $container->instance(RankCheckScheduler::class, $rankings);
+        $rankingImports = new Fakes\InMemoryRankingImports($keywords, $rankings);
+        $container->instance(Fakes\InMemoryRankingImports::class, $rankingImports);
+        $container->instance(\SeoControlCenter\Modules\Rankings\RankingImportStore::class, $rankingImports);
         $competitors = new InMemoryCompetitors($keywords, $rankings, $container->make(Clock::class));
         $container->instance(InMemoryCompetitors::class, $competitors);
         $container->instance(CompetitorRepository::class, $competitors);

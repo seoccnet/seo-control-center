@@ -64,7 +64,7 @@ if ($canManage && $settings->enabled && $providerAvailable && $keywordCount > 0)
 <?php if ($keywordCount === 0): ?>
     <section class="card empty">
         <h2>No keywords yet</h2>
-        <p>Rank tracking checks the project's keywords. <a href="<?= $view->e($base) ?>/keywords">Add keywords</a> first.</p>
+        <p>Rank tracking checks the project's keywords. <a href="<?= $view->e($base) ?>/keywords">Add keywords</a> first, or <a href="<?= $view->e($base) ?>/rankings/import">import them with their ranking history</a> from another tool.</p>
     </section>
 <?php endif; ?>
 
@@ -174,7 +174,7 @@ if ($canManage && $settings->enabled && $providerAvailable && $keywordCount > 0)
     <section class="card">
         <div class="card-header">
             <h2>Keywords</h2>
-            <?php if ($latest !== null): ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/export' . ($filter !== null ? '?filter=' . $filter->value : '')) ?>"><?= $view->icon('download') ?>Export CSV</a><?php endif; ?>
+            <?php if ($latest !== null): ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/export' . ($filter !== null ? '?filter=' . $filter->value : '')) ?>"><?= $view->icon('download') ?>Export CSV</a><?php endif; ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/import') ?>">Import history</a>
         </div>
         <?php if ($latest !== null): ?>
         <nav class="filter-row" aria-label="Filter by position">

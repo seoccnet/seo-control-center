@@ -82,6 +82,18 @@ final class RankingsModule implements Module, ProvidesJobs
             $c->make(Clock::class),
             $c->make(\SeoControlCenter\Modules\Annotations\AnnotationService::class),
         ));
+        // Import of keyword lists and ranking history (1.3.0).
+        $container->singleton(RankingImportStore::class, static fn(Container $c): RankingImportStore => new Persistence\PdoRankingImportStore($c->make(\SeoControlCenter\Core\Database\Connection::class), $c->make(Clock::class)));
+        $container->singleton(RankingImportService::class, static fn(Container $c): RankingImportService => new RankingImportService(
+            $c->make(\SeoControlCenter\Domain\Keywords\KeywordRepository::class),
+            $c->make(\SeoControlCenter\Domain\Rankings\RankingRepository::class),
+            $c->make(RankingImportStore::class),
+            $c->make(\SeoControlCenter\Core\Authorization\Authorizer::class),
+            $c->make(\SeoControlCenter\Core\RateLimit\RateLimiter::class),
+            $c->make(\SeoControlCenter\Core\Audit\AuditLogger::class),
+            $c->make(Clock::class),
+        ));
+        $container->singleton(Controllers\RankingImportController::class, static fn(Container $c): Controllers\RankingImportController => new Controllers\RankingImportController($c->make(ProjectService::class), $c->make(RankingImportService::class), $c->make(ResponseFactory::class), $c->make(ViewRenderer::class), $c->make(Clock::class)));
     }
 
     public function registerRoutes(RouteCollection $routes): void
@@ -92,6 +104,8 @@ final class RankingsModule implements Module, ProvidesJobs
         $routes->post($path . '/settings', RankingsController::class, 'settings');
         $routes->post($path . '/check', RankingsController::class, 'check');
         $routes->get($path . '/export', RankingsController::class, 'export', 'projects.rankings.export');
+        $routes->get($path . '/import', Controllers\RankingImportController::class, 'show', 'projects.rankings.import');
+        $routes->post($path . '/import', Controllers\RankingImportController::class, 'import', 'projects.rankings.import.save');
         $routes->get($path . '/{keyword:' . Uuid::ROUTE_PATTERN . '}', RankingsController::class, 'keyword', 'projects.rankings.keyword');
     }
 

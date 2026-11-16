@@ -1,5 +1,9 @@
 # Database Design
 
+## Imported ranking history (Unreleased, migration 2026_11_16_000400)
+
+`ranking_snapshots.source` (ASCII VARCHAR(10), NULL) is `import` for positions brought in from another tool and NULL for SEOcc's own checks. Imports use `INSERT IGNORE`, so a day already checked (or imported) keeps its row; `storeSnapshot` sets `source = NULL` when a check replaces an imported day. `ranking_daily` rows of imported days are rebuilt with the existing `aggregate`. Forward-only.
+
 ## Report client links (Unreleased, migration 2026_11_16_000300)
 
 `report_share_links` stores a public UUID, workspace and project FKs (cascading), the SHA-256 of the link token (BINARY(32), unique) and its first six characters as a hint, a label, creator, expiry, revocation time, view count and last view. The token itself is never stored. Lookups join `projects` and `workspaces` and exclude deleted ones, so a deleted project's links stop working without a cleanup job. InnoDB, utf8mb4_unicode_ci, forward-only.

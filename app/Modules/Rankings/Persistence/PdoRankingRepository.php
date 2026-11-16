@@ -150,7 +150,7 @@ final readonly class PdoRankingRepository implements RankingRepository
             'INSERT INTO ranking_snapshots (project_keyword_id, project_id, device, checked_on, position, absolute_position, url, serp_features, top_results, checked_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE position = VALUES(position), absolute_position = VALUES(absolute_position), url = VALUES(url),
-                 serp_features = VALUES(serp_features), top_results = VALUES(top_results), checked_at = VALUES(checked_at)',
+                 serp_features = VALUES(serp_features), top_results = VALUES(top_results), checked_at = VALUES(checked_at), source = NULL',
             [
                 $snapshot->projectKeywordId,
                 $snapshot->projectId,

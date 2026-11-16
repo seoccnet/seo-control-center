@@ -61,6 +61,17 @@ What the Rankings page shows:
 
 **Results-page changes** (*Research → Results-page changes*) shows what changed on the results pages of your tracked keywords between two checks on the same device, at most 14 days apart: features such as the AI Overview appearing or disappearing, tracked competitors entering or leaving the top 10 (and whether above you), new URLs of competitors or your own site, you entering, leaving or moving 5 places or more, and the kind of page Google ranks shifting. It counts the last 30 days, lists new URLs and keywords gained and lost per competitor, and can be filtered by change, keyword, domain or URL and dates. Everything comes from your stored checks; nothing extra is bought. A keyword needs two checks before changes appear; a missed check is a gap, not a change.
 
+### Import keywords and ranking history
+
+Switching from another tool? *Rankings → Import history* (1.3.0) reads a CSV or TSV export from Ahrefs, Semrush, Moz, Search Console or a spreadsheet, so your history starts before SEOcc's first check. It needs *Edit projects*, costs nothing and starts no lookup.
+
+- **Columns are found by name** in the first row, whatever their order: `Keyword` (or Query, Search term), `Position` (or Rank, Current position), and optionally `Date`, `URL` (or Current URL, Landing page) and `Device`. Comma, semicolon and tab separators and UTF-8, UTF-16 (Ahrefs) and Windows-1252 files are read.
+- **One column per date**, as Semrush Position Tracking exports it, also works: a `Keyword` column and columns named by date (such as `2026-10-01`), each holding that day's position.
+- **Without a date column**, all positions are stored for the date you choose, which suits a "current positions" export. Without a device column, the device you choose is used.
+- **A file with only a keyword column** adds the keywords and stores no positions.
+
+New keywords are tracked in the market you choose, up to the project's 1,000 keywords. Positions 1–100 are kept; empty cells, “-”, “0” and “>100” count as not in the top 100. Dates in the future or more than five years ago are skipped. A day SEOcc checked itself is never overwritten, and a later SEOcc check replaces an imported day, so imported and checked history never mix on one day. The daily totals (visibility, top 3, top 10) of imported days are rebuilt; visibility uses search volumes once they have been fetched. Up to 10 MB, 100,000 positions and 800 days per file, and ten imports per project and hour.
+
 ## Keyword research
 
 **Keywords → Keyword research** looks up data from the DataForSEO keyword database. Each lookup runs in the background and its result is stored, so viewing it again costs nothing. A new lookup replaces the previous result.
