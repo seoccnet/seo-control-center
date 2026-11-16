@@ -64,6 +64,12 @@ final class GoogleUpdates
         return $result;
     }
 
+    /** A stable address part for an update, such as "march-2026-core-update". */
+    public static function slug(string $name): string
+    {
+        return trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower($name)), '-');
+    }
+
     /** @return list<array{name: string, start: string, end: ?string}> */
     public static function all(): array
     {
