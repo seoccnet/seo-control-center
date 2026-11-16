@@ -61,6 +61,7 @@ final class SiteAuditModule implements Module, ProvidesJobs
             $c->has(\SeoControlCenter\Domain\Clusters\ClusterRepository::class) ? $c->make(\SeoControlCenter\Domain\Clusters\ClusterRepository::class) : null,
         ));
         $container->singleton(LinkSuggestionScheduler::class, static fn(Container $c): LinkSuggestionScheduler => new Jobs\LinkSuggestionJobs($c->make(\SeoControlCenter\Domain\InternalLinks\LinkGraphRepository::class), $c->make(Queue::class), $c->make(Clock::class)));
+        $container->singleton(Controllers\SnippetPreviewController::class, static fn(Container $c): Controllers\SnippetPreviewController => new Controllers\SnippetPreviewController(new SnippetPreviewService($c->make(SiteAuditRepository::class)), $c->make(ProjectService::class), $c->make(ResponseFactory::class), $c->make(ViewRenderer::class)));
         $container->singleton(Controllers\StructuredDataController::class, static fn(Container $c): Controllers\StructuredDataController => new Controllers\StructuredDataController(new StructuredDataService($c->make(SiteAuditRepository::class)), $c->make(ProjectService::class), $c->make(ResponseFactory::class), $c->make(ViewRenderer::class)));
         $container->singleton(Controllers\InternalLinksController::class, static fn(Container $c): Controllers\InternalLinksController => new Controllers\InternalLinksController($c->make(LinkSuggestionService::class), $c->make(ProjectService::class), $c->make(ResponseFactory::class), $c->make(ViewRenderer::class)));
         $container->singleton(SiteCrawler::class, static fn(Container $c): SiteCrawler => new SiteCrawler(
@@ -119,6 +120,7 @@ final class SiteAuditModule implements Module, ProvidesJobs
         $routes->post($base . '/render', SiteAuditController::class, 'render');
         $routes->get($base . '/links', Controllers\InternalLinksController::class, 'index', 'projects.audit.links');
         $routes->get($base . '/schema', Controllers\StructuredDataController::class, 'show', 'projects.audit.schema');
+        $routes->get($base . '/snippets', Controllers\SnippetPreviewController::class, 'show', 'projects.audit.snippets');
         $routes->get($audit, SiteAuditController::class, 'show', 'projects.audit.show');
         $routes->get($audit . '/pages', SiteAuditController::class, 'pages', 'projects.audit.pages');
         $routes->get($audit . '/export', SiteAuditController::class, 'export', 'projects.audit.export');

@@ -38,7 +38,7 @@ $startForm = static function (string $label, bool $ghost = false) use ($view, $b
 ?>
 <?= $view->partial('partials/project-header', ['project' => $project, 'active' => 'site-audit']) ?>
 <div class="improve-workspace improve-audit">
-<header class="improve-intro"><div><p class="portfolio-eyebrow">Improve · Site audit</p><h2>Find and prioritize technical issues</h2><p class="muted">Review crawl results, inspect affected pages and compare findings with saved diagnostics. <a href="<?= $view->e('/projects/' . $project->publicId . '/site-audit/schema') ?>">Structured data generator</a></p></div></header>
+<header class="improve-intro"><div><p class="portfolio-eyebrow">Improve · Site audit</p><h2>Find and prioritize technical issues</h2><p class="muted">Review crawl results, inspect affected pages and compare findings with saved diagnostics. <a href="<?= $view->e('/projects/' . $project->publicId . '/site-audit/schema') ?>">Structured data generator</a> · <a href="<?= $view->e('/projects/' . $project->publicId . '/site-audit/snippets') ?>">Snippet preview</a></p></div></header>
 <?php if (!$featureOn): ?>
     <p class="notice notice-warning">Site audits are turned off on this installation. Existing results stay readable.</p>
 <?php endif; ?>
