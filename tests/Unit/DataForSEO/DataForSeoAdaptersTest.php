@@ -262,6 +262,49 @@ final class DataForSeoAdaptersTest extends TestCase
         }
     }
 
+    /**
+     * Since November 2026 DataForSEO reports organic results with a Google
+     * redirect link (google.com/goto?url=<encrypted>) and domain google.com;
+     * the site is only in the breadcrumb or website name. Items are shaped
+     * like a real response for "uzgoj konoplje" (HR, desktop).
+     */
+    public function testGoogleRedirectLinksAreTracedToTheirSites(): void
+    {
+        $goto = static fn(string $id): string => 'https://google.com/goto?url=CAES' . $id . '&gsessionid=-CnF77ZWcFDx';
+        $this->http->json('POST', 'https://api.dataforseo.com' . DataForSeoSerp::PATH, self::envelope(0.018, [[
+            'id' => 'serp-goto',
+            'status_code' => 20000,
+            'result' => [[
+                'keyword' => 'uzgoj konoplje',
+                'se_results_count' => 100000,
+                'items' => [
+                    ['type' => 'organic', 'rank_group' => 1, 'rank_absolute' => 1, 'domain' => 'google.com', 'url' => $goto('ZQHEIkXXTD'), 'breadcrumb' => 'https://cannalogia.org › uzgoj-konoplje', 'website_name' => 'Cannalogia', 'title' => 'Uzgoj konoplje'],
+                    ['type' => 'ai_overview', 'rank_group' => 1, 'rank_absolute' => 2, 'references' => [['url' => $goto('ref'), 'domain' => 'google.com', 'source' => 'Liberal.hr'], ['url' => 'https://www.hempatia.hr/blog', 'domain' => 'www.hempatia.hr']]],
+                    ['type' => 'organic', 'rank_group' => 2, 'rank_absolute' => 3, 'domain' => 'google.com', 'url' => $goto('lAEBxCJF13'), 'breadcrumb' => 'https://www.hempatia.hr › blog › post › gnojivo-za-uzgo...', 'website_name' => 'Hempatia'],
+                    ['type' => 'organic', 'rank_group' => 3, 'rank_absolute' => 4, 'domain' => 'google.com', 'url' => $goto('ZwHEIkXX_o'), 'breadcrumb' => "Više od 46,2\u{00A0}tis. pregleda  ·  prije 9 godina", 'website_name' => "YouTube\u{00A0}·\u{00A0}Uros Davidovic"],
+                    ['type' => 'organic', 'rank_group' => 4, 'rank_absolute' => 5, 'domain' => 'google.com', 'url' => $goto('tAEBxCJF17'), 'breadcrumb' => '1 reakcija  ·  prije 3 godine', 'website_name' => "Facebook\u{00A0}·\u{00A0}Proper Stuff HR"],
+                    ['type' => 'organic', 'rank_group' => 5, 'rank_absolute' => 6, 'domain' => 'google.com', 'url' => 'https://www.google.com/url?q=https://seeds.acme.test/autoflower&sa=U', 'breadcrumb' => null],
+                    ['type' => 'organic', 'rank_group' => 6, 'rank_absolute' => 7, 'domain' => 'www.google.com', 'url' => 'https://www.google.com/amp/s/news.example.test/story', 'breadcrumb' => null],
+                    ['type' => 'organic', 'rank_group' => 7, 'rank_absolute' => 8, 'domain' => 'translate.google.com', 'url' => 'https://translate.google.com/?sl=hr', 'breadcrumb' => 'https://translate.google.com'],
+                    ['type' => 'organic', 'rank_group' => 8, 'rank_absolute' => 9, 'domain' => 'google.com', 'url' => $goto('unknown'), 'breadcrumb' => 'Više od 180 pratitelja', 'website_name' => 'Some forum'],
+                    ['type' => 'organic', 'rank_group' => 9, 'rank_absolute' => 10, 'domain' => 'shop.acme.test', 'url' => $goto('withdomain'), 'breadcrumb' => null],
+                ],
+            ]],
+        ]]));
+
+        $snapshot = (new DataForSeoSerp($this->client, $this->store, $this->clock))->organic(self::WORKSPACE, null, 'uzgoj konoplje', new KeywordLocale(2191, 'hr'), SerpDevice::Desktop);
+
+        self::assertSame(
+            [[1, 'cannalogia.org', 'https://cannalogia.org/'], [2, 'www.hempatia.hr', 'https://www.hempatia.hr/'], [3, 'youtube.com', 'https://youtube.com/'], [4, 'facebook.com', 'https://facebook.com/'],
+                [5, 'seeds.acme.test', 'https://seeds.acme.test/autoflower'], [6, 'news.example.test', 'https://news.example.test/story'], [7, 'translate.google.com', 'https://translate.google.com/?sl=hr'], [9, 'shop.acme.test', 'https://shop.acme.test/']],
+            array_map(static fn($r): array => [$r->position, $r->domain, $r->url], $snapshot->organic),
+            'Redirect links resolve to their sites; one that cannot be traced is left out rather than credited to google.com.',
+        );
+        self::assertSame(9, $snapshot->positionOf('shop.acme.test'), 'A usable domain field wins over a redirect link.');
+        self::assertNotContains('google.com', array_map(static fn($r): string => $r->domain, $snapshot->organic), 'No result is credited to google.com because of a redirect.');
+        self::assertSame(['www.hempatia.hr'], array_map(static fn($r): string => $r->domain, $snapshot->aiOverview->references ?? []), 'An AI Overview source with an untraceable redirect is left out.');
+    }
+
     public function testSerpIsNormalizedWithFeaturesAndPositions(): void
     {
         $this->http->json('POST', 'https://api.dataforseo.com' . DataForSeoSerp::PATH, self::envelope(0.002, [[

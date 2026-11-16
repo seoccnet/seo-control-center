@@ -61,6 +61,8 @@ What the Rankings page shows:
 
 **Results-page changes** (*Research → Results-page changes*) shows what changed on the results pages of your tracked keywords between two checks on the same device, at most 14 days apart: features such as the AI Overview appearing or disappearing, tracked competitors entering or leaving the top 10 (and whether above you), new URLs of competitors or your own site, you entering, leaving or moving 5 places or more, and the kind of page Google ranks shifting. It counts the last 30 days, lists new URLs and keywords gained and lost per competitor, and can be filtered by change, keyword, domain or URL and dates. Everything comes from your stored checks; nothing extra is bought. A keyword needs two checks before changes appear; a missed check is a gap, not a change.
 
+Since November 2026 Google hides the page address of many results behind a redirect link, and DataForSEO passes that link on. SEOcc then takes the site from the result's breadcrumb or website name (1.3.1): positions and domains stay exact, but the ranking URL shown is the site's address rather than the exact page.
+
 ### Import keywords and ranking history
 
 Switching from another tool? *Rankings → Import history* (1.3.0) reads a CSV or TSV export from Ahrefs, Semrush, Moz, Search Console or a spreadsheet, so your history starts before SEOcc's first check. It needs *Edit projects*, costs nothing and starts no lookup.

@@ -84,15 +84,19 @@ final readonly class DataForSeoSerp implements SerpProvider
             if (!is_int($item['rank_group'] ?? null) || $item['rank_group'] < 1 || !is_string($item['url'] ?? null) || $item['url'] === '') {
                 throw new IntegrationException('DataForSEO returned an invalid organic ranking row. Previous rankings were retained.', false);
             }
-            $host = self::urlHost($item['url']);
-            if ($host === null) {
+            if (self::urlHost($item['url']) === null) {
                 throw new IntegrationException('DataForSEO returned an invalid organic result URL. Previous rankings were retained.', false);
+            }
+            $target = self::target($item);
+            if ($target === null) {
+                // A Google link SCC cannot trace back to a site: the position stays taken, but no domain is credited with it.
+                continue;
             }
             $organic[] = new SerpResult(
                 $item['rank_group'],
                 is_int($item['rank_absolute'] ?? null) ? $item['rank_absolute'] : $item['rank_group'],
-                $item['url'],
-                $host,
+                $target['url'],
+                $target['host'],
                 is_string($item['title'] ?? null) ? $item['title'] : null,
                 is_string($item['description'] ?? null) ? $item['description'] : null,
             );
@@ -128,16 +132,16 @@ final readonly class DataForSeoSerp implements SerpProvider
         $references = [];
         foreach ($lists as $list) {
             foreach ($list as $reference) {
-                if (!is_array($reference) || !is_string($reference['url'] ?? null) || isset($references[$reference['url']])) {
+                if (!is_array($reference) || !is_string($reference['url'] ?? null)) {
                     continue;
                 }
-                $domain = self::urlHost($reference['url']);
-                if ($domain === null) {
+                $target = self::target($reference);
+                if ($target === null || isset($references[$target['url']])) {
                     continue;
                 }
-                $references[$reference['url']] = new AiOverviewReference(
-                    mb_substr($reference['url'], 0, 2048),
-                    strtolower($domain),
+                $references[$target['url']] = new AiOverviewReference(
+                    mb_substr($target['url'], 0, 2048),
+                    $target['host'],
                     is_string($reference['title'] ?? null) ? mb_substr($reference['title'], 0, 300) : null,
                 );
                 if (count($references) >= AiOverview::MAX_REFERENCES) {
@@ -147,6 +151,83 @@ final readonly class DataForSeoSerp implements SerpProvider
         }
 
         return new AiOverview(array_values($references));
+    }
+
+    /** Sites Google names only by platform in a result's website name, as in "YouTube · Channel". */
+    private const array PLATFORMS = [
+        'youtube' => 'youtube.com', 'facebook' => 'facebook.com', 'instagram' => 'instagram.com', 'tiktok' => 'tiktok.com',
+        'reddit' => 'reddit.com', 'linkedin' => 'linkedin.com', 'pinterest' => 'pinterest.com', 'x' => 'x.com', 'twitter' => 'x.com',
+        'wikipedia' => 'wikipedia.org', 'quora' => 'quora.com', 'amazon' => 'amazon.com', 'medium' => 'medium.com', 'vimeo' => 'vimeo.com',
+    ];
+
+    /**
+     * The site a result links to (1.3.1). Normally its own URL. Since
+     * November 2026 DataForSEO reports many results with a Google redirect
+     * link instead (https://google.com/goto?url=<encrypted>, also /url?q=…
+     * and /amp/s/…), whose host is google.com. For those the site is read,
+     * in order, from a plain link inside the redirect, the result's domain
+     * field, the address in its breadcrumb ("https://site.test › page"), or a
+     * known platform in its website name ("YouTube · Channel"). The URL is
+     * then the site's address only, as Google hides the page. Real Google
+     * pages (translate.google.com, a google.com path other than a redirect)
+     * stay as they are.
+     *
+     * @param array<mixed> $item
+     * @return array{url: string, host: string}|null null for a Google redirect that cannot be traced to a site
+     */
+    private static function target(array $item): ?array
+    {
+        $url = is_string($item['url'] ?? null) ? $item['url'] : '';
+        $host = self::urlHost($url);
+        if ($host === null) {
+            return null;
+        }
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        $redirect = self::isGoogle($host) && (in_array($path, ['/goto', '/url'], true) || str_starts_with($path, '/amp/s/'));
+        if (!$redirect) {
+            return ['url' => $url, 'host' => $host];
+        }
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        foreach (['q', 'url'] as $key) {
+            $inner = is_string($query[$key] ?? null) ? $query[$key] : '';
+            $innerHost = self::urlHost($inner);
+            if ($innerHost !== null && !self::isGoogle($innerHost)) {
+                return ['url' => $inner, 'host' => $innerHost];
+            }
+        }
+        if (str_starts_with($path, '/amp/s/')) {
+            $amp = 'https://' . substr($path, 7);
+            $ampHost = self::urlHost($amp);
+            if ($ampHost !== null && !self::isGoogle($ampHost)) {
+                return ['url' => $amp, 'host' => $ampHost];
+            }
+        }
+        $domain = is_string($item['domain'] ?? null) ? strtolower(trim($item['domain'])) : '';
+        if (self::isHost($domain) && !self::isGoogle($domain)) {
+            return ['url' => 'https://' . $domain . '/', 'host' => $domain];
+        }
+        $breadcrumb = is_string($item['breadcrumb'] ?? null) ? trim($item['breadcrumb']) : '';
+        if (preg_match('#^(https?)://([^\s/›>]+)#u', $breadcrumb, $m) === 1 && self::isHost(strtolower($m[2])) && !self::isGoogle(strtolower($m[2]))) {
+            return ['url' => $m[1] . '://' . strtolower($m[2]) . '/', 'host' => strtolower($m[2])];
+        }
+        $name = is_string($item['website_name'] ?? null) ? $item['website_name'] : (is_string($item['source'] ?? null) ? $item['source'] : '');
+        $parts = preg_split('/[·|\-–]/u', (string) preg_replace('/[\s\x{00A0}]+/u', ' ', $name)) ?: [''];
+        $platform = mb_strtolower(trim($parts[0]));
+        if (isset(self::PLATFORMS[$platform])) {
+            return ['url' => 'https://' . self::PLATFORMS[$platform] . '/', 'host' => self::PLATFORMS[$platform]];
+        }
+
+        return null;
+    }
+
+    private static function isGoogle(string $host): bool
+    {
+        return preg_match('/(^|\.)google\.[a-z]{2,3}(\.[a-z]{2})?$/', $host) === 1;
+    }
+
+    private static function isHost(string $host): bool
+    {
+        return preg_match('/^(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/', $host) === 1;
     }
 
     private static function depth(int $depth): int

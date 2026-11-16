@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- **Fixed: rank checks found no positions and listed google.com as every top result.** Since November 2026 DataForSEO reports Google's organic results with a Google redirect link (`google.com/goto?url=…`) and the domain `google.com`, so every result was credited to google.com and no tracked domain was found. SCC now traces such links to the real site: a plain link inside the redirect, the result's domain, the address in its breadcrumb, or a known platform in its website name (YouTube, Facebook, Reddit and others). For these results the stored ranking URL is the site's address, because Google hides the page; positions and domains are exact. A redirect that cannot be traced is left out rather than counted for google.com. The same applies to AI Overview sources. Checks stored before this fix keep their empty positions until the next check of that keyword.
+
 ## [1.3.0] — 2026-11-16 — Site health, client links, ranking import and update check
 
 - **Optional update check** (ADR-053): under *System → Updates* an administrator can let SEOcc ask GitHub once a day for the latest release; administrators then see a top-bar notice when a newer version is out. Off by default; the request carries no data about the installation, and nothing is downloaded or installed automatically. `UPDATE_CHECK_REPOSITORY` points forks at their own repository. No migration.
