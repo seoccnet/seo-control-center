@@ -52,6 +52,25 @@ final class BacklinksModule implements Module, ProvidesJobs
             $c->make(Clock::class),
         ));
         $container->singleton(BacklinksScheduler::class, static fn(Container $c): BacklinksScheduler => new BacklinksJobs($c->make(Queue::class)));
+        $container->singleton(LinkTargetRepository::class, static fn(Container $c): LinkTargetRepository => new Persistence\PdoLinkTargetRepository($c->make(Connection::class), $c->make(Clock::class)));
+        $container->singleton(LinkReclamationService::class, static fn(Container $c): LinkReclamationService => new LinkReclamationService(
+            $c->make(ResearchRepository::class),
+            $c->make(LinkTargetRepository::class),
+            $c->make(BacklinksScheduler::class),
+            $c->make(\SeoControlCenter\Modules\SiteMigration\UrlProbe::class),
+            $c->make(\SeoControlCenter\Domain\SearchConsole\SearchPerformanceReader::class),
+            $c->make(ProjectService::class),
+            $c->make(ProjectRepository::class),
+            $c->make(FeatureManager::class),
+            $c->make(AuditLogger::class),
+            $c->make(Clock::class),
+        ));
+        $container->singleton(Controllers\LinkReclamationController::class, static fn(Container $c): Controllers\LinkReclamationController => new Controllers\LinkReclamationController(
+            $c->make(LinkReclamationService::class),
+            $c->make(ProjectService::class),
+            $c->make(ResponseFactory::class),
+            $c->make(ViewRenderer::class),
+        ));
         $container->singleton(BacklinksService::class, static fn(Container $c): BacklinksService => new BacklinksService(
             $c->make(ResearchRepository::class),
             $c->make(BacklinksScheduler::class),
@@ -65,6 +84,7 @@ final class BacklinksModule implements Module, ProvidesJobs
             $c->make(AuditLogger::class),
             $c->make(Clock::class),
             $c->make(LoggerInterface::class),
+            $c->make(LinkReclamationService::class),
         ));
         $container->singleton(BacklinksController::class, static fn(Container $c): BacklinksController => new BacklinksController(
             $c->make(BacklinksService::class),
@@ -81,13 +101,16 @@ final class BacklinksModule implements Module, ProvidesJobs
         $routes->post($base . '/fetch', BacklinksController::class, 'fetch');
         $routes->post($base . '/monthly', BacklinksController::class, 'monthly');
         $routes->post($base . '/monitoring', BacklinksController::class, 'monitoring');
+        $routes->get($base . '/reclaim', Controllers\LinkReclamationController::class, 'show', 'projects.backlinks.reclaim');
+        $routes->post($base . '/reclaim', Controllers\LinkReclamationController::class, 'check', 'projects.backlinks.reclaim.check');
     }
 
     public function registerJobs(JobRegistry $jobs, Container $container): void
     {
         $jobs->register(BacklinksJobs::FETCH, static fn(): FetchBacklinksJob => new FetchBacklinksJob($container->make(BacklinksService::class), $container->make(Connection::class)));
         $jobs->register(BacklinksJobs::SCHEDULE, static fn(): ScheduleBacklinkChecksJob => new ScheduleBacklinkChecksJob($container->make(BacklinksService::class)));
-        foreach ([BacklinksJobs::FETCH, BacklinksJobs::SCHEDULE] as $type) {
+        $jobs->register(BacklinksJobs::TARGETS, static fn(): Jobs\CheckLinkTargetsJob => new Jobs\CheckLinkTargetsJob($container->make(LinkReclamationService::class), $container->make(Connection::class)));
+        foreach ([BacklinksJobs::FETCH, BacklinksJobs::SCHEDULE, BacklinksJobs::TARGETS] as $type) {
             $jobs->requireFeature($type, Feature::Backlinks);
         }
     }

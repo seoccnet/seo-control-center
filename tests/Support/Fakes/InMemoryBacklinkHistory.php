@@ -58,6 +58,11 @@ final class InMemoryBacklinkHistory implements BacklinkHistory, BacklinksSchedul
         $this->queued[] = ['projectId' => $projectId, 'workspaceId' => $workspaceId, 'kind' => $kind];
     }
 
+    public function checkTargets(int $projectId, int $workspaceId): void
+    {
+        $this->queued[] = ['projectId' => $projectId, 'workspaceId' => $workspaceId, 'kind' => 'targets'];
+    }
+
     public function isMonthly(int $projectId): bool
     {
         return $this->settings[$projectId]['monthly'] ?? false;

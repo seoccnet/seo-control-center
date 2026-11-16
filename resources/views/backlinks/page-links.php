@@ -18,7 +18,7 @@ $self = '/projects/' . $project->publicId . '/backlinks';
 <?php foreach (['bl_links' => 'Live links by page', 'bl_lost_links' => 'Lost links by page'] as $kind => $label): ?>
 <section class="card" id="<?= $view->e($kind) ?>">
     <div class="card-header"><h2><?= $view->e($label) ?></h2><?= $button($kind, 'Fetch ' . ($kind === 'bl_links' ? 'page links' : 'lost page links')) ?></div>
-    <p class="muted">A sample of up to 1,000 links<?= $kind === 'bl_lost_links' ? ' lost in the last 30 days' : ', strongest domains first' ?>. Open a target URL to see all its stored evidence.</p>
+    <p class="muted">A sample of up to 1,000 links<?= $kind === 'bl_lost_links' ? ' lost in the last 30 days' : ', strongest domains first' ?>. Open a target URL to see all its stored evidence.<?php if ($kind === 'bl_links'): ?> <a href="<?= $view->e($self . '/reclaim') ?>">Links to missing pages</a><?php endif; ?></p>
     <?= $status($results[$kind] ?? null) ?>
     <div class="table-scroll"><table class="table table-dense"><thead><tr><th scope="col">Source URL</th><th scope="col">Target URL</th><th scope="col">Anchor</th><th scope="col">Rank</th><th scope="col">Follow</th><th scope="col">Lost on</th></tr></thead><tbody>
     <?php foreach (($results[$kind]?->pageLinks() ?? []) as $link): ?><tr><td><?= $view->e($link->sourceUrl) ?></td><td><a href="<?= $view->e('/projects/' . $project->publicId . '/pages/details?url=' . rawurlencode($link->targetUrl)) ?>"><?= $view->e($link->targetUrl) ?></a></td><td><?= $view->e($link->anchor) ?></td><td><?= $view->e($link->domainRank ?? '—') ?></td><td><?= $link->dofollow ? 'Yes' : 'No' ?></td><td><?= $view->e($link->lostOn ?? '—') ?></td></tr><?php endforeach; ?>

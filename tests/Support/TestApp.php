@@ -209,6 +209,9 @@ final class TestApp
         $container->instance(InMemoryBacklinkHistory::class, $backlinkHistory);
         $container->instance(BacklinkHistory::class, $backlinkHistory);
         $container->instance(BacklinksScheduler::class, $backlinkHistory);
+        $linkTargets = new \SeoControlCenter\Tests\Support\Fakes\InMemoryLinkTargets($container->make(Clock::class));
+        $container->instance(\SeoControlCenter\Tests\Support\Fakes\InMemoryLinkTargets::class, $linkTargets);
+        $container->instance(\SeoControlCenter\Modules\Backlinks\LinkTargetRepository::class, $linkTargets);
         $assistant = new InMemoryAssistant($container->make(Clock::class));
         $container->instance(InMemoryAssistant::class, $assistant);
         $container->instance(AssistantSettingsRepository::class, $assistant);

@@ -58,6 +58,7 @@ final readonly class BacklinksService
         private AuditLogger $audit,
         private Clock $clock,
         private LoggerInterface $logger,
+        private ?LinkReclamationService $reclamation = null,
     ) {}
 
     /**
@@ -236,6 +237,10 @@ final readonly class BacklinksService
         }
         if ($kind === 'bl_lost_links') {
             $this->history->recordLostCheck($projectId, $this->clock->now()->format('Y-m-d'));
+        }
+        if ($kind === 'bl_links' && $rows !== [] && $this->features->enabled(Feature::SiteAudit)) {
+            // New links: check whether the pages they point to still exist (1.5.0, no provider cost).
+            $this->reclamation?->queue($projectId, $workspaceId);
         }
         if ($kind === 'bl_profiles' && $profiles !== []) {
             $this->history->record($projectId, $workspaceId, $this->clock->now()->format('Y-m-d'), $profiles);
