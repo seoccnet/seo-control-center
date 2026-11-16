@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.6.0] — 2026-11-16 — Google update impact, mobile vs desktop, competitor watch, snippet preview, new queries, brand mentions
 
 - **Google update impact** (*Performance → Google updates*). For every confirmed Google ranking update within your imported Search Console data: clicks, impressions and position in the four weeks before the rollout against the four weeks after it, with the rollout itself left out. Open an update to see the pages and queries that gained and lost most (among the 500 with the most clicks in each period). Updates still rolling out, without four weeks of data afterwards, or with missing days are marked as such. Stored data only.
 - **Mobile and desktop together.** *Rankings → Tracking settings* can also check the other device. The primary device still drives the dashboard, competitors, results-page changes and alerts; *Rankings → Mobile vs desktop* lists keywords ranking 5 or more places apart, or on one device only. It doubles the cost per check, which the estimate shows.

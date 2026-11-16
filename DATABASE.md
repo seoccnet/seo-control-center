@@ -1,6 +1,6 @@
 # Database Design
 
-## Devices, competitor watch and brand mentions (Unreleased, migrations 2026_11_16_000800–001000)
+## Devices, competitor watch and brand mentions (1.6.0, migrations 2026_11_16_000800–001000)
 
 - `project_ranking_settings.both_devices` (TINYINT(1), default 0): each check also covers the device other than `device`, which stays the primary one.
 - `competitor_watch` — one row per project: `workspace_id`, `enabled` (opt-in), `updated_at`. `competitor_sitemaps` — one row per competitor (cascade): `project_id`, `checked_on`, `baseline_on` (the first successful read), `urls`, `capped`, `error` (255). `competitor_pages` — per competitor and SHA-256 of the URL (PK): `project_id`, `url` (2,048), `first_seen` (NULL for pages of the baseline), `removed_on` (set when a complete later read no longer lists it, cleared when it returns); indexed by project and either date. All cascade on project and competitor deletion.
