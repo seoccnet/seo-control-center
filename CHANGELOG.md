@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.7.0] — 2026-11-19 — Title rewrites, orphan pages, pages to prune, year over year, volatility, disavow file
 
 - **Titles Google rewrites** (*Site audit → Titles Google rewrites*). Rank checks now record the title Google shows for your own result. The page compares it with the page's title from the latest audit and sorts each into *rewritten* (with the share of words Google kept), *no title*, *site name changed* or *cut*, with the searches it was shown for. Google can show different titles for different searches; each appears. Titles are recorded from this version on, on the tracked device, for the last 90 days.
 - **Orphan pages** (*Site audit → Orphan pages*). Pages with Search Console impressions in the last 90 days that no page of the latest audit links to: found only through the sitemap, or not reached at all. When the audit stopped at its page limit, unreached pages are listed separately as uncertain. Only the hosts and scheme the audit crawled count.
