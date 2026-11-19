@@ -100,6 +100,10 @@ WordPress queues notifications for public content changes, permalink changes and
 
 **Performance → New queries** (1.6.0) lists searches your site started to appear for: impressions in the latest 7, 28 or 90 days and none in the period before. *First time* means none in the year before either; *back after a break* means the query was seen earlier. Tick queries and **Track selected as keywords** to rank-track them in your usual market.
 
+### Year over year
+
+**Compare with: Last year** on the Performance page (1.7.0) compares the selected range with the same weeks 52 weeks earlier, so weekdays line up, and lists the queries and pages that gained and lost most clicks. Use it for seasonal sites, where the weeks before say little. SEOcc imports up to 16 months, so it works for ranges up to about three months.
+
 ## Good to know
 
 - **Totals versus rows:** the query and page tables leave out anonymised queries, as Search Console does, so they add up to less than the totals.

@@ -1,5 +1,10 @@
 # Database Design
 
+## Shown titles and disavow list (Unreleased, migrations 2026_11_19_000100–000200)
+
+- `ranking_snapshots.shown_title` (VARCHAR(300), NULL): the title Google showed for the project's own result in that check; NULL without an own result and for checks before 1.7.0.
+- `backlink_disavows` — per project and domain (PK, ASCII, 253): `workspace_id`, `spam_score` (TINYINT, the score when added, NULL when unknown), `added_by` (SET NULL), `added_at`. At most 5,000 domains per project. Cascades on project deletion.
+
 ## Devices, competitor watch and brand mentions (1.6.0, migrations 2026_11_16_000800–001000)
 
 - `project_ranking_settings.both_devices` (TINYINT(1), default 0): each check also covers the device other than `device`, which stays the primary one.

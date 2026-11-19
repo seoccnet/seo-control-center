@@ -76,6 +76,10 @@ It costs nothing extra: the details come with every rank check. Checks before 1.
 
 Tick **Also check the other device** in the tracking settings (1.6.0) to check every keyword on both. The device you choose stays the primary one for the dashboard, competitors and alerts. **Rankings → Mobile vs desktop** lists keywords ranking 5 or more places apart, or on one device only. Large mobile gaps usually point at the mobile page: layout, speed, pop-ups or content hidden on small screens. Checking both devices doubles the cost of each check.
 
+### Volatility
+
+**Rankings → Volatility** (1.7.0) shows, for every check of the last 90 days, how far your tracked keywords moved since their previous check, rated against the project's usual movement: *calm*, *moving* (1.5 times usual) or *turbulent* (2.5 times). Google updates rolling out on a day are named. When most keywords move at once, the cause is usually Google; when few move, look at those pages. Positions beyond 20 count as 21, and imported history is left out.
+
 ### Google updates on the charts
 
 Line charts shade Google's confirmed ranking updates (1.5.0) and name them under the chart, so a drop during a core update is not mistaken for the effect of your own change. The list comes from the Google Search Status Dashboard and ships with each SEOcc release; an update announced later appears after the next update of SEOcc.
@@ -151,6 +155,10 @@ Google ranks local businesses by distance, so your position changes across a cit
 ### Unlinked brand mentions
 
 **Unlinked brand mentions** (1.6.0) on the Backlinks page searches DataForSEO's content index for up to 100 sites that name your brand, one page per site, strongest first (about $0.03 per lookup). Enter the name as people write it. With the referring domains fetched, each site shows whether it already links to you; the ones marked **No** are the easiest links to ask for: thank them for the mention and ask them to link it. Read the page first, as namesakes match too.
+
+### Disavow file
+
+**Backlinks → Disavow file** (1.7.0) lists the stored referring domains with a spam score of 30 or more (or all of them), lets editors keep a disavow list and downloads it in Google's format, to upload in Search Console's disavow tool yourself. Google ignores most spammy links by itself; disavow only after a manual action for unnatural links, or for paid links you cannot get removed. Each upload replaces the previous file, so the download always contains the whole list.
 
 ### Links to missing pages
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+- **Titles Google rewrites** (*Site audit → Titles Google rewrites*). Rank checks now record the title Google shows for your own result. The page compares it with the page's title from the latest audit and sorts each into *rewritten* (with the share of words Google kept), *no title*, *site name changed* or *cut*, with the searches it was shown for. Google can show different titles for different searches; each appears. Titles are recorded from this version on, on the tracked device, for the last 90 days.
+- **Orphan pages** (*Site audit → Orphan pages*). Pages with Search Console impressions in the last 90 days that no page of the latest audit links to: found only through the sitemap, or not reached at all. When the audit stopped at its page limit, unreached pages are listed separately as uncertain. Only the hosts and scheme the audit crawled count.
+- **Pages to prune** (*Site audit → Pages to prune*). Indexable pages of the latest audit without a single Search Console impression in up to a year (at least 90 days of data needed), each with a suggestion: *merge or remove* (under 200 words), *redirect* (has backlinks in the stored sample) or *improve or noindex*. The start page, pages canonicalised elsewhere, later listing pages and pages missing from the oldest kept audit (new) are left out. CSV export. SEOcc changes nothing on the site.
+- **Year over year** (*Performance*). *Compare with: Last year* compares the range with the same weeks 52 weeks earlier (same weekdays) and lists the queries and pages that gained and lost most clicks against last year. Needs the earlier weeks imported, so it works for ranges up to about three months.
+- **Ranking volatility** (*Rankings → Volatility*). For each check of the last 90 days, how far tracked keywords moved since their previous check (at most 8 days earlier; positions beyond 20 count as 21; imported history left out), rated *calm*, *moving* or *turbulent* against the project's usual movement, with the Google updates rolling out that day. Stored data only.
+- **Disavow file** (*Backlinks → Disavow file*). Reviews the stored referring domains by spam score (30 or more by default), keeps a per-project disavow list (editors; tick domains or type them) and downloads it in Google's `domain:` format. SEOcc never uploads it; the page says when a disavow file is worth using.
+- **Lost backlink alerts name the pages.** With a recent lost-links sample, each strong lost domain in the alert lists the pages of yours it linked to.
+- **Migrations:** `2026_11_19_000100` adds `ranking_snapshots.shown_title`; `2026_11_19_000200` creates `backlink_disavows`. No dependency added.
+
 ## [1.6.0] — 2026-11-16 — Google update impact, mobile vs desktop, competitor watch, snippet preview, new queries, brand mentions
 
 - **Google update impact** (*Performance → Google updates*). For every confirmed Google ranking update within your imported Search Console data: clicks, impressions and position in the four weeks before the rollout against the four weeks after it, with the rollout itself left out. Open an update to see the pages and queries that gained and lost most (among the 500 with the most clicks in each period). Updates still rolling out, without four weeks of data afterwards, or with missing days are marked as such. Stored data only.

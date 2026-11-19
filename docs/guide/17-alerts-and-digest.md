@@ -31,7 +31,7 @@ Project editors can expand a project under **Project alert sensitivity** and cho
 - Traffic drop: 1–100%, default 30%.
 - Minimum clicks in the previous seven days: 1–1,000,000, default 100.
 - Ranking cutoff: top 1–100, default top 10. An alert means a keyword left this group between checks.
-- Minimum lost-link domain rank: 0–100, default 30. Unknown domain ranks are excluded.
+- Minimum lost-link domain rank: 0–100, default 30. Unknown domain ranks are excluded. With a recent lost-links sample (weekly lost-link monitoring), the alert names the pages each lost domain linked to (1.7.0).
 
 These settings apply to all recipients of the project, starting with the next hourly scan. Existing alerts and their once-per-event history remain intact. Audit-error and budget rules are unchanged.
 

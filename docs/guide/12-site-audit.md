@@ -93,6 +93,18 @@ Sizes come from the same small range request that checks the image; nothing more
 
 Title, description, heading and text checks apply only to pages that are meant to be indexed. The pages of a paginated listing (`?page=2`, `?page=3`, …) usually share a title, so they count as one page for duplicate titles and descriptions. Pages with *noindex*, or with a canonical tag pointing to another address, are listed once as such and not checked further.
 
+### Titles Google rewrites
+
+**Titles Google rewrites** (1.7.0) compares the title Google showed for your pages in the rank checks of the last 90 days with the title each page has in the latest audit. *Rewritten* means Google wrote its own title; the share of its words taken from yours shows how far it went. Google usually does this when a title is too long, repeats keywords, is vague or does not match the page; write a title close to the page's main heading. *Site name changed* is usually harmless, *cut* means the title is too wide (see the snippet preview). Google can show different titles for different searches, so a page may appear more than once. Rank checks record these titles from version 1.7.0 on.
+
+### Orphan pages
+
+**Orphan pages** (1.7.0) lists pages Google showed in the last 90 days (Search Console) that no page of the latest audit links to. Link to the ones worth keeping from a related page, and redirect old ones. When the audit stopped at its page limit, pages it never reached are listed as uncertain: they may be linked from pages beyond the limit.
+
+### Pages to prune
+
+**Pages to prune** (1.7.0) lists indexable pages without a single Search Console impression in up to a year, each with a suggestion: *merge or remove* for short pages, *redirect* for pages with backlinks in the stored sample, *improve or noindex* for the rest. New pages (not in the oldest kept audit), the start page, pages canonicalised elsewhere and later listing pages are left out. Pages people reach in other ways (contact, legal, campaigns) need no searches: keep them. Plan the redirects in *Site migration*. The list can be exported as CSV.
+
 ## Reading the results
 
 - **Health score:** 100 means that no checked page has an error or a warning. Pages with an error count fully against the score, and pages with warnings only count half. The arrow shows the change since the previous audit.
