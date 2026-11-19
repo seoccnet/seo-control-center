@@ -76,6 +76,7 @@ final class SiteAuditModule implements Module, ProvidesJobs
                 $c->make(\SeoControlCenter\Domain\SearchConsole\SearchPerformanceReader::class),
                 $c->has(\SeoControlCenter\Modules\Research\ResearchRepository::class) ? $c->make(\SeoControlCenter\Modules\Research\ResearchRepository::class) : null,
             ),
+            new LinkStrengthService($c->make(SiteAuditRepository::class), $c->make(\SeoControlCenter\Domain\SearchConsole\SearchPerformanceReader::class)),
             $c->make(ProjectService::class),
             $c->make(ResponseFactory::class),
             $c->make(ViewRenderer::class),
@@ -142,6 +143,7 @@ final class SiteAuditModule implements Module, ProvidesJobs
         $routes->get($base . '/title-rewrites', Controllers\TitleRewriteController::class, 'show', 'projects.audit.title_rewrites');
         $routes->get($base . '/orphans', Controllers\PageCleanupController::class, 'orphans', 'projects.audit.orphans');
         $routes->get($base . '/prune', Controllers\PageCleanupController::class, 'prune', 'projects.audit.prune');
+        $routes->get($base . '/link-strength', Controllers\PageCleanupController::class, 'strength', 'projects.audit.strength');
         $routes->get($audit, SiteAuditController::class, 'show', 'projects.audit.show');
         $routes->get($audit . '/pages', SiteAuditController::class, 'pages', 'projects.audit.pages');
         $routes->get($audit . '/export', SiteAuditController::class, 'export', 'projects.audit.export');

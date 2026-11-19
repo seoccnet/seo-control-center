@@ -55,6 +55,13 @@ interface CompetitorRepository
     public function days(int $projectId, SerpDevice $device, string $date): array;
 
     /**
+     * Visibility of each competitor per day between two dates (1.8.0).
+     *
+     * @return array<string, array<int, float>> date => competitor ID => visibility
+     */
+    public function visibilityHistory(int $projectId, SerpDevice $device, string $from, string $to): array;
+
+    /**
      * The project's and the competitor's positions per keyword on a day.
      *
      * @return list<KeywordComparison>

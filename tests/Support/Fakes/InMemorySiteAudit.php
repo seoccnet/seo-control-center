@@ -322,6 +322,11 @@ final class InMemorySiteAudit implements SiteAuditRepository, SiteAuditScheduler
         return array_intersect_key($this->pages[$auditId] ?? [], array_flip($pageIds));
     }
 
+    public function links(int $auditId): array
+    {
+        return array_values($this->links[$auditId] ?? []);
+    }
+
     public function linkSources(int $auditId, int $pageId, int $limit): array
     {
         $urls = [];

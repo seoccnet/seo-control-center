@@ -220,6 +220,12 @@ final class TestApp
         $disavows = new Fakes\InMemoryDisavows($container->make(Clock::class));
         $container->instance(Fakes\InMemoryDisavows::class, $disavows);
         $container->instance(\SeoControlCenter\Modules\Backlinks\DisavowRepository::class, $disavows);
+        $outreach = new Fakes\InMemoryOutreach($container->make(Clock::class));
+        $container->instance(Fakes\InMemoryOutreach::class, $outreach);
+        $container->instance(\SeoControlCenter\Modules\Backlinks\OutreachRepository::class, $outreach);
+        $keywordTargets = new Fakes\InMemoryKeywordTargets($keywords);
+        $container->instance(Fakes\InMemoryKeywordTargets::class, $keywordTargets);
+        $container->instance(\SeoControlCenter\Modules\Rankings\KeywordTargetRepository::class, $keywordTargets);
         $assistant = new InMemoryAssistant($container->make(Clock::class));
         $container->instance(InMemoryAssistant::class, $assistant);
         $container->instance(AssistantSettingsRepository::class, $assistant);

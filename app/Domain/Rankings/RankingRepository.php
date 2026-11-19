@@ -97,6 +97,14 @@ interface RankingRepository
     public function shownTitles(int $projectId, SerpDevice $device, string $since, int $limit): array;
 
     /**
+     * Every check of every keyword of the project since $since, oldest first,
+     * with the keyword's search volume when known (1.8.0).
+     *
+     * @return array<string, array{keyword: string, volume: ?int, checks: list<array{date: string, position: ?int, url: ?string}>}> keyword public ID =>
+     */
+    public function urlHistory(int $projectId, int $workspaceId, SerpDevice $device, string $since): array;
+
+    /**
      * Per check day since $since: how far checked (not imported) keywords
      * moved since their previous check on the device at most 8 days earlier,
      * positions beyond 20 counted as 21 and pairs outside the top 20 on both

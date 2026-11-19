@@ -57,6 +57,7 @@ if ($link !== null && $canImport) {
     <?= $view->partial('partials/performance-sources', ['base' => $base, 'current' => 'google']) ?>
     <a class="button button-ghost button-small" href="<?= $view->e($base . '/performance/updates') ?>">Google updates</a>
     <a class="button button-ghost button-small" href="<?= $view->e($base . '/performance/new-queries') ?>">New queries</a>
+    <a class="button button-ghost button-small" href="<?= $view->e($base . '/performance/decline') ?>">Slow decline</a>
     <?php if ($data !== null): ?>
         <?= $view->partial('partials/range-picker', ['ranges' => $ranges, 'current' => $rangeKey, 'href' => $base . '/performance', 'keep' => $compare === 'year' ? ['compare' => 'year'] : []]) ?>
         <nav class="segmented" aria-label="Compare with">

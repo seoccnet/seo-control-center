@@ -32,6 +32,16 @@ interface SearchPerformanceReader
     public function compared(int $projectId, PerformanceDimension $dimension, DateRange $range, int $limit, ?DateRange $earlier = null): array;
 
     /**
+     * Queries or pages with clicks in the first of several periods, with
+     * their metrics in each period, most clicks in the first period first
+     * (1.8.0: slow decline). Periods must be in order and not overlap.
+     *
+     * @param list<DateRange> $periods
+     * @return list<array{key: string, periods: list<Metrics>}>
+     */
+    public function periods(int $projectId, PerformanceDimension $dimension, array $periods, int $limit): array;
+
+    /**
      * @return array{first: string, last: string}|null imported date span
      */
     public function dataSpan(int $projectId): ?array;

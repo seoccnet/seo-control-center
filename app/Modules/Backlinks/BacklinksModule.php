@@ -65,6 +65,14 @@ final class BacklinksModule implements Module, ProvidesJobs
             $c->make(AuditLogger::class),
             $c->make(Clock::class),
         ));
+        // Link outreach tracker (1.8.0).
+        $container->singleton(OutreachRepository::class, static fn(Container $c): OutreachRepository => new Persistence\PdoOutreachRepository($c->make(Connection::class), $c->make(Clock::class)));
+        $container->singleton(Controllers\OutreachController::class, static fn(Container $c): Controllers\OutreachController => new Controllers\OutreachController(
+            new OutreachService($c->make(OutreachRepository::class), $c->make(ResearchRepository::class), $c->make(LinkReclamationService::class), $c->make(DisavowRepository::class), $c->make(ProjectService::class)),
+            $c->make(ProjectService::class),
+            $c->make(ResponseFactory::class),
+            $c->make(ViewRenderer::class),
+        ));
         // Disavow file builder (1.7.0).
         $container->singleton(DisavowRepository::class, static fn(Container $c): DisavowRepository => new Persistence\PdoDisavowRepository($c->make(Connection::class), $c->make(Clock::class)));
         $container->singleton(Controllers\DisavowController::class, static fn(Container $c): Controllers\DisavowController => new Controllers\DisavowController(
@@ -112,6 +120,8 @@ final class BacklinksModule implements Module, ProvidesJobs
         $routes->get($base . '/reclaim', Controllers\LinkReclamationController::class, 'show', 'projects.backlinks.reclaim');
         $routes->post($base . '/reclaim', Controllers\LinkReclamationController::class, 'check', 'projects.backlinks.reclaim.check');
         $routes->get($base . '/disavow', Controllers\DisavowController::class, 'show', 'projects.backlinks.disavow');
+        $routes->get($base . '/outreach', Controllers\OutreachController::class, 'show', 'projects.backlinks.outreach');
+        $routes->post($base . '/outreach', Controllers\OutreachController::class, 'update', 'projects.backlinks.outreach.update');
         $routes->post($base . '/disavow', Controllers\DisavowController::class, 'update', 'projects.backlinks.disavow.update');
         $routes->get($base . '/disavow/file', Controllers\DisavowController::class, 'file', 'projects.backlinks.disavow.file');
     }

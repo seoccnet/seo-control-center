@@ -134,6 +134,21 @@ final class InMemoryCompetitors implements CompetitorRepository
         return $days;
     }
 
+    public function visibilityHistory(int $projectId, SerpDevice $device, string $from, string $to): array
+    {
+        $history = [];
+        foreach ($this->forProject($projectId) as $c) {
+            foreach ($this->days as $key => $day) {
+                if (str_starts_with($key, $c->id . ':' . $device->value . ':') && $day->date >= $from && $day->date <= $to) {
+                    $history[$day->date][$c->id] = $day->visibility;
+                }
+            }
+        }
+        ksort($history);
+
+        return $history;
+    }
+
     public function compare(int $projectId, int $workspaceId, int $competitorId, SerpDevice $device, string $date): array
     {
         $result = [];

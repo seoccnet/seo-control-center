@@ -84,6 +84,16 @@ final class CompetitorsModule implements Module, ProvidesJobs
             $c->make(ResponseFactory::class),
             $c->make(ViewRenderer::class),
         ));
+        $container->singleton(ShareOfVoiceService::class, static fn(Container $c): ShareOfVoiceService => new ShareOfVoiceService(
+            $c->make(CompetitorRepository::class),
+            $c->make(RankingRepository::class),
+        ));
+        $container->singleton(Controllers\ShareOfVoiceController::class, static fn(Container $c): Controllers\ShareOfVoiceController => new Controllers\ShareOfVoiceController(
+            $c->make(ShareOfVoiceService::class),
+            $c->make(ProjectService::class),
+            $c->make(ResponseFactory::class),
+            $c->make(ViewRenderer::class),
+        ));
     }
 
     public function registerRoutes(RouteCollection $routes): void
@@ -94,6 +104,7 @@ final class CompetitorsModule implements Module, ProvidesJobs
         $routes->get($path, CompetitorsController::class, 'index', 'projects.competitors');
         $routes->post($path, CompetitorsController::class, 'add');
         $routes->get($path . '/new-pages', Controllers\CompetitorWatchController::class, 'show', 'projects.competitors.watch');
+        $routes->get($path . '/share-of-voice', Controllers\ShareOfVoiceController::class, 'show', 'projects.competitors.share');
         $routes->post($path . '/new-pages/watch', Controllers\CompetitorWatchController::class, 'toggle', 'projects.competitors.watch.toggle');
         $routes->get($path . $competitor, CompetitorsController::class, 'show', 'projects.competitors.show');
         $routes->post($path . $competitor . '/delete', CompetitorsController::class, 'remove');

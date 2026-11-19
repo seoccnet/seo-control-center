@@ -126,6 +126,13 @@ interface SiteAuditRepository
     public function linkSources(int $auditId, int $pageId, int $limit): array;
 
     /**
+     * Every internal link of the audit, page to page (1.8.0).
+     *
+     * @return list<array{0: int, 1: int}> from page ID, to page ID
+     */
+    public function links(int $auditId): array;
+
+    /**
      * @return list<AuditPage> fetched pages in URL order
      */
     public function pages(int $auditId, int $offset, int $limit): array;

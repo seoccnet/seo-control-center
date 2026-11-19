@@ -82,6 +82,20 @@ final class RankingsModule implements Module, ProvidesJobs
             $c->make(Clock::class),
             $c->make(\SeoControlCenter\Modules\Annotations\AnnotationService::class),
         ));
+        // Target page per keyword (1.8.0).
+        $container->singleton(KeywordTargetRepository::class, static fn(Container $c): KeywordTargetRepository => new Persistence\PdoKeywordTargetRepository($c->make(Connection::class), $c->make(Clock::class)));
+        $container->singleton(TargetPageService::class, static fn(Container $c): TargetPageService => new TargetPageService(
+            $c->make(RankingRepository::class),
+            $c->make(KeywordTargetRepository::class),
+            $c->make(ProjectService::class),
+            $c->make(Clock::class),
+        ));
+        $container->singleton(Controllers\TargetPageController::class, static fn(Container $c): Controllers\TargetPageController => new Controllers\TargetPageController(
+            $c->make(TargetPageService::class),
+            $c->make(ProjectService::class),
+            $c->make(ResponseFactory::class),
+            $c->make(ViewRenderer::class),
+        ));
         // Import of keyword lists and ranking history (1.3.0).
         $container->singleton(RankingImportStore::class, static fn(Container $c): RankingImportStore => new Persistence\PdoRankingImportStore($c->make(\SeoControlCenter\Core\Database\Connection::class), $c->make(Clock::class)));
         $container->singleton(RankingImportService::class, static fn(Container $c): RankingImportService => new RankingImportService(
@@ -107,6 +121,8 @@ final class RankingsModule implements Module, ProvidesJobs
         $routes->get($path . '/answers', RankingsController::class, 'answers', 'projects.rankings.answers');
         $routes->get($path . '/devices', RankingsController::class, 'devices', 'projects.rankings.devices');
         $routes->get($path . '/volatility', RankingsController::class, 'volatility', 'projects.rankings.volatility');
+        $routes->get($path . '/target-pages', Controllers\TargetPageController::class, 'show', 'projects.rankings.targets');
+        $routes->post($path . '/target-pages', Controllers\TargetPageController::class, 'update', 'projects.rankings.targets.save');
         $routes->get($path . '/import', Controllers\RankingImportController::class, 'show', 'projects.rankings.import');
         $routes->post($path . '/import', Controllers\RankingImportController::class, 'import', 'projects.rankings.import.save');
         $routes->get($path . '/{keyword:' . Uuid::ROUTE_PATTERN . '}', RankingsController::class, 'keyword', 'projects.rankings.keyword');

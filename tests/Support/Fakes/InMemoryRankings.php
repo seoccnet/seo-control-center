@@ -217,6 +217,25 @@ final class InMemoryRankings implements RankingRepository, RankCheckScheduler
         return $checks;
     }
 
+    public function urlHistory(int $projectId, int $workspaceId, SerpDevice $device, string $since): array
+    {
+        $history = [];
+        foreach ($this->keywords->keywords[$projectId] ?? [] as $keyword) {
+            $checks = [];
+            foreach ($this->snapshots as $s) {
+                if ($s->projectKeywordId === $keyword['id'] && $s->device === $device && $s->checkedOn >= $since) {
+                    $checks[] = ['date' => $s->checkedOn, 'position' => $s->position, 'url' => $s->url];
+                }
+            }
+            if ($checks !== []) {
+                usort($checks, static fn(array $a, array $b): int => strcmp($a['date'], $b['date']));
+                $history[$keyword['public_id']] = ['keyword' => $keyword['keyword'], 'volume' => null, 'checks' => $checks];
+            }
+        }
+
+        return $history;
+    }
+
     public function shownTitles(int $projectId, SerpDevice $device, string $since, int $limit): array
     {
         $rows = [];

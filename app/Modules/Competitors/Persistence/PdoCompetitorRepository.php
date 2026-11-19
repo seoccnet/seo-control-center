@@ -156,6 +156,23 @@ final readonly class PdoCompetitorRepository implements CompetitorRepository
         return $days;
     }
 
+    public function visibilityHistory(int $projectId, SerpDevice $device, string $from, string $to): array
+    {
+        $history = [];
+        foreach ($this->db->fetchAll(
+            'SELECT cd.competitor_id, cd.date, cd.visibility
+             FROM competitor_daily cd
+             JOIN competitors c ON c.id = cd.competitor_id AND c.project_id = ?
+             WHERE cd.device = ? AND cd.date BETWEEN ? AND ?
+             ORDER BY cd.date',
+            [$projectId, $device->value, $from, $to],
+        ) as $row) {
+            $history[(string) $row['date']][(int) $row['competitor_id']] = (float) $row['visibility'];
+        }
+
+        return $history;
+    }
+
     public function compare(int $projectId, int $workspaceId, int $competitorId, SerpDevice $device, string $date): array
     {
         $rows = $this->db->fetchAll(

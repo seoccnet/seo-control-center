@@ -459,6 +459,32 @@ final readonly class PdoRankingRepository implements RankingRepository
         ], $rows);
     }
 
+    public function urlHistory(int $projectId, int $workspaceId, SerpDevice $device, string $since): array
+    {
+        $history = [];
+        foreach ($this->db->fetchAll(
+            'SELECT pk.public_id, pk.keyword, km.search_volume, rs.checked_on, rs.position, rs.url
+             FROM ranking_snapshots rs
+             JOIN project_keywords pk ON pk.id = rs.project_keyword_id AND pk.project_id = rs.project_id
+             LEFT JOIN keyword_metrics km
+                 ON km.workspace_id = ? AND km.keyword_hash = pk.keyword_hash
+                AND km.location_code = pk.location_code AND km.language_code = pk.language_code
+             WHERE rs.project_id = ? AND rs.device = ? AND rs.checked_on >= ?
+             ORDER BY pk.id, rs.checked_on',
+            [$workspaceId, $projectId, $device->value, $since],
+        ) as $row) {
+            $id = (string) $row['public_id'];
+            $history[$id] ??= ['keyword' => (string) $row['keyword'], 'volume' => $row['search_volume'] !== null ? (int) $row['search_volume'] : null, 'checks' => []];
+            $history[$id]['checks'][] = [
+                'date' => (string) $row['checked_on'],
+                'position' => $row['position'] !== null ? (int) $row['position'] : null,
+                'url' => $row['url'] !== null ? (string) $row['url'] : null,
+            ];
+        }
+
+        return $history;
+    }
+
     public function volatility(int $projectId, SerpDevice $device, string $since): array
     {
         // Positions beyond 20 count as 21: movement far down the results is noise for this purpose.

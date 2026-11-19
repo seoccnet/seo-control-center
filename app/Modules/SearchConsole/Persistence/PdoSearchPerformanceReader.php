@@ -70,6 +70,55 @@ final readonly class PdoSearchPerformanceReader implements SearchPerformanceRead
         return ['total' => (int) ($rows[0]['total'] ?? 0), 'rows' => array_map(static fn(array $r): array => ['key' => (string) $r['k'], 'current' => $metrics($r, 'current'), 'previous' => $metrics($r, 'previous')], $rows)];
     }
 
+    public function periods(int $projectId, PerformanceDimension $dimension, array $periods, int $limit): array
+    {
+        [$table, $key, $dictionary, $column] = match ($dimension) {
+            PerformanceDimension::Query => ['queries', 'query_id', 'search_queries', 'query'],
+            PerformanceDimension::Page => ['pages', 'page_id', 'pages', 'url'],
+            default => throw new \InvalidArgumentException('Read queries or pages.'),
+        };
+        if ($periods === []) {
+            return [];
+        }
+        $sums = [];
+        $params = [];
+        foreach ($periods as $i => $period) {
+            if ($i > 0 && $periods[$i - 1]->toString() >= $period->fromString()) {
+                throw new \InvalidArgumentException('Periods must be in order and must not overlap.');
+            }
+            $sums[] = sprintf('SUM(CASE WHEN date BETWEEN ? AND ? THEN clicks ELSE 0 END) AS c%1$d,
+                SUM(CASE WHEN date BETWEEN ? AND ? THEN impressions ELSE 0 END) AS i%1$d,
+                SUM(CASE WHEN date BETWEEN ? AND ? THEN position * impressions ELSE 0 END) AS p%1$d', $i);
+            array_push($params, ...array_merge(...array_fill(0, 3, [$period->fromString(), $period->toString()])));
+        }
+        $sql = sprintf(
+            'SELECT d.%s AS k, t.* FROM (
+                SELECT %s AS id, %s FROM search_console_%s
+                WHERE project_id = ? AND date BETWEEN ? AND ?
+                GROUP BY %s HAVING c0 > 0 ORDER BY c0 DESC, id LIMIT %d
+            ) t JOIN %s d ON d.id = t.id AND d.project_id = ? ORDER BY t.c0 DESC, k',
+            $column,
+            $key,
+            implode(', ', $sums),
+            $table,
+            $key,
+            max(1, min(5000, $limit)),
+            $dictionary,
+        );
+        array_push($params, $projectId, $periods[0]->fromString(), $periods[count($periods) - 1]->toString(), $projectId);
+        $rows = [];
+        foreach ($this->db->fetchAll($sql, $params) as $r) {
+            $metrics = [];
+            foreach (array_keys($periods) as $i) {
+                $impressions = (int) $r['i' . $i];
+                $metrics[] = new Metrics((int) $r['c' . $i], $impressions, $impressions > 0 ? (float) $r['p' . $i] / $impressions : 0.0);
+            }
+            $rows[] = ['key' => (string) $r['k'], 'periods' => $metrics];
+        }
+
+        return $rows;
+    }
+
     public function coveredDates(int $projectId, DateRange $range): array
     {
         return array_map(static fn(array $r): string => (string) $r['date'], $this->db->fetchAll('SELECT date FROM search_console_import_days WHERE project_id = ? AND date BETWEEN ? AND ?

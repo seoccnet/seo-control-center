@@ -422,6 +422,16 @@ final readonly class PdoSiteAuditRepository implements SiteAuditRepository
         return $pages;
     }
 
+    public function links(int $auditId): array
+    {
+        $links = [];
+        foreach ($this->db->fetchAll('SELECT from_page_id, to_page_id FROM site_audit_links WHERE audit_id = ?', [$auditId]) as $row) {
+            $links[] = [(int) $row['from_page_id'], (int) $row['to_page_id']];
+        }
+
+        return $links;
+    }
+
     public function linkSources(int $auditId, int $pageId, int $limit): array
     {
         return array_map(

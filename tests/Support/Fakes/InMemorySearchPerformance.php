@@ -61,6 +61,27 @@ final class InMemorySearchPerformance implements SearchPerformanceStore, SearchP
         return count(array_filter(array_keys($dates), $range->contains(...)));
     }
 
+    public function periods(int $projectId, PerformanceDimension $dimension, array $periods, int $limit): array
+    {
+        if ($periods === []) {
+            return [];
+        }
+        $byPeriod = [];
+        foreach ($periods as $i => $period) {
+            $byPeriod[$i] = array_column($this->top($projectId, $dimension, $period, PHP_INT_MAX), null, 'key');
+        }
+        $rows = [];
+        foreach ($byPeriod[0] as $key => $row) {
+            if ($row->metrics->clicks === 0) {
+                continue;
+            }
+            $rows[] = ['key' => (string) $key, 'periods' => array_values(array_map(static fn(array $p): \SeoControlCenter\Domain\SearchConsole\Metrics => isset($p[$key]) ? $p[$key]->metrics : \SeoControlCenter\Domain\SearchConsole\Metrics::zero(), $byPeriod))];
+        }
+        usort($rows, static fn(array $a, array $b): int => [$b['periods'][0]->clicks, $a['key']] <=> [$a['periods'][0]->clicks, $b['key']]);
+
+        return array_slice($rows, 0, max(1, $limit));
+    }
+
     public function compared(int $projectId, PerformanceDimension $dimension, DateRange $range, int $limit, ?DateRange $earlier = null): array
     {
         $previous = array_column($this->top($projectId, $dimension, $earlier ?? $range->previous(), PHP_INT_MAX), null, 'key');

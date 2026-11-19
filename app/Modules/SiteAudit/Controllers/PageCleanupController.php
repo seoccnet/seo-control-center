@@ -11,6 +11,7 @@ use SeoControlCenter\Core\Http\ResponseFactory;
 use SeoControlCenter\Core\View\ViewRenderer;
 use SeoControlCenter\Domain\Projects\ProjectService;
 use SeoControlCenter\Modules\Shared\Http\WebContext;
+use SeoControlCenter\Modules\SiteAudit\LinkStrengthService;
 use SeoControlCenter\Modules\SiteAudit\OrphanPagesService;
 use SeoControlCenter\Modules\SiteAudit\PrunePagesService;
 
@@ -25,10 +26,23 @@ final readonly class PageCleanupController
     public function __construct(
         private OrphanPagesService $orphans,
         private PrunePagesService $prune,
+        private LinkStrengthService $strength,
         private ProjectService $projects,
         private ResponseFactory $responses,
         private ViewRenderer $views,
     ) {}
+
+    /** Internal link strength (1.8.0). */
+    public function strength(ServerRequestInterface $request): ResponseInterface
+    {
+        $project = $this->projects->get(WebContext::user($request), WebContext::workspace($request)->workspace(), WebContext::routeParam($request, 'project'));
+        $show = $request->getQueryParams()['show'] ?? '';
+
+        return $this->responses->html($this->views->render('site-audit/link-strength', [
+            'project' => $project,
+            ...$this->strength->report($project, is_string($show) ? $show : ''),
+        ], $request))->withHeader('Cache-Control', 'no-store');
+    }
 
     public function orphans(ServerRequestInterface $request): ResponseInterface
     {

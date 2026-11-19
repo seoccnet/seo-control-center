@@ -146,6 +146,12 @@ final class SearchConsoleModule implements Module, ProvidesJobs
             $c->make(SearchConsoleExtras::class),
             $c->make(Clock::class),
         ));
+        $container->singleton(Controllers\DeclineController::class, static fn(Container $c): Controllers\DeclineController => new Controllers\DeclineController(
+            new SlowDeclineService($c->make(SearchPerformanceReader::class)),
+            $c->make(ProjectService::class),
+            $c->make(ResponseFactory::class),
+            $c->make(ViewRenderer::class),
+        ));
         $container->singleton(Controllers\NewQueriesController::class, static fn(Container $c): Controllers\NewQueriesController => new Controllers\NewQueriesController(
             new NewQueriesService($c->make(SearchPerformanceReader::class), $c->make(\SeoControlCenter\Domain\Keywords\KeywordRepository::class), $c->make(ProjectService::class)),
             $c->make(ProjectService::class),
@@ -201,6 +207,7 @@ final class SearchConsoleModule implements Module, ProvidesJobs
         $routes->get('/projects/' . $project . '/performance/export', PerformanceController::class, 'export', 'projects.performance.export');
         $routes->get('/projects/' . $project . '/performance/updates', Controllers\UpdateImpactController::class, 'show', 'projects.performance.updates');
         $routes->get('/projects/' . $project . '/performance/new-queries', Controllers\NewQueriesController::class, 'show', 'projects.performance.new_queries');
+        $routes->get('/projects/' . $project . '/performance/decline', Controllers\DeclineController::class, 'show', 'projects.performance.decline');
     }
 
     public function registerJobs(JobRegistry $jobs, Container $container): void
