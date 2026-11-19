@@ -65,6 +65,14 @@ final class BacklinksModule implements Module, ProvidesJobs
             $c->make(AuditLogger::class),
             $c->make(Clock::class),
         ));
+        // Disavow file builder (1.7.0).
+        $container->singleton(DisavowRepository::class, static fn(Container $c): DisavowRepository => new Persistence\PdoDisavowRepository($c->make(Connection::class), $c->make(Clock::class)));
+        $container->singleton(Controllers\DisavowController::class, static fn(Container $c): Controllers\DisavowController => new Controllers\DisavowController(
+            new DisavowService($c->make(DisavowRepository::class), $c->make(ResearchRepository::class), $c->make(ProjectService::class), $c->make(AuditLogger::class), $c->make(Clock::class)),
+            $c->make(ProjectService::class),
+            $c->make(ResponseFactory::class),
+            $c->make(ViewRenderer::class),
+        ));
         $container->singleton(Controllers\LinkReclamationController::class, static fn(Container $c): Controllers\LinkReclamationController => new Controllers\LinkReclamationController(
             $c->make(LinkReclamationService::class),
             $c->make(ProjectService::class),
@@ -103,6 +111,9 @@ final class BacklinksModule implements Module, ProvidesJobs
         $routes->post($base . '/monitoring', BacklinksController::class, 'monitoring');
         $routes->get($base . '/reclaim', Controllers\LinkReclamationController::class, 'show', 'projects.backlinks.reclaim');
         $routes->post($base . '/reclaim', Controllers\LinkReclamationController::class, 'check', 'projects.backlinks.reclaim.check');
+        $routes->get($base . '/disavow', Controllers\DisavowController::class, 'show', 'projects.backlinks.disavow');
+        $routes->post($base . '/disavow', Controllers\DisavowController::class, 'update', 'projects.backlinks.disavow.update');
+        $routes->get($base . '/disavow/file', Controllers\DisavowController::class, 'file', 'projects.backlinks.disavow.file');
     }
 
     public function registerJobs(JobRegistry $jobs, Container $container): void

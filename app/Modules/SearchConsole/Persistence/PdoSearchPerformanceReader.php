@@ -35,7 +35,7 @@ final readonly class PdoSearchPerformanceReader implements SearchPerformanceRead
         ) covered', [$projectId, $range->fromString(), $range->toString(), $projectId, $range->fromString(), $range->toString()]);
     }
 
-    public function compared(int $projectId, PerformanceDimension $dimension, DateRange $range, int $limit): array
+    public function compared(int $projectId, PerformanceDimension $dimension, DateRange $range, int $limit, ?DateRange $earlier = null): array
     {
         [$table, $key, $dictionary, $column] = match ($dimension) {
             PerformanceDimension::Query => ['queries', 'query_id', 'search_queries', 'query'],
@@ -55,12 +55,16 @@ final readonly class PdoSearchPerformanceReader implements SearchPerformanceRead
                 SUM(CASE WHEN date < ? THEN clicks ELSE 0 END) AS previous_clicks,
                 SUM(CASE WHEN date < ? THEN impressions ELSE 0 END) AS previous_impressions,
                 SUM(CASE WHEN date < ? THEN position * impressions ELSE 0 END) AS previous_position_sum
-            FROM search_console_%s WHERE project_id = ? AND date BETWEEN ? AND ?
+            FROM search_console_%s WHERE project_id = ? AND (date BETWEEN ? AND ? OR date BETWEEN ? AND ?)
             GROUP BY %s HAVING MIN(date) < ? AND MAX(date) >= ?
         ) a) t JOIN %s d ON d.id = t.id AND d.project_id = ?
         ORDER BY direction_rank, ABS(current_clicks - previous_clicks) DESC, current_impressions DESC, k LIMIT %d', $column, $key, $table, $key, $dictionary, $limit);
         $start = $range->fromString();
-        $params = [$start, $start, $start, $start, $start, $start, $projectId, $range->previous()->fromString(), $range->toString(), $start, $start, $projectId];
+        $earlier ??= $range->previous();
+        if ($earlier->toString() >= $start) {
+            throw new \InvalidArgumentException('The earlier period must end before the range starts.');
+        }
+        $params = [$start, $start, $start, $start, $start, $start, $projectId, $earlier->fromString(), $earlier->toString(), $start, $range->toString(), $start, $start, $projectId];
         $rows = $this->db->fetchAll($sql, $params);
         $metrics = static fn(array $r, string $prefix): Metrics => new Metrics((int) $r[$prefix . '_clicks'], (int) $r[$prefix . '_impressions'], (float) $r[$prefix . '_impressions'] > 0 ? (float) $r[$prefix . '_position_sum'] / (float) $r[$prefix . '_impressions'] : 0.0);
         return ['total' => (int) ($rows[0]['total'] ?? 0), 'rows' => array_map(static fn(array $r): array => ['key' => (string) $r['k'], 'current' => $metrics($r, 'current'), 'previous' => $metrics($r, 'previous')], $rows)];

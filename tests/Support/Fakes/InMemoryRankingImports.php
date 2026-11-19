@@ -39,6 +39,7 @@ final class InMemoryRankingImports implements RankingImportStore
             }
             $this->rankings->snapshots[$key] = new RankSnapshot($r['keywordId'], $projectId, SerpDevice::from($r['device']), $r['date'], $r['position'], null, $r['url'], [], []);
             $this->imported[$key] = true;
+            $this->rankings->imported[$key] = true;
             ++$inserted;
         }
 

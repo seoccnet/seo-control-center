@@ -108,6 +108,17 @@ final class AlertDetectionTest extends TestCase
         self::assertSame('Acme Shop: 2 strong backlinks lost', $events[0]['title']);
         self::assertSame('news.test (domain rank 70), lost 2026-10-02', $events[0]['lines'][0]);
         self::assertSame('blog.test (domain rank 40), lost recently', $events[0]['lines'][1]);
+
+        // With a recent lost-links sample, each domain names the pages it linked to (1.7.0).
+        $research->queue($project->id, $project->workspaceId, 'bl_lost_links', '', [], null);
+        $research->complete($project->id, 'bl_lost_links', '', [
+            (new \SeoControlCenter\Domain\Backlinks\PageBacklink('https://www.news.test/a', 'https://shop.acme.test/coats', 'coats', 70, true, null, '2026-10-02'))->toArray(),
+            (new \SeoControlCenter\Domain\Backlinks\PageBacklink('https://news.test/b', 'https://shop.acme.test/', 'Acme', 70, true, null, '2026-10-02'))->toArray(),
+            (new \SeoControlCenter\Domain\Backlinks\PageBacklink('https://other.test/c', 'https://shop.acme.test/boots', 'boots', 20, true, null, '2026-10-02'))->toArray(),
+        ]);
+        $lines = $this->detect()[0]['lines'];
+        self::assertSame('news.test (domain rank 70), lost 2026-10-02 · it linked to /coats, /', $lines[0]);
+        self::assertSame('blog.test (domain rank 40), lost recently', $lines[1]);
     }
 
     /**

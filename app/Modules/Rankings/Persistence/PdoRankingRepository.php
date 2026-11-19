@@ -23,6 +23,8 @@ final readonly class PdoRankingRepository implements RankingRepository
 {
     /** Keyword table: how far back "previous" and "best" positions are looked up. */
     private const int HISTORY_DAYS = 365;
+    /** Days between two checks of a keyword that still count as consecutive for volatility (weekly checks plus a day). */
+    private const int VOLATILITY_GAP = 8;
     /** Latest (rn = 1) and previous (rn = 2) check per keyword with the best position; parameters: project, device, since. */
     private const string RECENT = 'WITH recent AS (
             SELECT project_keyword_id, position, url, serp_features, checked_on,
@@ -148,11 +150,11 @@ final readonly class PdoRankingRepository implements RankingRepository
     public function storeSnapshot(RankSnapshot $snapshot): void
     {
         $this->db->execute(
-            'INSERT INTO ranking_snapshots (project_keyword_id, project_id, device, checked_on, position, absolute_position, url, serp_features, top_results, checked_at, snippet_domain, paa_questions)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            'INSERT INTO ranking_snapshots (project_keyword_id, project_id, device, checked_on, position, absolute_position, url, serp_features, top_results, checked_at, snippet_domain, paa_questions, shown_title)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE position = VALUES(position), absolute_position = VALUES(absolute_position), url = VALUES(url),
                  serp_features = VALUES(serp_features), top_results = VALUES(top_results), checked_at = VALUES(checked_at), source = NULL,
-                 snippet_domain = VALUES(snippet_domain), paa_questions = VALUES(paa_questions)',
+                 snippet_domain = VALUES(snippet_domain), paa_questions = VALUES(paa_questions), shown_title = VALUES(shown_title)',
             [
                 $snapshot->projectKeywordId,
                 $snapshot->projectId,
@@ -166,6 +168,7 @@ final readonly class PdoRankingRepository implements RankingRepository
                 $this->now(),
                 $snapshot->snippetDomain !== null ? mb_substr($snapshot->snippetDomain, 0, 253) : null,
                 $snapshot->questions !== [] ? json_encode(array_slice($snapshot->questions, 0, 8), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : null,
+                $snapshot->shownTitle !== null ? mb_substr($snapshot->shownTitle, 0, 300) : null,
             ],
         );
     }
@@ -430,6 +433,57 @@ final readonly class PdoRankingRepository implements RankingRepository
             $r['from_position'] !== null ? (int) $r['from_position'] : null,
             $r['to_position'] !== null ? (int) $r['to_position'] : null,
         ), $rows);
+    }
+
+    public function shownTitles(int $projectId, SerpDevice $device, string $since, int $limit): array
+    {
+        $rows = $this->db->fetchAll(
+            sprintf(
+                'SELECT url, shown_title, checked_on, keyword FROM (
+                     SELECT rs.url, rs.shown_title, rs.checked_on, pk.keyword,
+                            ROW_NUMBER() OVER (PARTITION BY rs.project_keyword_id ORDER BY rs.checked_on DESC) AS rn
+                     FROM ranking_snapshots rs
+                     JOIN project_keywords pk ON pk.id = rs.project_keyword_id AND pk.project_id = rs.project_id
+                     WHERE rs.project_id = ? AND rs.device = ? AND rs.checked_on >= ? AND rs.shown_title IS NOT NULL AND rs.url IS NOT NULL
+                 ) latest WHERE rn = 1 ORDER BY url, keyword LIMIT %d',
+                max(1, $limit),
+            ),
+            [$projectId, $device->value, $since],
+        );
+
+        return array_map(static fn(array $r): array => [
+            'url' => (string) $r['url'],
+            'title' => (string) $r['shown_title'],
+            'keyword' => (string) $r['keyword'],
+            'checkedOn' => (string) $r['checked_on'],
+        ], $rows);
+    }
+
+    public function volatility(int $projectId, SerpDevice $device, string $since): array
+    {
+        // Positions beyond 20 count as 21: movement far down the results is noise for this purpose.
+        $rows = $this->db->fetchAll(
+            'SELECT checked_on, COUNT(*) AS pairs, SUM(p <> prev_p) AS moved, AVG(ABS(p - prev_p)) AS average FROM (
+                 SELECT checked_on, p,
+                        LAG(checked_on) OVER (PARTITION BY project_keyword_id ORDER BY checked_on) AS prev_on,
+                        LAG(p) OVER (PARTITION BY project_keyword_id ORDER BY checked_on) AS prev_p
+                 FROM (
+                     SELECT project_keyword_id, checked_on, CAST(LEAST(COALESCE(position, 21), 21) AS SIGNED) AS p
+                     FROM ranking_snapshots
+                     WHERE project_id = ? AND device = ? AND checked_on >= DATE_SUB(?, INTERVAL ' . self::VOLATILITY_GAP . ' DAY) AND source IS NULL
+                 ) s
+             ) c
+             WHERE prev_on IS NOT NULL AND checked_on >= ? AND DATEDIFF(checked_on, prev_on) <= ' . self::VOLATILITY_GAP . ' AND NOT (p = 21 AND prev_p = 21)
+             GROUP BY checked_on ORDER BY checked_on',
+            [$projectId, $device->value, $since, $since],
+        );
+
+        return array_map(static fn(array $r): array => [
+            'date' => (string) $r['checked_on'],
+            'pairs' => (int) $r['pairs'],
+            'moved' => (int) $r['moved'],
+            'average' => round((float) $r['average'], 3),
+        ], $rows);
     }
 
     public function syncState(int $projectId): ?RankingSyncState

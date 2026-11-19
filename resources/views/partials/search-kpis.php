@@ -9,6 +9,7 @@
  * @var SeoControlCenter\Domain\Shared\DateRange $range
  * @var bool|null $showPosition false for sources without an overall position (Bing)
  * @var array<string, string>|null $notes small line under a tile, by its label (e.g. the Google/Bing split)
+ * @var string|null $compareLabel what the change is against (default: the previous N days)
  */
 $num = static fn(float|int $v): string => number_format((float) $v);
 $pct = static fn(float $v): string => number_format($v * 100, 1) . ' %';
@@ -52,7 +53,7 @@ if (($showPosition ?? true) === false) {
             <h2 class="stat-label"><?= $view->e($label) ?></h2>
             <p class="stat-value"><?= $view->e($value) ?></p>
             <?php if (isset($notes[$label])): ?><p class="stat-note"><?= $view->e($notes[$label]) ?></p><?php endif; ?>
-            <?php if ($change !== ''): ?><p class="stat-delta"><?= $change ?> <span class="muted">vs previous <?= $view->e($range->days()) ?> days</span></p><?php endif; ?>
+            <?php if ($change !== ''): ?><p class="stat-delta"><?= $change ?> <span class="muted"><?= $view->e($compareLabel ?? 'vs previous ' . $range->days() . ' days') ?></span></p><?php endif; ?>
         </section>
     <?php endforeach; ?>
 </div>

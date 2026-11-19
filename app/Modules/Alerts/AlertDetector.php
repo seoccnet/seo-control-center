@@ -285,16 +285,51 @@ final readonly class AlertDetector
             return null;
         }
         usort($strong, static fn(ReferringDomain $a, ReferringDomain $b): int => ($b->rank ?? 0) <=> ($a->rank ?? 0));
+        $pages = $this->lostPages($projectId);
 
         return [
             'type' => AlertType::LostLinks,
             'fingerprint' => 'lost:' . $projectId . ':' . $result->fetchedAt,
             'title' => sprintf('%s: %d strong backlink%s lost', $name, count($strong), count($strong) === 1 ? '' : 's'),
             'lines' => [
-                ...array_map(static fn(ReferringDomain $d): string => sprintf('%s (domain rank %d), lost %s', $d->domain, (int) $d->rank, $d->lostDate ?? 'recently'), array_slice($strong, 0, 8)),
+                ...array_map(static fn(ReferringDomain $d): string => sprintf('%s (domain rank %d), lost %s', $d->domain, (int) $d->rank, $d->lostDate ?? 'recently')
+                    . (isset($pages[self::site($d->domain)]) ? ' · it linked to ' . implode(', ', array_slice(array_keys($pages[self::site($d->domain)]), 0, 3)) : ''), array_slice($strong, 0, 8)),
                 'Ask the sites to restore the links, or redirect URLs that changed.',
             ],
             'url' => $base . '/backlinks',
         ];
+    }
+
+    /**
+     * The own pages each site's lost links pointed to, from a recent lost-links
+     * sample (1.7.0): site => path => true.
+     *
+     * @return array<string, array<string, true>>
+     */
+    private function lostPages(int $projectId): array
+    {
+        $result = $this->research->find($projectId, 'bl_lost_links');
+        if ($result === null || $result->fetchedAt === null || $result->fetchedAt < $this->clock->now()->modify('-' . self::RECENT_DAYS . ' days')->format('Y-m-d H:i:s')) {
+            return [];
+        }
+        $pages = [];
+        foreach ($result->items as $item) {
+            $link = is_array($item) ? \SeoControlCenter\Domain\Backlinks\PageBacklink::fromArray($item) : null;
+            if ($link !== null) {
+                $path = (string) parse_url($link->targetUrl, PHP_URL_PATH);
+                $query = parse_url($link->targetUrl, PHP_URL_QUERY);
+                $pages[self::site((string) parse_url($link->sourceUrl, PHP_URL_HOST))][($path !== '' ? $path : '/') . (is_string($query) ? '?' . $query : '')] = true;
+            }
+        }
+
+        return $pages;
+    }
+
+    /** A host without "www.", lower case: lost domains and link sources compare on it. */
+    private static function site(string $host): string
+    {
+        $host = strtolower($host);
+
+        return str_starts_with($host, 'www.') ? substr($host, 4) : $host;
     }
 }

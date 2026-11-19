@@ -147,7 +147,7 @@ $delta = static function (?int $now, ?int $before) use ($view): string {
         <h2>Referring domains</h2>
         <?= $button('bl_domains', 'Fetch referring domains') ?>
     </div>
-    <p class="muted small">Up to <?= $view->e(number_format(BacklinksService::LIMITS['bl_domains'])) ?> domains that link to <?= $view->e($ownDomain) ?>, best rank first. Click a column to sort.</p>
+    <p class="muted small">Up to <?= $view->e(number_format(BacklinksService::LIMITS['bl_domains'])) ?> domains that link to <?= $view->e($ownDomain) ?>, best rank first. Click a column to sort. <a href="<?= $view->e($self . '/disavow') ?>">Review spam domains and build a disavow file</a></p>
     <?= $status($results['bl_domains']) ?>
     <?php $domains = $results['bl_domains']?->referringDomains() ?? []; ?>
     <?php if ($domains !== []): ?>

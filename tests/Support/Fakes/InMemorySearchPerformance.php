@@ -61,9 +61,9 @@ final class InMemorySearchPerformance implements SearchPerformanceStore, SearchP
         return count(array_filter(array_keys($dates), $range->contains(...)));
     }
 
-    public function compared(int $projectId, PerformanceDimension $dimension, DateRange $range, int $limit): array
+    public function compared(int $projectId, PerformanceDimension $dimension, DateRange $range, int $limit, ?DateRange $earlier = null): array
     {
-        $previous = array_column($this->top($projectId, $dimension, $range->previous(), PHP_INT_MAX), null, 'key');
+        $previous = array_column($this->top($projectId, $dimension, $earlier ?? $range->previous(), PHP_INT_MAX), null, 'key');
         $rows = [];
         foreach ($this->top($projectId, $dimension, $range, PHP_INT_MAX) as $row) {
             if (isset($previous[$row->key])) {

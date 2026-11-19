@@ -178,7 +178,7 @@ if ($canManage && $settings->enabled && $providerAvailable && $keywordCount > 0)
     <section class="card">
         <div class="card-header">
             <h2>Keywords</h2>
-            <?php if ($latest !== null): ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/export' . ($filter !== null ? '?filter=' . $filter->value : '')) ?>"><?= $view->icon('download') ?>Export CSV</a><?php endif; ?><?php if ($settings->bothDevices): ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/devices') ?>">Mobile vs desktop</a><?php endif; ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/answers') ?>">Snippets &amp; questions</a><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/import') ?>">Import history</a>
+            <?php if ($latest !== null): ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/export' . ($filter !== null ? '?filter=' . $filter->value : '')) ?>"><?= $view->icon('download') ?>Export CSV</a><?php endif; ?><?php if ($settings->bothDevices): ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/devices') ?>">Mobile vs desktop</a><?php endif; ?><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/answers') ?>">Snippets &amp; questions</a><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/volatility') ?>">Volatility</a><a class="button button-ghost button-small" href="<?= $view->e($base . '/rankings/import') ?>">Import history</a>
         </div>
         <?php if ($latest !== null): ?>
         <nav class="filter-row" aria-label="Filter by position">

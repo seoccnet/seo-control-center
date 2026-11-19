@@ -62,6 +62,24 @@ final class SiteAuditModule implements Module, ProvidesJobs
         ));
         $container->singleton(LinkSuggestionScheduler::class, static fn(Container $c): LinkSuggestionScheduler => new Jobs\LinkSuggestionJobs($c->make(\SeoControlCenter\Domain\InternalLinks\LinkGraphRepository::class), $c->make(Queue::class), $c->make(Clock::class)));
         $container->singleton(Controllers\SnippetPreviewController::class, static fn(Container $c): Controllers\SnippetPreviewController => new Controllers\SnippetPreviewController(new SnippetPreviewService($c->make(SiteAuditRepository::class)), $c->make(ProjectService::class), $c->make(ResponseFactory::class), $c->make(ViewRenderer::class)));
+        // Titles Google rewrites, orphan pages and pages to prune (1.7.0): stored data only.
+        $container->singleton(Controllers\TitleRewriteController::class, static fn(Container $c): Controllers\TitleRewriteController => new Controllers\TitleRewriteController(
+            new TitleRewriteService($c->make(\SeoControlCenter\Domain\Rankings\RankingRepository::class), $c->make(SiteAuditRepository::class), $c->make(Clock::class)),
+            $c->make(ProjectService::class),
+            $c->make(ResponseFactory::class),
+            $c->make(ViewRenderer::class),
+        ));
+        $container->singleton(Controllers\PageCleanupController::class, static fn(Container $c): Controllers\PageCleanupController => new Controllers\PageCleanupController(
+            new OrphanPagesService($c->make(SiteAuditRepository::class), $c->make(\SeoControlCenter\Domain\SearchConsole\SearchPerformanceReader::class)),
+            new PrunePagesService(
+                $c->make(SiteAuditRepository::class),
+                $c->make(\SeoControlCenter\Domain\SearchConsole\SearchPerformanceReader::class),
+                $c->has(\SeoControlCenter\Modules\Research\ResearchRepository::class) ? $c->make(\SeoControlCenter\Modules\Research\ResearchRepository::class) : null,
+            ),
+            $c->make(ProjectService::class),
+            $c->make(ResponseFactory::class),
+            $c->make(ViewRenderer::class),
+        ));
         $container->singleton(Controllers\StructuredDataController::class, static fn(Container $c): Controllers\StructuredDataController => new Controllers\StructuredDataController(new StructuredDataService($c->make(SiteAuditRepository::class)), $c->make(ProjectService::class), $c->make(ResponseFactory::class), $c->make(ViewRenderer::class)));
         $container->singleton(Controllers\InternalLinksController::class, static fn(Container $c): Controllers\InternalLinksController => new Controllers\InternalLinksController($c->make(LinkSuggestionService::class), $c->make(ProjectService::class), $c->make(ResponseFactory::class), $c->make(ViewRenderer::class)));
         $container->singleton(SiteCrawler::class, static fn(Container $c): SiteCrawler => new SiteCrawler(
@@ -121,6 +139,9 @@ final class SiteAuditModule implements Module, ProvidesJobs
         $routes->get($base . '/links', Controllers\InternalLinksController::class, 'index', 'projects.audit.links');
         $routes->get($base . '/schema', Controllers\StructuredDataController::class, 'show', 'projects.audit.schema');
         $routes->get($base . '/snippets', Controllers\SnippetPreviewController::class, 'show', 'projects.audit.snippets');
+        $routes->get($base . '/title-rewrites', Controllers\TitleRewriteController::class, 'show', 'projects.audit.title_rewrites');
+        $routes->get($base . '/orphans', Controllers\PageCleanupController::class, 'orphans', 'projects.audit.orphans');
+        $routes->get($base . '/prune', Controllers\PageCleanupController::class, 'prune', 'projects.audit.prune');
         $routes->get($audit, SiteAuditController::class, 'show', 'projects.audit.show');
         $routes->get($audit . '/pages', SiteAuditController::class, 'pages', 'projects.audit.pages');
         $routes->get($audit . '/export', SiteAuditController::class, 'export', 'projects.audit.export');

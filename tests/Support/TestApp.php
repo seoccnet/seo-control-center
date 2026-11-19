@@ -217,6 +217,9 @@ final class TestApp
         $linkTargets = new \SeoControlCenter\Tests\Support\Fakes\InMemoryLinkTargets($container->make(Clock::class));
         $container->instance(\SeoControlCenter\Tests\Support\Fakes\InMemoryLinkTargets::class, $linkTargets);
         $container->instance(\SeoControlCenter\Modules\Backlinks\LinkTargetRepository::class, $linkTargets);
+        $disavows = new Fakes\InMemoryDisavows($container->make(Clock::class));
+        $container->instance(Fakes\InMemoryDisavows::class, $disavows);
+        $container->instance(\SeoControlCenter\Modules\Backlinks\DisavowRepository::class, $disavows);
         $assistant = new InMemoryAssistant($container->make(Clock::class));
         $container->instance(InMemoryAssistant::class, $assistant);
         $container->instance(AssistantSettingsRepository::class, $assistant);

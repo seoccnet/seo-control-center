@@ -61,12 +61,16 @@ final readonly class PerformanceController
             $rangeKey = self::DEFAULT_RANGE;
         }
 
+        // Compare with the period before, or with the same weeks a year earlier (1.7.0).
+        $compare = ($request->getQueryParams()['compare'] ?? null) === 'year' ? 'year' : 'previous';
         $span = $this->reader->dataSpan($project->id);
         $data = null;
         if ($span !== null) {
             // Anchor on the newest imported day: Google's data lags 2-3 days behind today.
             $range = DateRange::endingOn($span['last'], self::RANGES[$rangeKey]);
-            $previous = $range->previous();
+            $previous = $compare === 'year' ? $range->yearEarlier() : $range->previous();
+            // A year back needs the whole earlier period: a partial one would read as a fall.
+            $hasPrevious = $compare === 'year' ? $span['first'] <= $previous->fromString() : $span['first'] <= $previous->toString();
             $byDate = [];
             foreach ($this->reader->daily($project->id, $range) as $day) {
                 $byDate[$day->date] = $day->metrics;
@@ -76,7 +80,11 @@ final readonly class PerformanceController
                 'previousRange' => $previous,
                 'totals' => $this->reader->totals($project->id, $range),
                 'previous' => $this->reader->totals($project->id, $previous),
-                'hasPrevious' => $span['first'] <= $previous->toString(),
+                'hasPrevious' => $hasPrevious,
+                'movers' => $compare === 'year' && $hasPrevious ? [
+                    'query' => $this->movers($project->id, PerformanceDimension::Query, $range, $previous),
+                    'page' => $this->movers($project->id, PerformanceDimension::Page, $range, $previous),
+                ] : null,
                 'days' => array_map(static fn(string $d): array => [$d, $byDate[$d] ?? null], $range->eachDay()),
                 'queries' => $this->reader->top($project->id, PerformanceDimension::Query, $range, 25),
                 'pages' => $this->reader->top($project->id, PerformanceDimension::Page, $range, 25),
@@ -96,6 +104,7 @@ final readonly class PerformanceController
             'span' => $span,
             'rangeKey' => $rangeKey,
             'ranges' => self::RANGES,
+            'compare' => $compare,
             'data' => $data,
             'annotations' => $data === null ? [] : $this->annotations->context($project, $data['range']),
             'canImport' => $this->projects->can(WebContext::user($request), Permission::IntegrationsManage, $project),
@@ -147,6 +156,24 @@ final readonly class PerformanceController
         WebContext::session($request)->flash('status', 'Import queued. It runs in the background with the next cron runs.');
 
         return $this->responses->redirect('/projects/' . $project->publicId . '/performance');
+    }
+
+    /**
+     * The queries or pages with the largest click gains and losses against
+     * the same weeks a year earlier (1.7.0), among those seen in both.
+     *
+     * @return array{gains: list<array{key: string, current: Metrics, previous: Metrics}>, losses: list<array{key: string, current: Metrics, previous: Metrics}>}
+     */
+    private function movers(int $projectId, PerformanceDimension $dimension, DateRange $range, DateRange $earlier): array
+    {
+        $rows = $this->reader->compared($projectId, $dimension, $range, 60, $earlier)['rows'];
+        $gains = array_values(array_filter($rows, static fn(array $r): bool => $r['current']->clicks > $r['previous']->clicks));
+        $losses = array_values(array_filter($rows, static fn(array $r): bool => $r['current']->clicks < $r['previous']->clicks));
+        $change = static fn(array $r): int => $r['current']->clicks - $r['previous']->clicks;
+        usort($gains, static fn(array $a, array $b): int => [$change($b), $a['key']] <=> [$change($a), $b['key']]);
+        usort($losses, static fn(array $a, array $b): int => [$change($a), $a['key']] <=> [$change($b), $b['key']]);
+
+        return ['gains' => array_slice($gains, 0, 10), 'losses' => array_slice($losses, 0, 10)];
     }
 
     /**

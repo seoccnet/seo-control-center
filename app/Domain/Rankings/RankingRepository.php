@@ -89,6 +89,24 @@ interface RankingRepository
     public function history(int $projectId, string $keywordPublicId, SerpDevice $device, string $since): array;
 
     /**
+     * The latest title Google showed for the project's own result, per
+     * keyword checked since $since (1.7.0); keywords without one are left out.
+     *
+     * @return list<array{url: string, title: string, keyword: string, checkedOn: string}>
+     */
+    public function shownTitles(int $projectId, SerpDevice $device, string $since, int $limit): array;
+
+    /**
+     * Per check day since $since: how far checked (not imported) keywords
+     * moved since their previous check on the device at most 8 days earlier,
+     * positions beyond 20 counted as 21 and pairs outside the top 20 on both
+     * days left out (1.7.0).
+     *
+     * @return list<array{date: string, pairs: int, moved: int, average: float}>
+     */
+    public function volatility(int $projectId, SerpDevice $device, string $since): array;
+
+    /**
      * Keywords whose position changed between two check days.
      *
      * @return list<RankingMove>

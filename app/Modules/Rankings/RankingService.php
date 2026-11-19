@@ -50,6 +50,8 @@ final readonly class RankingService
     public const int HISTORY_DAYS = 365;
     public const int ANSWER_LIMIT = 500;
     public const int DEVICE_GAP = 5;
+    /** Days of ranking volatility shown (1.7.0). */
+    public const int VOLATILITY_DAYS = 90;
     private const int SEARCH_CONSOLE_DAYS = 28;
 
     public function __construct(
@@ -143,6 +145,37 @@ final readonly class RankingService
             'page' => $page,
             'pages' => $pages,
         ];
+    }
+
+    /**
+     * Ranking volatility of the last 90 days on the primary device (1.7.0),
+     * newest day first, with the Google updates rolling out on each day.
+     *
+     * @return array{
+     *     device: SerpDevice, usual: ?float,
+     *     latest: ?array{date: string, pairs: int, moved: int, average: float, level: string, ratio: ?float},
+     *     days: list<array{date: string, pairs: int, moved: int, average: float, level: string, ratio: ?float, updates: list<string>}>
+     * }
+     */
+    public function volatility(Project $project): array
+    {
+        $device = $this->rankings->settings($project->id)->device;
+        $today = $this->clock->now()->format('Y-m-d');
+        $since = $this->clock->now()->modify('-' . self::VOLATILITY_DAYS . ' days')->format('Y-m-d');
+        $assessment = \SeoControlCenter\Domain\Rankings\Volatility::assess($this->rankings->volatility($project->id, $device, $since));
+        $updates = \SeoControlCenter\Domain\Shared\GoogleUpdates::between($since, $today);
+        $days = [];
+        foreach (array_reverse($assessment['days']) as $day) {
+            $names = [];
+            foreach ($updates as $update) {
+                if ($update['start'] <= $day['date'] && ($update['end'] ?? $today) >= $day['date']) {
+                    $names[] = $update['name'];
+                }
+            }
+            $days[] = [...$day, 'updates' => $names];
+        }
+
+        return ['device' => $device, 'usual' => $assessment['usual'], 'latest' => $assessment['latest'], 'days' => $days];
     }
 
     /**

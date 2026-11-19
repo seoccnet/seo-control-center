@@ -25,9 +25,11 @@ interface SearchPerformanceReader
     public function coveredDates(int $projectId, DateRange $range): array;
 
     /** Rows observed in both periods, balanced across gains, losses and unchanged rows.
+     * The earlier period is the one directly before $range unless $earlier names
+     * another one before it (1.7.0: the same weeks a year earlier).
      * @return array{total: int, rows: list<array{key: string, current: Metrics, previous: Metrics}>}
      */
-    public function compared(int $projectId, PerformanceDimension $dimension, DateRange $range, int $limit): array;
+    public function compared(int $projectId, PerformanceDimension $dimension, DateRange $range, int $limit, ?DateRange $earlier = null): array;
 
     /**
      * @return array{first: string, last: string}|null imported date span

@@ -286,6 +286,8 @@ main:focus { outline: none; }
 .card-grid { display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr); gap: var(--space-4); align-items: start; }
 .stack { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 @media (max-width: 72rem) { .card-grid { grid-template-columns: minmax(0, 1fr); } }
+.year-movers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); align-items: start; }
+@media (max-width: 60rem) { .year-movers { grid-template-columns: minmax(0, 1fr); } }
 .danger-zone { border-color: var(--danger); }
 .danger-zone h2 { color: var(--danger); }
 details.card summary { cursor: pointer; font-weight: 600; }

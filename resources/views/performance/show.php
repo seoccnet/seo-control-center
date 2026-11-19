@@ -9,6 +9,7 @@
  * @var array{first: string, last: string}|null $span
  * @var string $rangeKey
  * @var array<string, int> $ranges
+ * @var string $compare previous or year (1.7.0)
  * @var bool $canImport
  * @var array{
  *     range: SeoControlCenter\Domain\Shared\DateRange,
@@ -16,6 +17,7 @@
  *     totals: SeoControlCenter\Domain\SearchConsole\Metrics,
  *     previous: SeoControlCenter\Domain\SearchConsole\Metrics,
  *     hasPrevious: bool,
+ *     movers: array{query: array{gains: list<array{key: string, current: SeoControlCenter\Domain\SearchConsole\Metrics, previous: SeoControlCenter\Domain\SearchConsole\Metrics}>, losses: list<array{key: string, current: SeoControlCenter\Domain\SearchConsole\Metrics, previous: SeoControlCenter\Domain\SearchConsole\Metrics}>}, page: array{gains: list<array{key: string, current: SeoControlCenter\Domain\SearchConsole\Metrics, previous: SeoControlCenter\Domain\SearchConsole\Metrics}>, losses: list<array{key: string, current: SeoControlCenter\Domain\SearchConsole\Metrics, previous: SeoControlCenter\Domain\SearchConsole\Metrics}>}}|null,
  *     days: list<array{0: string, 1: SeoControlCenter\Domain\SearchConsole\Metrics|null}>,
  *     queries: list<SeoControlCenter\Domain\SearchConsole\DimensionRow>,
  *     pages: list<SeoControlCenter\Domain\SearchConsole\DimensionRow>,
@@ -56,7 +58,11 @@ if ($link !== null && $canImport) {
     <a class="button button-ghost button-small" href="<?= $view->e($base . '/performance/updates') ?>">Google updates</a>
     <a class="button button-ghost button-small" href="<?= $view->e($base . '/performance/new-queries') ?>">New queries</a>
     <?php if ($data !== null): ?>
-        <?= $view->partial('partials/range-picker', ['ranges' => $ranges, 'current' => $rangeKey, 'href' => $base . '/performance']) ?>
+        <?= $view->partial('partials/range-picker', ['ranges' => $ranges, 'current' => $rangeKey, 'href' => $base . '/performance', 'keep' => $compare === 'year' ? ['compare' => 'year'] : []]) ?>
+        <nav class="segmented" aria-label="Compare with">
+            <a href="<?= $view->e($base . '/performance?range=' . $rangeKey) ?>"<?= $compare === 'previous' ? ' aria-current="true"' : '' ?>>Previous period</a>
+            <a href="<?= $view->e($base . '/performance?range=' . $rangeKey . '&compare=year') ?>"<?= $compare === 'year' ? ' aria-current="true"' : '' ?>>Last year</a>
+        </nav>
     <?php endif; ?>
 </div>
 
@@ -83,9 +89,44 @@ if ($link !== null && $canImport) {
     </div>
 
     <section id="performance-overview" class="performance-section" aria-labelledby="performance-overview-title">
-        <div class="section-header"><div><p class="portfolio-eyebrow">Period overview</p><h2 id="performance-overview-title">Search performance</h2><p class="muted small">Your key metrics, compared with the previous period.</p></div><nav class="performance-outline" aria-label="Performance sections"><a href="#performance-trends">Trends</a><a href="#performance-search">Queries &amp; pages</a><a href="#performance-audience">Audience</a><a href="#performance-daily">Daily data</a></nav></div>
-    <?= $view->partial('partials/search-kpis', ['totals' => $data['totals'], 'previous' => $data['previous'], 'hasPrevious' => $data['hasPrevious'], 'range' => $range]) ?>
+        <div class="section-header"><div><p class="portfolio-eyebrow">Period overview</p><h2 id="performance-overview-title">Search performance</h2><p class="muted small">Your key metrics, compared with <?= $compare === 'year' ? 'the same weeks a year earlier (' . $view->e($data['previousRange']->fromString() . ' – ' . $data['previousRange']->toString()) . ')' : 'the previous period' ?>.</p></div><nav class="performance-outline" aria-label="Performance sections"><a href="#performance-trends">Trends</a><a href="#performance-search">Queries &amp; pages</a><a href="#performance-audience">Audience</a><a href="#performance-daily">Daily data</a></nav></div>
+    <?= $view->partial('partials/search-kpis', ['totals' => $data['totals'], 'previous' => $data['previous'], 'hasPrevious' => $data['hasPrevious'], 'range' => $range, 'compareLabel' => $compare === 'year' ? 'vs same weeks last year' : null]) ?>
+    <?php if ($compare === 'year' && !$data['hasPrevious']): ?>
+    <p class="notice">Search Console data starts on <?= $view->e($span['first'] ?? '') ?>, after the same weeks last year began (<?= $view->e($data['previousRange']->fromString()) ?>). SEOcc imports up to 16 months, so a year-over-year comparison works for ranges up to about three months; pick a shorter range.</p>
+    <?php endif; ?>
     </section>
+
+    <?php if ($data['movers'] !== null): ?>
+    <section id="performance-year" class="performance-section" aria-labelledby="performance-year-title">
+        <div class="section-header"><div><p class="portfolio-eyebrow">Year over year</p><h2 id="performance-year-title">Biggest changes against last year</h2><p class="muted small">Queries and pages with clicks in both periods, by the change in clicks. Seasonal searches move every year; compare them here rather than with the weeks before.</p></div></div>
+        <div class="year-movers">
+        <?php foreach (['query' => 'Queries', 'page' => 'Pages'] as $dimension => $heading): ?>
+            <?php foreach (['gains' => 'gained', 'losses' => 'lost'] as $direction => $verb): ?>
+            <div class="card">
+                <h3><?= $view->e($heading . ' that ' . $verb . ' most') ?></h3>
+                <?php if ($data['movers'][$dimension][$direction] === []): ?>
+                <p class="muted small">None.</p>
+                <?php else: ?>
+                <div class="table-scroll"><table class="table table-dense numeric">
+                    <thead><tr><th scope="col"><?= $view->e($dimension === 'query' ? 'Query' : 'Page') ?></th><th scope="col">Clicks</th><th scope="col">Last year</th><th scope="col">Change</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($data['movers'][$dimension][$direction] as $row): $diff = $row['current']->clicks - $row['previous']->clicks; ?>
+                        <tr>
+                            <td class="key-cell"><?= $view->e($row['key']) ?></td>
+                            <td><?= $view->e($num($row['current']->clicks)) ?></td>
+                            <td><?= $view->e($num($row['previous']->clicks)) ?></td>
+                            <td><span class="delta <?= $diff > 0 ? 'delta-good' : 'delta-bad' ?>"><?= $view->e(sprintf('%+d', $diff)) ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table></div>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <?php if ($data['fresh'] !== []): ?>
     <section id="performance-fresh" class="performance-section" aria-labelledby="performance-fresh-title">
@@ -114,7 +155,7 @@ if ($link !== null && $canImport) {
     <section id="performance-surfaces" class="performance-section" aria-labelledby="performance-surfaces-title">
         <div class="section-header"><div><p class="portfolio-eyebrow">Beyond web search</p><h2 id="performance-surfaces-title">Other Google surfaces</h2><p class="muted small">Traffic Search Console reports separately from web search, for the same period. These clicks are not part of the figures above.</p></div></div>
         <div class="card"><div class="table-scroll"><table class="table table-dense numeric">
-            <thead><tr><th scope="col">Surface</th><th scope="col">Clicks</th><th scope="col">Previous</th><th scope="col">Impressions</th><th scope="col">CTR</th><th scope="col">Position</th></tr></thead>
+            <thead><tr><th scope="col">Surface</th><th scope="col">Clicks</th><th scope="col"><?= $compare === 'year' ? 'Last year' : 'Previous' ?></th><th scope="col">Impressions</th><th scope="col">CTR</th><th scope="col">Position</th></tr></thead>
             <tbody>
                 <?php foreach ($data['surfaces'] as $surface): $t = $surface['totals']; ?>
                     <tr>

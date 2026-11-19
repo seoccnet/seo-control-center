@@ -61,6 +61,15 @@ final readonly class DateRange
         return self::endingOn($this->from->modify('-1 day')->format('Y-m-d'), $this->days());
     }
 
+    /**
+     * The same range 52 weeks earlier (1.7.0): the same weekdays a year
+     * before, so weekend and weekday traffic compare like for like.
+     */
+    public function yearEarlier(): self
+    {
+        return new self($this->from->modify('-364 days')->format('Y-m-d'), $this->to->modify('-364 days')->format('Y-m-d'));
+    }
+
     public function contains(string $date): bool
     {
         $d = self::parse($date);
