@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.8.0] — 2026-11-19 — Share of voice, target pages, internal link strength, slow decline, link outreach
 
 - **Share of voice** (*Competitors → Share of voice*). Of the clicks you and your competitors are estimated to win on your tracked keywords (visibility: click-through rate by position, weighted by search volume), the share each site wins, with the change against a check about four weeks earlier and a chart of your share over the last 180 days. Only checks on which every competitor was measured count, so adding a competitor never makes your share jump.
 - **Target pages** (*Rankings → Target pages*). Choose the page that should rank for each tracked keyword (a path or full address of the project's site), or adopt today's ranking page for every keyword without one. Keywords are marked *target ranks*, *another page ranks* or *not ranking*, and keywords whose ranking page changed two or more times in 90 days are marked as switching.

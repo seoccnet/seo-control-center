@@ -1,6 +1,6 @@
 # Database Design
 
-## Target pages and link outreach (Unreleased, migrations 2026_11_19_000300–000400)
+## Target pages and link outreach (1.8.0, migrations 2026_11_19_000300–000400)
 
 - `keyword_targets` — per tracked keyword (PK `project_keyword_id`, cascades with the keyword): `project_id` (cascade), `url` (2,048), `set_by` (SET NULL), `set_at`.
 - `link_outreach` — per project and domain (PK, ASCII, 253): `workspace_id`, `source` (`mention`, `lost`, `broken`, `manual`), `page_url` and `target_url` (2,048, NULL), `status` (`to_contact`, `contacted`, `won`, `declined`), `note` (500), `added_by` (SET NULL), `added_at`, `updated_at`. At most 2,000 sites per project. Cascades on project deletion.
