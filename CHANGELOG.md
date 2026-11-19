@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+- **Share of voice** (*Competitors → Share of voice*). Of the clicks you and your competitors are estimated to win on your tracked keywords (visibility: click-through rate by position, weighted by search volume), the share each site wins, with the change against a check about four weeks earlier and a chart of your share over the last 180 days. Only checks on which every competitor was measured count, so adding a competitor never makes your share jump.
+- **Target pages** (*Rankings → Target pages*). Choose the page that should rank for each tracked keyword (a path or full address of the project's site), or adopt today's ranking page for every keyword without one. Keywords are marked *target ranks*, *another page ranks* or *not ranking*, and keywords whose ranking page changed two or more times in 90 days are marked as switching.
+- **Internal link strength** (*Site audit → Internal link strength*). PageRank over the latest audit's internal links, as a percentile (0–100), next to each page's Search Console clicks of the last 90 days. Lists pages in the top quarter by clicks that are weaker than half the site or more than three clicks deep, and strongly linked pages (top quarter) that Google showed for nothing.
+- **Slow decline** (*Performance → Slow decline*). Pages whose clicks fell in each of the last four quarters (13 weeks each), by 25 % or more overall and without one step carrying most of the drop, with a first guess at the cause: lost positions, fewer searches, or fewer clicks per view. Needs a year of Search Console data.
+- **Link outreach** (*Backlinks → Link outreach*). A per-project list of sites to ask for a link, with status (*to contact*, *contacted*, *won*, *declined*) and a note. Suggestions come from stored lookups: unlinked brand mentions, the lost-links sample and links to missing pages; sites already linking, listed or disavowed are left out. A contacted site shows *Link found* once a later backlink lookup lists it. SEOcc sends nothing.
+- **Migrations:** `2026_11_19_000300` creates `keyword_targets`; `2026_11_19_000400` creates `link_outreach`. No dependency added. No new paid calls: everything uses stored data.
+
 ## [1.7.0] — 2026-11-19 — Title rewrites, orphan pages, pages to prune, year over year, volatility, disavow file
 
 - **Titles Google rewrites** (*Site audit → Titles Google rewrites*). Rank checks now record the title Google shows for your own result. The page compares it with the page's title from the latest audit and sorts each into *rewritten* (with the share of words Google kept), *no title*, *site name changed* or *cut*, with the searches it was shown for. Google can show different titles for different searches; each appears. Titles are recorded from this version on, on the tracked device, for the last 90 days.

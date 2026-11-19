@@ -17,6 +17,10 @@ Click a competitor to see the keyword-by-keyword comparison.
 
 Competitor data comes from your rank checks at no extra cost, so history starts when you add a competitor.
 
+### Share of voice
+
+**Competitors → Share of voice** (1.8.0) shows, of the clicks you and your competitors are estimated to win on your tracked keywords, the share each site wins, with the change against a check about four weeks earlier and a chart of your own share. Clicks are estimated from each position's usual click-through rate and the keyword's search volume. A growing share means you are gaining on the competitors you track, even when demand as a whole rises or falls. Checks on which a competitor was not measured yet (it was added later) are left out; adding or removing a competitor changes everyone's share.
+
 ### What competitors publish
 
 **Competitors → New pages** (1.6.0) watches your competitors' sitemaps. Switch it on (editors); from then on SEOcc reads each competitor's sitemap once a day, only the sitemap and no pages, at no cost. The first read records what each one has today; from the next day the page lists the pages that appeared or disappeared in the last 30 days, with the tracked keywords each address matches. **Only pages matching my keywords** narrows it to those. A page counts as removed when the sitemap stops listing it; sitemaps over 10,000 pages, or that suddenly list less than half as many, report no removals. Competitors without a readable sitemap show the reason.

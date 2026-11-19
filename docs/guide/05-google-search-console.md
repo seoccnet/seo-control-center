@@ -104,6 +104,10 @@ WordPress queues notifications for public content changes, permalink changes and
 
 **Compare with: Last year** on the Performance page (1.7.0) compares the selected range with the same weeks 52 weeks earlier, so weekdays line up, and lists the queries and pages that gained and lost most clicks. Use it for seasonal sites, where the weeks before say little. SEOcc imports up to 16 months, so it works for ranges up to about three months.
 
+### Slow decline
+
+**Performance → Slow decline** (1.8.0) lists pages whose clicks fell in each of the last four quarters, by at least a quarter overall, without one sudden drop (those show up in alerts). Each gets a first guess at the cause: *lost positions* (refresh the content against the pages now above it), *fewer searches* (the topic moved on), or *fewer clicks per view* (AI Overviews or other result features take the clicks; review the title and description). It needs a year of imported data.
+
 ## Good to know
 
 - **Totals versus rows:** the query and page tables leave out anonymised queries, as Search Console does, so they add up to less than the totals.

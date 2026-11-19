@@ -80,6 +80,10 @@ Tick **Also check the other device** in the tracking settings (1.6.0) to check e
 
 **Rankings → Volatility** (1.7.0) shows, for every check of the last 90 days, how far your tracked keywords moved since their previous check, rated against the project's usual movement: *calm*, *moving* (1.5 times usual) or *turbulent* (2.5 times). Google updates rolling out on a day are named. When most keywords move at once, the cause is usually Google; when few move, look at those pages. Positions beyond 20 count as 21, and imported history is left out.
 
+### Target pages
+
+**Rankings → Target pages** (1.8.0) lets editors choose the page that should rank for each keyword: type a path such as `/shoes` or a full address of the site, or adopt the page ranking today for every keyword without a target. Keywords are marked *target ranks*, *another page ranks* or *not ranking*. Keywords for which Google ranked a different page of yours two or more times in 90 days are marked as *switching*: those pages usually compete for the same search. Strengthen the target (internal links with the keyword, a clearer title) or merge the pages.
+
 ### Google updates on the charts
 
 Line charts shade Google's confirmed ranking updates (1.5.0) and name them under the chart, so a drop during a core update is not mistaken for the effect of your own change. The list comes from the Google Search Status Dashboard and ships with each SEOcc release; an update announced later appears after the next update of SEOcc.
@@ -155,6 +159,10 @@ Google ranks local businesses by distance, so your position changes across a cit
 ### Unlinked brand mentions
 
 **Unlinked brand mentions** (1.6.0) on the Backlinks page searches DataForSEO's content index for up to 100 sites that name your brand, one page per site, strongest first (about $0.03 per lookup). Enter the name as people write it. With the referring domains fetched, each site shows whether it already links to you; the ones marked **No** are the easiest links to ask for: thank them for the mention and ask them to link it. Read the page first, as namesakes match too.
+
+### Link outreach
+
+**Backlinks → Link outreach** (1.8.0) keeps a list of the sites to ask for a link, with a status (*to contact*, *contacted*, *won*, *declined*) and a note. Editors add sites by hand or from the suggestions, which come from stored lookups: sites that mention your brand without linking, sites whose link disappeared (lost-links sample) and sites linking to a page of yours that no longer exists. Sites that already link, are on the list or on your disavow list are not suggested. When a contacted site appears as linking in a later backlink lookup, it is marked *Link found*; check the link and mark it as won. SEOcc sends no messages.
 
 ### Disavow file
 

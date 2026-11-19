@@ -105,6 +105,10 @@ Title, description, heading and text checks apply only to pages that are meant t
 
 **Pages to prune** (1.7.0) lists indexable pages without a single Search Console impression in up to a year, each with a suggestion: *merge or remove* for short pages, *redirect* for pages with backlinks in the stored sample, *improve or noindex* for the rest. New pages (not in the oldest kept audit), the start page, pages canonicalised elsewhere and later listing pages are left out. Pages people reach in other ways (contact, legal, campaigns) need no searches: keep them. Plan the redirects in *Site migration*. The list can be exported as CSV.
 
+### Internal link strength
+
+**Internal link strength** (1.8.0) scores how much of the site's internal linking each page receives, PageRank-style: a link from a strongly linked page counts more than one from a weak page. The score is a percentile: 100 is the strongest page, 50 is stronger than half of them. Two lists compare it with Search Console clicks of the last 90 days: pages that earn many clicks but are weakly linked or more than three clicks from the start page (link to them from strong, related pages), and strongly linked pages Google showed for nothing (usually menu or footer links; fine for contact or legal pages, otherwise move the links to pages that should rank).
+
 ## Reading the results
 
 - **Health score:** 100 means that no checked page has an error or a warning. Pages with an error count fully against the score, and pages with warnings only count half. The arrow shows the change since the previous audit.
